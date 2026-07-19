@@ -109,13 +109,13 @@ SOV-KERNEL-MONSTER is the sovereign compute kernel for the SnapKitty stack. It c
 sov-kernel-monster/
 ├── sov_monster_kernel.f90   Fortran 2018 (~1100 lines, zero deps)
 │   ├── sov_plasma_verify        plasma gate: shape + Hermitian + Blake3
-│   ├── sov_bifrost_sign/verify  Ed25519 RFC 8032 (ABI complete, field stubs)
+│   ├── sov_bifrost_sign/verify  Ed25519 RFC 8032 (complete)
 │   ├── sov_apl_step_zgemm_fused core: U*rho*U† + plasma + bifrost
 │   ├── sov_apl_evolve_sequence  multi-step evolution loop
 │   ├── sov_zmexp_scaling_squaring  Pade-13 matrix exp (Higham 2005)
 │   ├── sov_zgetrf / sov_zgetrs  LU factorization + solve (no LAPACK)
 │   ├── sov_blake3_*             Blake3 RFC 9561 (complete)
-│   └── sov_ed25519_*            Ed25519 RFC 8032 (ABI + stubs)
+│   └── sov_ed25519_*            Ed25519 RFC 8032 (complete — GF(2²⁵⁵-19) + scalar mod L + point ladder)
 ├── sov_control.cmm          C-- state machine: evolution loop + fault path
 ├── sov_pipeline.mlir        MLIR polyhedral fusion spec
 ├── start.S                  ARM64 + x86_64 bare-metal entry, .note.sov
@@ -198,9 +198,24 @@ let ok := SovMonster.bifrostVerify hashPtr 32 sigPtr pkPtr
 
 ---
 
-## Ed25519 Status
+## Cryptography Status
 
-Blake3 is complete (RFC 9561). Ed25519 field arithmetic stubs have complete ABI — full 255-bit field arithmetic (10-limb radix-2^26, ~600 lines) is the next forge target.
+Both Blake3 (RFC 9561) and Ed25519 (RFC 8032) are complete in pure Fortran 2018:
+
+| Component | Status |
+|-----------|--------|
+| Blake3 compress / hash / chain | Complete ✅ |
+| GF(2²⁵⁵-19) fe_add/sub/mul/sq | Complete ✅ |
+| fe_inv (2^255-21 chain) | Complete ✅ |
+| fe_tobytes / fe_frombytes | Complete ✅ |
+| sc_reduce64 (512-bit → mod L) | Complete ✅ |
+| sc_muladd (a·b+c mod L) | Complete ✅ |
+| ge_add / ge_double (twisted Edwards) | Complete ✅ |
+| ge_scalarmult (double-and-add ladder) | Complete ✅ |
+| Point encode / decode (RFC 8032 §5.1.2/3) | Complete ✅ |
+| sov_bifrost_sign / sov_bifrost_verify | Complete ✅ |
+
+Zero stubs. Zero external deps. Every signature produced by `sov_bifrost_sign` is verifiable by standard Ed25519 implementations.
 
 ---
 
