@@ -9,6 +9,8 @@
   <img src="https://img.shields.io/badge/libc-NONE-e74c3c?style=flat-square" alt="no libc"/>
   <img src="https://img.shields.io/badge/audit-Blake3_%2B_Ed25519-8e44ad?style=flat-square" alt="bifrost"/>
   <img src="https://img.shields.io/badge/license-SSL_v1.0-555?style=flat-square" alt="license"/>
+  <img src="https://img.shields.io/badge/mode-contribution--only-c0392b?style=flat-square" alt="contribution-only"/>
+  <img src="https://img.shields.io/badge/node--key-required-2e86c1?style=flat-square" alt="node key"/>
 </p>
 
 > The Monster doesn't run on infrastructure. The Monster *is* the infrastructure.
