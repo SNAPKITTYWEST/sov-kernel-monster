@@ -219,4 +219,30 @@ Zero stubs. Zero external deps. Every signature produced by `sov_bifrost_sign` i
 
 ---
 
+## Sovereign Node Key
+
+**To run the Monster you must hold a Sovereign Node Key.**
+
+The key is an Ed25519 keypair. Without it, `sov_bifrost_sign` will not seal outputs.
+Unsigned outputs cannot propagate through the Bifrost WORM chain.
+
+```bash
+# Check if you have a key:
+ls node_sk.bin
+
+# Build with your key:
+SOV_SK=node_sk.bin ./build_monster.sh
+
+# Build in dev mode (unsealed outputs, local only):
+SOV_SK=dev ./build_monster.sh
+```
+
+**Get a key:** Donate to the Bel Esprit D'Accord Irrevocable Trust.
+See [SOVEREIGN_NODE_KEY.md](SOVEREIGN_NODE_KEY.md) for tiers, payment, and instructions.
+
+> The key is not DRM. It is a covenant.
+> Building this took years. Running it without contributing is extraction.
+
+---
+
 *SnapKitty West · Sovereign Source License v1.0 · Evidence or Silence — 2026*
