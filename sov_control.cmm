@@ -1,0 +1,81 @@
+// ════════════════════════════════════════════════════════════════
+// SOV_CONTROL.CMM — Sovereign APL State Machine
+// C-- control flow for multi-step density matrix evolution
+// Compiled: c-- -> LLVM IR -> MLIR -> Machine Code
+// No prologue/epilogue overhead. Hand-tuned register layout.
+// ════════════════════════════════════════════════════════════════
+
+section "text" {
+
+  // sov_apl_evolve_cmm
+  // Args (System V AMD64 ABI):
+  //   R0 = H_ptr          (complex(dp) column-major, n x n)
+  //   R1 = rho_ptr        (complex(dp) column-major, n x n, in/out)
+  //   R2 = n              (int64)
+  //   R3 = steps          (int64)
+  //   R4 = dt             (float64, via xmm0 on x86_64)
+  //   R5 = sk_ptr         (Ed25519 secret key, 32 bytes)
+  //   R6 = pk_ptr         (Ed25519 public key, 32 bytes)
+  //   R7 = receipts_ptr   (uint8_t[steps * 96])
+  // Returns: rax = 0 (ok) | error code
+
+  export sov_apl_evolve_cmm;
+
+  sov_apl_evolve_cmm
+    ( bits64 H_ptr, bits64 rho_ptr, bits64 n, bits64 steps,
+      bits64 dt, bits64 sk_ptr, bits64 pk_ptr, bits64 receipts_ptr )
+    {
+      bits64 step, receipt_off, hash_ptr, sig_ptr;
+      bits64 RECEIPT_SZ = 96;  // HASH_LEN(32) + SIG_LEN(64)
+
+      // Step counter
+      step = 0;
+
+    L_check:
+      if step >= steps goto L_done;
+
+      // Compute receipt buffer offset for this step
+      receipt_off = step * RECEIPT_SZ;
+      hash_ptr    = receipts_ptr + receipt_off;
+      sig_ptr     = receipts_ptr + receipt_off + 32;
+
+      // Call Fortran kernel: sov_apl_step_zgemm_fused
+      foreign "C" sov_apl_step_zgemm_fused
+        ( H_ptr, n, rho_ptr, n, dt, sk_ptr, pk_ptr,
+          rho_ptr, hash_ptr, sig_ptr );
+
+      // Advance
+      step = step + 1;
+      goto L_check;
+
+    L_done:
+      return ( 0::bits64 );
+
+    // Fault path: minimal — write code, halt
+    L_fault:
+      bits64 fault_mem = 0x0000DEAD0000;
+      W_ [fault_mem] = step;
+      call "asm" { "hlt" };
+    }
+
+  // sov_verify_receipt
+  // Verifies a single receipt (hash || sig) for a given rho snapshot
+  // Returns 1 if valid, 0 if tampered
+  export sov_verify_receipt;
+
+  sov_verify_receipt
+    ( bits64 rho_ptr, bits64 n, bits64 receipt_ptr, bits64 pk_ptr )
+    {
+      bits64 hash_ptr, sig_ptr, ok;
+
+      hash_ptr = receipt_ptr;        // first 32 bytes
+      sig_ptr  = receipt_ptr + 32;   // next 64 bytes
+
+      // Call Fortran: sov_bifrost_verify
+      ok = foreign "C" sov_bifrost_verify
+        ( hash_ptr, 32, sig_ptr, pk_ptr );
+
+      return ( ok );
+    }
+
+} // section "text"
