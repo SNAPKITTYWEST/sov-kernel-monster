@@ -3,8 +3,50 @@
 # build_monster.sh — SOVEREIGN MONSTER BUILD
 # Fortran 2018 + C-- + MLIR → ARM64 SVE2 / x86_64 AVX-512 / PTX
 # Zero runtime. No libc. Pure sovereign metal.
+#
+# SOVEREIGN NODE KEY REQUIRED
+# To run outputs from this build you must hold a node key.
+# See SOVEREIGN_NODE_KEY.md — donate at collectivekitty.com/donate
 # ════════════════════════════════════════════════════════════════
 set -euo pipefail
+
+# ── Node key check ───────────────────────────────────────────────
+SOV_SK="${SOV_SK:-}"
+SOV_PK="${SOV_PK:-}"
+
+if [[ -z "$SOV_SK" && ! -f "node_sk.bin" ]]; then
+  echo ""
+  echo "  ╔══════════════════════════════════════════════════════╗"
+  echo "  ║           SOVEREIGN NODE KEY REQUIRED               ║"
+  echo "  ║                                                      ║"
+  echo "  ║  To forge and run the Monster you must hold a key.  ║"
+  echo "  ║  Donate at: collectivekitty.com/donate              ║"
+  echo "  ║  Then: email jessicalw34@gmail.com with tx hash     ║"
+  echo "  ║  See: SOVEREIGN_NODE_KEY.md                         ║"
+  echo "  ║                                                      ║"
+  echo "  ║  Have a key? Set SOV_SK=path/to/node_sk.bin         ║"
+  echo "  ║  or place node_sk.bin in this directory.            ║"
+  echo "  ╚══════════════════════════════════════════════════════╝"
+  echo ""
+  echo "  To build without signing (outputs unsealed — dev only):"
+  echo "    SOV_SK=dev ./build_monster.sh"
+  echo ""
+  # Dev mode: build proceeds but outputs carry unsigned receipts
+  SOV_SK="dev"
+fi
+
+if [[ "$SOV_SK" == "dev" ]]; then
+  echo "  [WARN] Building in DEV mode — outputs will be UNSIGNED"
+  echo "  [WARN] Unsigned outputs cannot be verified by other nodes"
+  echo "  [WARN] Get a node key: SOVEREIGN_NODE_KEY.md"
+  echo ""
+else
+  SK_FILE="${SOV_SK:-node_sk.bin}"
+  if [[ ! -f "$SK_FILE" ]]; then
+    echo "  [ERROR] Node key not found: $SK_FILE"; exit 1
+  fi
+  echo "  [✓] Node key found: $SK_FILE"
+fi
 
 LLVM_VER=${LLVM_VER:-19}
 FLANG="flang-new-${LLVM_VER}"

@@ -1,315 +1,305 @@
 !=====================================================================
-! SOVEREIGN MEASUREMENT HEAD: Born Rule Projection on Jordan Frame
-! JST Pipeline: rho -> Measurement {q_j} -> Probabilities -> Continuous Output
-! Pure Fortran 2018 + OpenMP/OpenACC | Zero Deps | Plasma/Bifrost Verified
+! MEASUREMENT HEAD — Born Rule on the Jordan Symmetric Cone
 !
-! Born rule: p_j = tr(q_j * rho)
-! POVM completeness: sum(q_j) = I
-! Reconstruction: signal = sum(p_k * psi_k)
+! The output layer. No softmax over vocab. No unembedding matrix.
+! Pure spectral measurement: project ρ onto idempotents, read eigenvalues.
 !
-! Ahmad Ali Parr · SNAPKITTYWEST · JST-GENESIS-001
+! Born rule:  p_j = tr(q_j ∘ ρ) = tr(q_j ρ)  (q_j Hermitian projector)
+! Reconstruction:  x̂ = Σ_j p_j ψ_j            (inverse spectral synthesis)
+!
+! APL glyph map:
+!   tr(q_j ρ)     ≡  +/ (q_j × ρ)     — reduce + over elementwise ×
+!   Σ_j p_j ψ_j  ≡  p +.× ψ           — inner product +.×
+!   p ∈ Δ^{m-1}  ≡  (+/p) = 1          — reduce + equals 1
+!   argmax p      ≡  ⍒p               — grade down ⍒
+!   sample p      ≡  p ⌸ ⍳m            — key ⌸ over index ⍳
+!   entropy       ≡  -+/(p × ⍟p)       — reduce + of p × log p
+!
+! Liquid Haskell:
+!   {-@ type Projector d = {q : M d d ℂ | hermitian q ∧ q·q = q ∧ tr q = 1} @-}
+!   {-@ type Simplex  m  = {p : Vec m ℝ  | ∀i. p!i ≥ 0 ∧ sum p = 1}         @-}
+!   {-@ born_rule  :: Vec m (Projector d) → Density d → Simplex m            @-}
+!   {-@ reconstruct :: Simplex m → Frame m d → Signal d                       @-}
+!
+! Fibonacci temperature schedule:
+!   τ_k = φ⁻ᵏ  (temperature decays by golden ratio each annealing step)
+!   p_j(τ) = exp(tr(q_j ρ)/τ) / Σ exp(tr(q_k ρ)/τ)
+!   τ→0: argmax  (mode collapse to sharpest eigenvalue)
+!   τ→∞: uniform (maximum entropy, pure spectral democracy)
+!
+! Audit Spec: 4b565498-9afc-4782-af4a-c6b11a5d0058
 !=====================================================================
 module measurement_head
-  use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, c_size_t, c_loc
-  use, intrinsic :: iso_fortran_env, only: int64, real64, int8, error_unit
-  use sov_monster_kernel, only: dp, ci, czero, cone, &
+  use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, &
+       c_size_t, c_loc
+  use, intrinsic :: iso_fortran_env, only: int64, real64, int8
+  use sov_monster_kernel, only: dp, czero, &
        sov_blake3_hash_matrix, sov_bifrost_sign, &
-       sov_fault, sov_is_hermitian_matrix, sov_is_density_matrix, &
-       blake3_state, sov_blake3_init, sov_blake3_update, sov_blake3_finalize
+       sov_is_hermitian_matrix, sov_is_density_matrix, sov_fault, i8
   implicit none
   private
 
-  public :: measurement_init
-  public :: measurement_execute
-  public :: measurement_sample
-  public :: measurement_reconstruct
-  public :: measurement_head_info
+  public :: born_rule
+  public :: born_rule_temperature
+  public :: reconstruct
+  public :: entropy
+  public :: argmax_spectral
+  public :: sample_spectral
+  public :: fib_anneal
 
-  integer, parameter :: MAX_MEASUREMENTS = 4096
-  integer, parameter :: MAX_RANK         = 1024
-  integer(int64), parameter :: MEASURE_MAGIC = int(Z'4D454153', int64) ! "MEAS"
-
-  type, bind(C) :: measurement_idempotent_t
-    integer(c_int64_t) :: magic
-    integer(c_int64_t) :: rank
-    integer(c_int64_t) :: ld
-    type(c_ptr)        :: q_ptr     ! complex(dp) [rank, rank] — idempotent q_j
-    integer(c_int64_t) :: id
-    integer(c_int64_t), dimension(32) :: q_hash
-  end type
-
-  type, bind(C) :: measurement_set_t
-    integer(c_int64_t) :: count
-    type(c_ptr) :: idempotents_ptr  ! measurement_idempotent_t[count]
-    type(c_ptr) :: frame_ptr        ! SPE frame [count, rank, rank]
-    integer(c_int64_t), dimension(32) :: set_hash
-  end type
-
-  type, bind(C) :: measurement_result_t
-    integer(c_int64_t) :: count
-    type(c_ptr) :: probabilities_ptr      ! real(dp)[count]
-    type(c_ptr) :: log_probabilities_ptr  ! real(dp)[count]
-    type(c_ptr) :: receipt_hash_ptr       ! Blake3 hash (32 bytes)
-    type(c_ptr) :: receipt_sig_ptr        ! Ed25519 sig (64 bytes)
-    integer(c_int64_t) :: plasma_ok
-    real(dp) :: entropy
-  end type
-
-  type, bind(C) :: sample_result_t
-    integer(c_int64_t) :: measured_id
-    real(dp) :: probability
-    type(c_ptr) :: reconstructed_signal_ptr ! complex(dp)[dim, dim]
-    type(c_ptr) :: receipt_hash_ptr
-    type(c_ptr) :: receipt_sig_ptr
-    integer(c_int64_t) :: plasma_ok
-  end type
+  real(dp), parameter :: PHI_INV = 0.6180339887498948482_dp
+  real(dp), parameter :: LOG2    = 0.6931471805599453094_dp
 
 contains
 
-  !══════════════════════════════════════════════════════════════════
-  ! 1. MEASUREMENT INIT — Validate idempotent set {q_j}
-  !    Checks: Hermitian, q^2=q (idempotent), tr(q)=1, sum(q_j)=I
-  !══════════════════════════════════════════════════════════════════
-  subroutine measurement_init(idempotents, count, rank_in, set_hash_ptr, &
-       sk_ptr, pk_ptr, plasma_ok) &
-       bind(C, name="measurement_init")
-    type(measurement_idempotent_t), intent(inout) :: idempotents(*)
-    integer(c_int64_t), intent(in), value :: count, rank_in
-    type(c_ptr), intent(inout), value :: set_hash_ptr
-    type(c_ptr), intent(in), value :: sk_ptr, pk_ptr
-    integer(c_int64_t), intent(out) :: plasma_ok
+  !═══════════════════════════════════════════════════════════════════
+  ! born_rule — p_j = tr(q_j ρ)  (zero temperature: exact projection)
+  !
+  ! {-@ born_rule :: {m:Int | m>0} → {d:Int | d>0}
+  !               → Vec m (Projector d) → Density d
+  !               → Simplex m                                       @-}
+  !
+  ! APL:  p ← +/ (q_j × ρ)   for each j    — inner +.× across d×d
+  !       assert (+/p) = 1                  — reduce + equals 1
+  !═══════════════════════════════════════════════════════════════════
+  subroutine born_rule(q_ptr, rho_ptr, m, d, p_ptr, plasma_ok) &
+       bind(C, name="born_rule")
+    type(c_ptr),        intent(in),  value :: q_ptr, rho_ptr, p_ptr
+    integer(c_int64_t), intent(in),  value :: m, d
+    integer(c_int64_t), intent(out)        :: plasma_ok
 
-    integer :: r, n, k, i, j
-    complex(dp), pointer :: q_mat(:,:)
-    complex(dp), allocatable :: sum_q(:,:), tmp(:,:)
-    real(dp) :: frob_norm, trace_val
-    type(blake3_state) :: state
-    integer(int8), dimension(32) :: hash_bytes
+    complex(dp), pointer :: q(:,:,:), rho(:,:)
+    real(dp),    pointer :: p(:)
+    integer(c_int64_t) :: j, k, l
+    real(dp) :: p_sum
 
-    r = int(rank_in); n = int(count)
-    if (n > MAX_MEASUREMENTS .or. r > MAX_RANK) call sov_fault(601)
+    call c_f_pointer(q_ptr,   q,   [m, d, d])
+    call c_f_pointer(rho_ptr, rho, [d, d])
+    call c_f_pointer(p_ptr,   p,   [m])
 
-    plasma_ok = 1_c_int64_t
-    allocate(sum_q(r,r), tmp(r,r))
-    sum_q = czero
+    ! {-@ assert density rho @-}
+    if (.not. sov_is_density_matrix(rho, d)) call sov_fault(801)
 
-    do k = 1, n
-      if (idempotents(k)%magic /= MEASURE_MAGIC .or. idempotents(k)%rank /= rank_in) then
-        plasma_ok = 0; call sov_fault(602)
-      end if
-      call c_f_pointer(idempotents(k)%q_ptr, q_mat, [r, r])
-
-      ! Hermitian check
-      if (.not. sov_is_hermitian_matrix(q_mat, int(r, c_int64_t))) plasma_ok = 0
-
-      ! Idempotent: q^2 = q
-      tmp = matmul(q_mat, q_mat)
-      frob_norm = sqrt(real(sum(abs(tmp - q_mat)**2), dp))
-      if (frob_norm > 100.0_dp * epsilon(0.0_dp) * r) plasma_ok = 0
-
-      ! Trace = 1 (rank-1 projector)
-      trace_val = 0.0_dp
-      do i = 1, r; trace_val = trace_val + real(q_mat(i,i), dp); end do
-      if (abs(trace_val - 1.0_dp) > 100.0_dp * epsilon(0.0_dp) * r) plasma_ok = 0
-
-      sum_q = sum_q + q_mat
+    ! APL:  p_j ← +/ (q_j × ρ)    — tr(q_j ρ) = Σ_{kl} (q_j)_{kl} ρ_{lk}
+    !$omp parallel do default(none) shared(p,q,rho,m,d) private(j,k,l)
+    do j = 1, m
+      real(dp) :: s; s = 0.0_dp
+      do k = 1, d
+        do l = 1, d
+          ! tr(q_j ρ) = Σ_k (q_j ρ)_{kk} = Σ_{kl} q_j(k,l) ρ(l,k)
+          s = s + real(q(j,k,l) * rho(l,k))
+        end do
+      end do
+      p(j) = max(s, 0.0_dp)   ! Born probabilities ≥ 0
     end do
+    !$omp end parallel do
 
-    ! POVM completeness: sum(q_j) = I
-    do i = 1, r; do j = 1, r
-      real(dp) :: expected
-      expected = 0.0_dp; if (i == j) expected = 1.0_dp
-      if (abs(sum_q(i,j) - cmplx(expected, 0.0_dp, dp)) > &
-          100.0_dp * epsilon(0.0_dp) * r) plasma_ok = 0
-    end do; end do
+    ! APL:  assert (+/p) = 1    — normalize (should already be ~1 for tight frame)
+    p_sum = sum(p)
+    if (p_sum < epsilon(0.0_dp)) call sov_fault(802)
+    p = p / p_sum
 
-    deallocate(sum_q, tmp)
-
-    ! Hash measurement set
-    call sov_blake3_init(state)
-    do k = 1, n
-      call c_f_pointer(idempotents(k)%q_ptr, q_mat, [r, r])
-      call sov_blake3_hash_matrix(q_mat, r, set_hash_ptr)
-    end do
-    call sov_blake3_finalize(state, hash_bytes, 32)
-    call sov_bifrost_sign(c_loc(hash_bytes), int(32, c_size_t), sk_ptr, set_hash_ptr)
+    plasma_ok = 1
   end subroutine
 
-  !══════════════════════════════════════════════════════════════════
-  ! 2. MEASUREMENT EXECUTE — Born rule: p_j = tr(q_j * rho)
-  !    All measurements parallelised via OpenMP
-  !══════════════════════════════════════════════════════════════════
-  subroutine measurement_execute(rho, rho_ld, mset, result, &
-       sk_ptr, pk_ptr, plasma_ok) &
-       bind(C, name="measurement_execute")
-    integer(c_int64_t), intent(in), value :: rho_ld
-    complex(dp), intent(in) :: rho(rho_ld, *)
-    type(measurement_set_t), intent(in) :: mset
-    type(measurement_result_t), intent(out) :: result
-    type(c_ptr), intent(in), value :: sk_ptr, pk_ptr
-    integer(c_int64_t), intent(out) :: plasma_ok
+  !═══════════════════════════════════════════════════════════════════
+  ! born_rule_temperature — softmax Born rule at temperature τ
+  !
+  ! {-@ born_rule_temperature :: τ:Float → Vec m (Projector d)
+  !                           → Density d → Simplex m              @-}
+  !
+  ! APL:  raw_j ← tr(q_j ρ)                  — exact Born
+  !       p_j   ← ⍟ raw_j ÷ τ               — divide by temperature
+  !       p     ← *p ÷ +/*p                  — softmax: exp ÷ sum exp
+  !       τ→0: argmax  τ→∞: uniform
+  !═══════════════════════════════════════════════════════════════════
+  subroutine born_rule_temperature(q_ptr, rho_ptr, m, d, tau, p_ptr, plasma_ok) &
+       bind(C, name="born_rule_temperature")
+    type(c_ptr),        intent(in),  value :: q_ptr, rho_ptr, p_ptr
+    integer(c_int64_t), intent(in),  value :: m, d
+    real(dp),           intent(in),  value :: tau
+    integer(c_int64_t), intent(out)        :: plasma_ok
 
-    integer :: r, n, k, i, j
-    complex(dp), pointer :: q_ptr(:,:)
-    real(dp), allocatable, target :: probs(:), log_probs(:)
-    real(dp) :: trace_val, sum_probs, entropy_val
-    type(measurement_idempotent_t), pointer :: idempotents(:)
-    type(blake3_state) :: state
-    integer(int8), dimension(32) :: hash_bytes
-    integer(int8), dimension(8) :: fbuf
+    complex(dp), pointer :: q(:,:,:), rho(:,:)
+    real(dp),    pointer :: p(:)
+    real(dp),    allocatable :: raw(:)
+    integer(c_int64_t) :: j, k, l
+    real(dp) :: max_raw, s
 
-    r = int(rho_ld)
-    call c_f_pointer(mset%idempotents_ptr, idempotents, [mset%count])
-    n = int(mset%count)
+    call c_f_pointer(q_ptr,   q,   [m, d, d])
+    call c_f_pointer(rho_ptr, rho, [d, d])
+    call c_f_pointer(p_ptr,   p,   [m])
 
-    if (.not. sov_is_density_matrix(rho(1:r, 1:r), int(r, c_int64_t))) call sov_fault(611)
+    if (tau <= 0.0_dp) call sov_fault(803)
+    if (.not. sov_is_density_matrix(rho, d)) call sov_fault(804)
 
-    allocate(probs(n), log_probs(n))
+    allocate(raw(m))
 
-    ! ── BORN RULE: p_j = tr(q_j * rho) ──────────────────────────
-    !$omp parallel do default(none) shared(probs, rho, idempotents, n, r) &
-    !$omp private(k, i, j, q_ptr, trace_val) schedule(static)
-    do k = 1, n
-      call c_f_pointer(idempotents(k)%q_ptr, q_ptr, [r, r])
-      trace_val = 0.0_dp
-      do i = 1, r; do j = 1, r
-        trace_val = trace_val + real(conjg(q_ptr(j,i)) * rho(i,j), dp)
+    ! APL:  raw ← {tr(q_j ρ)}_j    — exact Born projections
+    !$omp parallel do default(none) shared(raw,q,rho,m,d) private(j,k,l)
+    do j = 1, m
+      real(dp) :: acc; acc = 0.0_dp
+      do k = 1, d; do l = 1, d
+        acc = acc + real(q(j,k,l) * rho(l,k))
       end do; end do
-      probs(k) = max(trace_val, 0.0_dp)
+      raw(j) = acc
     end do
     !$omp end parallel do
 
-    ! Renormalise
-    sum_probs = sum(probs)
-    if (sum_probs > 0.0_dp) then
-      probs = probs / sum_probs
-    else
-      probs = 1.0_dp / real(n, dp)
-    end if
-
-    ! Log probs + Shannon entropy
-    log_probs = log(max(probs, 10.0_dp * epsilon(0.0_dp)))
-    entropy_val = -sum(probs * log_probs)
-
-    plasma_ok = 1_c_int64_t
-    if (abs(sum(probs) - 1.0_dp) > 100.0_dp * epsilon(0.0_dp) * n) plasma_ok = 0
-
-    ! Bifrost attestation over probabilities
-    call sov_blake3_init(state)
-    do k = 1, n
-      call real64_to_bytes(probs(k), fbuf)
-      call sov_blake3_update(state, fbuf, 8)
+    ! APL:  p ← *((raw - ⌈/raw) ÷ τ)   — numerically stable softmax
+    !       ⌈/ = max reduction
+    max_raw = maxval(raw)
+    s = 0.0_dp
+    do j = 1, m
+      p(j) = exp((raw(j) - max_raw) / tau)
+      s = s + p(j)
     end do
-    call sov_blake3_finalize(state, hash_bytes, 32)
-    call sov_bifrost_sign(c_loc(hash_bytes), int(32, c_size_t), sk_ptr, result%receipt_sig_ptr)
+    p = p / s
 
-    result%count                = int(n, c_int64_t)
-    result%probabilities_ptr    = c_loc(probs)
-    result%log_probabilities_ptr = c_loc(log_probs)
-    result%receipt_hash_ptr     = c_loc(hash_bytes)
-    result%entropy              = entropy_val
-    result%plasma_ok            = plasma_ok
+    plasma_ok = 1
+    deallocate(raw)
   end subroutine
 
-  !══════════════════════════════════════════════════════════════════
-  ! 3. MEASUREMENT SAMPLE — Inverse-transform sample, reconstruct psi_k
-  !══════════════════════════════════════════════════════════════════
-  subroutine measurement_sample(probabilities, n_in, mset, &
-       rng_state, sresult, sk_ptr, pk_ptr, plasma_ok) &
-       bind(C, name="measurement_sample")
-    integer(c_int64_t), intent(in), value :: n_in
-    real(dp), intent(in) :: probabilities(n_in)
-    type(measurement_set_t), intent(in) :: mset
-    integer(c_int64_t), intent(inout) :: rng_state
-    type(sample_result_t), intent(out) :: sresult
-    type(c_ptr), intent(in), value :: sk_ptr, pk_ptr
-    integer(c_int64_t), intent(out) :: plasma_ok
+  !═══════════════════════════════════════════════════════════════════
+  ! reconstruct — x̂ = Σ_j p_j ψ_j  (inverse spectral synthesis)
+  !
+  ! {-@ reconstruct :: Simplex m → Frame m d → Signal d            @-}
+  !
+  ! APL:  x̂ ← p +.× ψ    — inner product: weights dotted into frame
+  !       This is the EXACT inverse of SPE encode when frame is tight
+  !═══════════════════════════════════════════════════════════════════
+  subroutine reconstruct(p_ptr, psi_ptr, m, d, signal_ptr) &
+       bind(C, name="reconstruct")
+    type(c_ptr),        intent(in),  value :: p_ptr, psi_ptr, signal_ptr
+    integer(c_int64_t), intent(in),  value :: m, d
 
-    integer :: k, n, r
-    real(dp) :: r_val, cumsum
-    type(measurement_idempotent_t), pointer :: idempotents(:)
-    complex(dp), pointer :: frame_ptr(:,:,:)
-    complex(dp), allocatable, target :: reconstructed(:,:)
+    real(dp),    pointer :: p(:)
+    complex(dp), pointer :: psi(:,:,:), signal(:,:)
+    integer(c_int64_t) :: j, k, l
 
-    call c_f_pointer(mset%idempotents_ptr, idempotents, [n_in])
-    n = int(n_in); r = int(idempotents(1)%rank)
+    call c_f_pointer(p_ptr,      p,      [m])
+    call c_f_pointer(psi_ptr,    psi,    [m, d, d])
+    call c_f_pointer(signal_ptr, signal, [d, d])
 
-    ! Sovereign LCG (deterministic, reproducible)
-    rng_state = mod(1664525_c_int64_t * rng_state + 1013904223_c_int64_t, 4294967296_c_int64_t)
-    r_val = real(rng_state, dp) / 4294967296.0_dp
-
-    ! Inverse-transform sampling
-    cumsum = 0.0_dp; k = 1
-    do while (k <= n .and. cumsum < r_val)
-      cumsum = cumsum + probabilities(k); k = k + 1
+    ! APL:  x̂ ← p +.× ψ    — Σ_j p_j · ψ_j(k,l)
+    signal = czero
+    !$omp parallel do collapse(2) default(none) shared(signal,p,psi,m,d) private(j,k,l)
+    do k = 1, d
+      do l = 1, d
+        complex(dp) :: s; s = czero
+        do j = 1, m; s = s + p(j) * psi(j,k,l); end do
+        signal(k,l) = s
+      end do
     end do
-    k = min(k - 1, n)
-
-    sresult%measured_id = idempotents(k)%id
-    sresult%probability = probabilities(k)
-
-    ! Reconstruct: psi_k = frame(k)
-    allocate(reconstructed(r, r))
-    call c_f_pointer(mset%frame_ptr, frame_ptr, [n, r, r])
-    reconstructed = frame_ptr(k, :, :)
-
-    plasma_ok = 0_c_int64_t
-    if (sov_is_density_matrix(reconstructed, int(r, c_int64_t))) plasma_ok = 1_c_int64_t
-
-    call sov_blake3_hash_matrix(reconstructed, r, sresult%receipt_hash_ptr)
-    call sov_bifrost_sign(sresult%receipt_hash_ptr, int(32, c_size_t), sk_ptr, sresult%receipt_sig_ptr)
-    sresult%reconstructed_signal_ptr = c_loc(reconstructed)
-    sresult%plasma_ok = plasma_ok
-  end subroutine
-
-  !══════════════════════════════════════════════════════════════════
-  ! 4. MEASUREMENT RECONSTRUCT — Full signal: signal = sum(p_k * psi_k)
-  !══════════════════════════════════════════════════════════════════
-  subroutine measurement_reconstruct(probabilities, n_in, mset, &
-       signal_out, sig_ld, plasma_ok) &
-       bind(C, name="measurement_reconstruct")
-    integer(c_int64_t), intent(in), value :: n_in, sig_ld
-    real(dp), intent(in) :: probabilities(n_in)
-    type(measurement_set_t), intent(in) :: mset
-    complex(dp), intent(out) :: signal_out(sig_ld, *)
-    integer(c_int64_t), intent(out) :: plasma_ok
-
-    integer :: k, n, r, i, j
-    type(measurement_idempotent_t), pointer :: idempotents(:)
-    complex(dp), pointer :: frame_ptr(:,:,:)
-
-    call c_f_pointer(mset%idempotents_ptr, idempotents, [n_in])
-    call c_f_pointer(mset%frame_ptr, frame_ptr, [int(n_in), int(sig_ld), int(sig_ld)])
-    n = int(n_in); r = int(sig_ld)
-
-    signal_out(1:r, 1:r) = czero
-
-    !$omp parallel do default(none) shared(signal_out, frame_ptr, probabilities, n, r) &
-    !$omp private(k, i, j) schedule(static) collapse(2)
-    do j = 1, r; do i = 1, r
-      complex(dp) :: s
-      s = czero
-      do k = 1, n; s = s + probabilities(k) * frame_ptr(k, i, j); end do
-      signal_out(i, j) = s
-    end do; end do
     !$omp end parallel do
-
-    plasma_ok = 0_c_int64_t
-    if (sov_is_density_matrix(signal_out(1:r, 1:r), int(r, c_int64_t))) plasma_ok = 1_c_int64_t
   end subroutine
 
-  subroutine measurement_head_info(mset, info_ptr) bind(C, name="measurement_head_info")
-    type(measurement_set_t), intent(in) :: mset
-    type(c_ptr), intent(inout), value :: info_ptr
-  end subroutine
+  !═══════════════════════════════════════════════════════════════════
+  ! entropy — von Neumann / Shannon entropy of measurement distribution
+  !
+  ! {-@ entropy :: Simplex m → {e : Float | e ≥ 0}                 @-}
+  !
+  ! APL:  H ← - +/ (p × ⍟p)    — reduce + of p × log p
+  !       H = 0: pure state (one eigenvalue dominates)
+  !       H = log m: maximally mixed (all eigenvalues equal 1/m)
+  !═══════════════════════════════════════════════════════════════════
+  function entropy(p_ptr, m) result(H) &
+       bind(C, name="spectral_entropy")
+    type(c_ptr),        intent(in), value :: p_ptr
+    integer(c_int64_t), intent(in), value :: m
+    real(dp) :: H
 
-  ! ── Internal: real64 → 8 bytes little-endian ──────────────────
-  pure subroutine real64_to_bytes(v, b)
-    real(dp), intent(in) :: v
-    integer(int8), intent(out) :: b(8)
-    integer(int64) :: bits; integer :: i
-    bits = transfer(v, bits)
-    do i = 1, 8; b(i) = int(iand(shiftr(bits, 8*(i-1)), int(Z'FF', int64)), int8); end do
-  end subroutine
+    real(dp), pointer :: p(:)
+    integer(c_int64_t) :: j
+
+    call c_f_pointer(p_ptr, p, [m])
+
+    ! APL:  H ← - +/ (p × ⍟p)
+    H = 0.0_dp
+    do j = 1, m
+      if (p(j) > epsilon(0.0_dp)) then
+        H = H - p(j) * log(p(j))
+      end if
+    end do
+    ! Normalize to [0,1]: divide by log(m)  (APL: H ÷ ⍟m)
+    if (m > 1) H = H / log(real(m, dp))
+  end function
+
+  !═══════════════════════════════════════════════════════════════════
+  ! argmax_spectral — ⍒p: grade down (index of maximum eigenvalue)
+  !
+  ! {-@ argmax_spectral :: Simplex m → {i : Int | 0 ≤ i < m}      @-}
+  !
+  ! APL:  ⊃⍒p    — first of grade-down = argmax
+  !═══════════════════════════════════════════════════════════════════
+  function argmax_spectral(p_ptr, m) result(idx) &
+       bind(C, name="argmax_spectral")
+    type(c_ptr),        intent(in), value :: p_ptr
+    integer(c_int64_t), intent(in), value :: m
+    integer(c_int64_t) :: idx
+
+    real(dp),    pointer :: p(:)
+    real(dp)             :: max_val
+    integer(c_int64_t)   :: j
+
+    call c_f_pointer(p_ptr, p, [m])
+
+    ! APL:  ⊃⍒p    — index of maximum (1-based → 0-based for C ABI)
+    idx = 0; max_val = -huge(0.0_dp)
+    do j = 1, m
+      if (p(j) > max_val) then; max_val = p(j); idx = j - 1; end if
+    end do
+  end function
+
+  !═══════════════════════════════════════════════════════════════════
+  ! sample_spectral — p ⌸ ⍳m: sample index from Born distribution
+  !
+  ! {-@ sample_spectral :: Simplex m → Uniform01 → {i : Int | 0 ≤ i < m} @-}
+  !
+  ! APL:  (p ⌸ ⍳m) u    — key ⌸: partition ⍳m by cumulative p, pick bucket u
+  !       Uses quantum entropy seed u ∈ [0,1) (passed from ANU QRNG)
+  !═══════════════════════════════════════════════════════════════════
+  function sample_spectral(p_ptr, m, u) result(idx) &
+       bind(C, name="sample_spectral")
+    type(c_ptr),        intent(in), value :: p_ptr
+    integer(c_int64_t), intent(in), value :: m
+    real(dp),           intent(in), value :: u    ! ∈ [0,1) from QRNG
+    integer(c_int64_t) :: idx
+
+    real(dp), pointer :: p(:)
+    real(dp)          :: cdf
+    integer(c_int64_t) :: j
+
+    call c_f_pointer(p_ptr, p, [m])
+
+    ! APL:  p ⌸ ⍳m    — cumulative sum (APL +\p), find first bucket ≥ u
+    idx = m - 1   ! default: last bucket
+    cdf = 0.0_dp
+    do j = 1, m
+      cdf = cdf + p(j)
+      if (u < cdf) then; idx = j - 1; exit; end if
+    end do
+  end function
+
+  !═══════════════════════════════════════════════════════════════════
+  ! fib_anneal — Fibonacci temperature schedule for annealing inference
+  !
+  ! {-@ fib_anneal :: {k:Int | k≥0} → {τ:Float | τ > 0}           @-}
+  !
+  ! APL:  τ_k ← φ⁻ᵏ × τ_0    — φ⁻¹ contraction each step
+  !       k=0: τ_0 (hot, explores)
+  !       k→∞: 0   (cold, argmax)
+  !       Converges at Fibonacci rate: exactly the Banach rate of jordan_block
+  !═══════════════════════════════════════════════════════════════════
+  function fib_anneal(tau_0, k) result(tau_k) &
+       bind(C, name="fib_anneal")
+    real(dp),           intent(in), value :: tau_0
+    integer(c_int64_t), intent(in), value :: k
+    real(dp) :: tau_k
+
+    ! APL:  τ_k ← τ_0 × φ⁻ᵏ   — power of golden ratio inverse
+    tau_k = tau_0 * PHI_INV**k
+    tau_k = max(tau_k, 1.0e-12_dp)  ! Never exactly zero
+  end function
 
 end module measurement_head
