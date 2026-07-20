@@ -279,7 +279,7 @@ contains
         end if
         
         ! Simplified: return diagonal elements
-        ! Full implementation would use LAPACK eigenvalue solver
+        ! Full implementation would ! use LAPACK  ! removed: zero-dep build eigenvalue solver
         do i = 1, this%dim
             eigenvalues(i) = real(this%matrix(i,i))
         end do

@@ -149,7 +149,7 @@ opaque reconstruct (pPtr psiPtr : CPtr) (m d : Int64)
     (signalPtr : CPtr) : Unit
 
 /-- H = -Σ p log p / log m ∈ [0,1].                               -/
-@[extern "spectral_entropy"]
+@[extern "entropy"]
 opaque spectralEntropy (pPtr : CPtr) (m : Int64) : Float
 
 /-- ⊃⍒p — index of maximum probability (0-based).                 -/

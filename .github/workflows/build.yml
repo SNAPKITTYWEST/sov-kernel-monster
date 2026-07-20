@@ -1,0 +1,126 @@
+name: Build All Languages
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      # Cache paths
+      CARGO_HOME: ${{ github.workspace }}/.cargo
+      RUSTUP_HOME: ${{ github.workspace }}/.rustup
+      JULIA_DEPOT_PATH: ${{ github.workspace }}/.julia
+      R_LIBS_USER: ${{ github.workspace }}/.Rpackages
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install system dependencies (gfortran, cmake, etc.)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran cmake libssl-dev pkg-config
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Setup Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: '1.10'
+          arch: x64
+
+      - name: Cache Julia depot
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.JULIA_DEPOT_PATH }}
+          key: ${{ runner.os }}-julia-${{ hashFiles('**/Project.toml', '**/Manifest.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-julia-
+
+      - name: Setup Elixir (and Erlang)
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.16'
+          otp-version: '26.2'
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Cache R packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-${{ hashFiles('**/DESCRIPTION') }}
+          restore-keys: |
+            ${{ runner.os }}-r-
+
+      - name: Install Lake via Elan (Lean 4)
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+          elan component add lake
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: CMake Build (C/C++/Fortran)
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --parallel $(nproc)
+
+      - name: Cargo Build (Rust)
+        run: cargo build --release --workspace --all-targets
+
+      - name: FPM Test (Fortran)
+        run: |
+          if command -v fpm &> /dev/null; then
+            fpm test --profile release
+          else
+            echo "fpm not found, skipping Fortran tests."
+            echo "Install fpm via: curl -fsSL https://fpm.fortran-lang.org/install.sh | bash"
+          fi
+
+      - name: Julia Test
+        run: |
+          julia --project -e 'using Pkg; Pkg.test()'
+
+      - name: Mix Test (Elixir)
+        run: |
+          mix deps.get
+          mix test
+
+      - name: R CMD Check
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+
+      - name: Lake Build (Lean 4)
+        run: lake build

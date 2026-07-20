@@ -371,7 +371,7 @@ contains
             return
         end if
         
-        ! Simplified: use trace of ρ² as entanglement measure
+        ! Simplified: ! use trace  ! inlined of ρ² as entanglement measure
         entanglement = ZERO
         do i = 1, dim_a
             do j = 1, dim_a

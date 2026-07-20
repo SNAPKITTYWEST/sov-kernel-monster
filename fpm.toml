@@ -1,0 +1,16 @@
+name = "sov-kernel-monster"
+version = "1.0.0"
+license = "Apache-2.0"
+
+[build]
+auto-executables = false
+auto-tests = true
+
+[fortran]
+implicit-typing = false
+implicit-external = false
+source-form = "free"
+flags = ["-O3", "-march=native", "-fPIC", "-std=f2018"]
+
+[library]
+source-dir = "src"
