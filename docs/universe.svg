@@ -1,0 +1,265 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="900" height="500">
+  <defs>
+    <radialGradient id="cosmos" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#060c18"/>
+      <stop offset="100%" stop-color="#010205"/>
+    </radialGradient>
+    <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00d4cc" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#0af" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0af" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="plasma-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d36bff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur-sm">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <filter id="blur-md">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="blur-lg">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="glow-teal">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background cosmos -->
+  <rect width="900" height="500" fill="url(#cosmos)"/>
+
+  <!-- Star field — static small stars -->
+  <g fill="white" opacity="0.6">
+    <circle cx="45"  cy="23"  r="0.7"/><circle cx="120" cy="67"  r="0.5"/>
+    <circle cx="200" cy="15"  r="0.8"/><circle cx="310" cy="44"  r="0.5"/>
+    <circle cx="445" cy="28"  r="0.6"/><circle cx="520" cy="80"  r="0.7"/>
+    <circle cx="630" cy="19"  r="0.5"/><circle cx="720" cy="55"  r="0.8"/>
+    <circle cx="810" cy="30"  r="0.6"/><circle cx="870" cy="70"  r="0.5"/>
+    <circle cx="60"  cy="140" r="0.6"/><circle cx="155" cy="180" r="0.5"/>
+    <circle cx="270" cy="120" r="0.7"/><circle cx="390" cy="160" r="0.5"/>
+    <circle cx="480" cy="130" r="0.6"/><circle cx="590" cy="155" r="0.8"/>
+    <circle cx="700" cy="115" r="0.5"/><circle cx="800" cy="145" r="0.6"/>
+    <circle cx="855" cy="110" r="0.7"/><circle cx="30"  cy="260" r="0.5"/>
+    <circle cx="100" cy="310" r="0.6"/><circle cx="220" cy="280" r="0.7"/>
+    <circle cx="340" cy="300" r="0.5"/><circle cx="680" cy="290" r="0.6"/>
+    <circle cx="770" cy="320" r="0.5"/><circle cx="850" cy="270" r="0.7"/>
+    <circle cx="75"  cy="400" r="0.6"/><circle cx="185" cy="430" r="0.5"/>
+    <circle cx="290" cy="410" r="0.7"/><circle cx="600" cy="390" r="0.5"/>
+    <circle cx="700" cy="440" r="0.6"/><circle cx="830" cy="420" r="0.8"/>
+    <circle cx="410" cy="470" r="0.5"/><circle cx="500" cy="450" r="0.6"/>
+    <circle cx="560" cy="480" r="0.7"/><circle cx="150" cy="490" r="0.5"/>
+  </g>
+
+  <!-- Twinkling stars (animated) -->
+  <circle cx="360" cy="55" r="1.2" fill="white">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="2.3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="740" cy="88" r="1.0" fill="#a0e8ff">
+    <animate attributeName="opacity" values="0.2;0.9;0.2" dur="3.1s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="88" cy="350" r="1.1" fill="white">
+    <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="820" cy="380" r="0.9" fill="#c0d8ff">
+    <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.7s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="460" cy="460" r="1.3" fill="white">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="4.2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Outer nebula ring (slow rotation) -->
+  <g transform="translate(450,250)">
+    <ellipse rx="380" ry="180" fill="none" stroke="#0af" stroke-width="0.4" stroke-opacity="0.12"
+             stroke-dasharray="8 14">
+      <animateTransform attributeName="transform" type="rotate"
+                        from="0" to="360" dur="80s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse rx="320" ry="140" fill="none" stroke="#7c3aed" stroke-width="0.3" stroke-opacity="0.1"
+             stroke-dasharray="5 18">
+      <animateTransform attributeName="transform" type="rotate"
+                        from="360" to="0" dur="60s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+
+  <!-- Lattice grid (vortex lattice visualization, 8x4 cells) -->
+  <g transform="translate(450,250)" opacity="0.18">
+    <line x1="-360" y1="-200" x2="360" y2="-200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="-360" y1="-100" x2="360" y2="-100" stroke="#0af" stroke-width="0.5"/>
+    <line x1="-360" y1="0"    x2="360" y2="0"    stroke="#0af" stroke-width="0.5"/>
+    <line x1="-360" y1="100"  x2="360" y2="100"  stroke="#0af" stroke-width="0.5"/>
+    <line x1="-360" y1="200"  x2="360" y2="200"  stroke="#0af" stroke-width="0.5"/>
+    <line x1="-360" y1="-200" x2="-360" y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="-270" y1="-200" x2="-270" y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="-180" y1="-200" x2="-180" y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="-90"  y1="-200" x2="-90"  y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="0"    y1="-200" x2="0"    y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="90"   y1="-200" x2="90"   y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="180"  y1="-200" x2="180"  y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="270"  y1="-200" x2="270"  y2="200" stroke="#0af" stroke-width="0.5"/>
+    <line x1="360"  y1="-200" x2="360"  y2="200" stroke="#0af" stroke-width="0.5"/>
+  </g>
+
+  <!-- Orbital paths (4 rings) -->
+  <g transform="translate(450,250)">
+    <!-- Ring 1 -->
+    <ellipse rx="80" ry="30" fill="none" stroke="#00d4cc" stroke-width="0.6" stroke-opacity="0.3"/>
+    <!-- Ring 2 -->
+    <ellipse rx="140" ry="55" fill="none" stroke="#0af" stroke-width="0.5" stroke-opacity="0.25"/>
+    <!-- Ring 3 -->
+    <ellipse rx="210" ry="85" fill="none" stroke="#7c3aed" stroke-width="0.4" stroke-opacity="0.2"/>
+    <!-- Ring 4 -->
+    <ellipse rx="290" ry="120" fill="none" stroke="#ffd700" stroke-width="0.3" stroke-opacity="0.15"/>
+  </g>
+
+  <!-- Core plasma glow -->
+  <circle cx="450" cy="250" r="55" fill="url(#core-glow)" filter="url(#blur-md)"/>
+  <circle cx="450" cy="250" r="30" fill="url(#plasma-glow)" filter="url(#blur-sm)">
+    <animate attributeName="r" values="28;34;28" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Core diamond -->
+  <g transform="translate(450,250)">
+    <rect x="-14" y="-14" width="28" height="28" fill="none"
+          stroke="#00d4cc" stroke-width="1.5" transform="rotate(45)">
+      <animateTransform attributeName="transform" type="rotate"
+                        from="45" to="405" dur="12s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="-9" y="-9" width="18" height="18" fill="#00d4cc" opacity="0.25" transform="rotate(45)">
+      <animateTransform attributeName="transform" type="rotate"
+                        from="45" to="-315" dur="8s" repeatCount="indefinite"/>
+    </rect>
+    <circle cx="0" cy="0" r="4" fill="#00d4cc">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Orbital body 1 — BLAKE3 node (teal, ring 1) -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+                      from="0 450 250" to="360 450 250" dur="8s" repeatCount="indefinite"/>
+    <ellipse cx="450" cy="250" rx="80" ry="30" fill="none"/>
+    <circle cx="530" cy="250" r="7" fill="#00d4cc" filter="url(#blur-sm)">
+      <animate attributeName="r" values="6;9;6" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Orbital body 2 — Ed25519 node (purple, ring 2, opposite direction) -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+                      from="360 450 250" to="0 450 250" dur="14s" repeatCount="indefinite"/>
+    <circle cx="590" cy="250" r="6" fill="#d36bff" filter="url(#blur-sm)">
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Orbital body 3 — Hamiltonian node (gold, ring 3) -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+                      from="120 450 250" to="480 450 250" dur="22s" repeatCount="indefinite"/>
+    <circle cx="660" cy="250" r="8" fill="#ffd700" filter="url(#blur-sm)">
+      <animate attributeName="r" values="7;10;7" dur="4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Orbital body 4 — Vortex lattice node (green, ring 4) -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+                      from="240 450 250" to="600 450 250" dur="34s" repeatCount="indefinite"/>
+    <circle cx="740" cy="250" r="5" fill="#00ff88" filter="url(#blur-sm)">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Quantum state probability arcs — animated phase flow -->
+  <g transform="translate(450,250)" fill="none">
+    <path d="M 0,0 Q 60,-40 80,0" stroke="#00d4cc" stroke-width="0.8" stroke-opacity="0.5">
+      <animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="2.4s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 0,0 Q -50,50 -70,20" stroke="#7c3aed" stroke-width="0.8" stroke-opacity="0.5">
+      <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="3.1s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 0,0 Q 30,60 0,80" stroke="#ffd700" stroke-width="0.8" stroke-opacity="0.4">
+      <animate attributeName="stroke-opacity" values="0.2;0.6;0.2" dur="4.0s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 0,0 Q -70,-30 -90,0" stroke="#00ff88" stroke-width="0.8" stroke-opacity="0.4">
+      <animate attributeName="stroke-opacity" values="0.1;0.5;0.1" dur="2.8s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- Vortex winding indicators (topological charges ±1) -->
+  <g transform="translate(450,250)" fill="none">
+    <circle cx="-200" cy="-60" r="12" stroke="#0af" stroke-width="0.8" stroke-opacity="0.5">
+      <animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+    <line x1="-200" y1="-72" x2="-200" y2="-48" stroke="#0af" stroke-width="0.6" stroke-opacity="0.5">
+      <animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3.5s" repeatCount="indefinite"/>
+    </line>
+    <circle cx="160" cy="70" r="10" stroke="#ff4444" stroke-width="0.8" stroke-opacity="0.4">
+      <animate attributeName="stroke-opacity" values="0.1;0.6;0.1" dur="4.2s" repeatCount="indefinite"/>
+    </circle>
+    <line x1="154" y1="70" x2="166" y2="70" stroke="#ff4444" stroke-width="0.6" stroke-opacity="0.4">
+      <animate attributeName="stroke-opacity" values="0.1;0.6;0.1" dur="4.2s" repeatCount="indefinite"/>
+    </line>
+    <circle cx="-100" cy="100" r="11" stroke="#7c3aed" stroke-width="0.8" stroke-opacity="0.4">
+      <animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="2.9s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Module labels -->
+  <g font-family="'Courier New', monospace" font-size="9" fill="#4a6878" letter-spacing="0.5">
+    <text x="16" y="462">bob_kinds.f90</text>
+    <text x="16" y="474">bob_state.f90</text>
+    <text x="16" y="486">bob_gates.f90</text>
+    <text x="110" y="462">bob_lattice.f90</text>
+    <text x="110" y="474">bob_metrics.f90</text>
+    <text x="110" y="486">bob_hamiltonian.f90</text>
+    <text x="230" y="462">bob_integrator.f90</text>
+    <text x="230" y="474">bob_measurement.f90</text>
+    <text x="230" y="486">bob_rng.f90  bob_abi.f90</text>
+    <text x="620" y="462">sov_monster_kernel.f90</text>
+    <text x="620" y="474">boolean_spectral_lens.f90</text>
+    <text x="620" y="486">measurement_head.f90</text>
+    <text x="776" y="462">jordan_block.f90</text>
+    <text x="776" y="474">spe_encoder.f90</text>
+    <text x="776" y="486">training_adjoint.f90</text>
+  </g>
+
+  <!-- Title text -->
+  <g font-family="'Courier New', monospace">
+    <text x="450" y="32" text-anchor="middle" font-size="15" fill="#00d4cc"
+          letter-spacing="4" font-weight="bold">SOV-KERNEL-MONSTER</text>
+    <text x="450" y="48" text-anchor="middle" font-size="8" fill="#4a6878"
+          letter-spacing="2">FORTRAN 2018 · MLIR · ARM64 SVE2 · AVX-512 · PTX · ZERO DEPS</text>
+  </g>
+
+  <!-- Node labels on orbital bodies -->
+  <g font-family="'Courier New', monospace" font-size="8" text-anchor="middle">
+    <!-- These are approximate positions; the labels don't animate with the dots but are fixed captions -->
+    <text x="790" y="165" fill="#00d4cc" opacity="0.6">BLAKE3</text>
+    <text x="730" y="90"  fill="#d36bff" opacity="0.6">Ed25519</text>
+    <text x="290" y="140" fill="#ffd700" opacity="0.6">Ĥ = −JΣσᶻσᶻ − hΣσˣ</text>
+    <text x="200" y="380" fill="#00ff88" opacity="0.6">16×16 lattice</text>
+  </g>
+
+  <!-- Central label -->
+  <g font-family="'Courier New', monospace" text-anchor="middle">
+    <text x="450" y="244" font-size="8" fill="#00d4cc" letter-spacing="1" opacity="0.9">plasma gate</text>
+    <text x="450" y="264" font-size="7" fill="#4a6878" letter-spacing="1">ρ → U ρ U†</text>
+  </g>
+
+  <!-- WORM chain line (bottom) -->
+  <g>
+    <line x1="30" y1="500" x2="870" y2="500" stroke="#00d4cc" stroke-width="1" stroke-opacity="0.2"/>
+    <rect x="30" y="496" width="0" height="4" fill="#00d4cc" opacity="0.6">
+      <animate attributeName="width" values="0;840;0" dur="6s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- Bottom label -->
+  <text x="450" y="495" text-anchor="middle" font-family="'Courier New', monospace"
+        font-size="8" fill="#2a4858" letter-spacing="2">EVIDENCE OR SILENCE · Ω·III · SSL v3.0</text>
+</svg>

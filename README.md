@@ -1,250 +1,212 @@
-# SOV-KERNEL-MONSTER
+<div align="center">
 
-**Fortran 2018 + C-- + MLIR → ARM64 SVE2 / x86_64 AVX-512 / PTX**
+<img src="docs/universe.svg" width="900" alt="SOV-KERNEL-MONSTER — quantum civilization engine"/>
 
-<p>
-  <img src="https://img.shields.io/badge/language-Fortran_2018_%2B_C--%2B_MLIR-c0392b?style=flat-square" alt="language"/>
-  <img src="https://img.shields.io/badge/targets-ARM64_SVE2_%7C_x86_AVX--512_%7C_PTX-2e86c1?style=flat-square" alt="targets"/>
-  <img src="https://img.shields.io/badge/deps-ZERO-00b894?style=flat-square" alt="zero deps"/>
-  <img src="https://img.shields.io/badge/libc-NONE-e74c3c?style=flat-square" alt="no libc"/>
-  <img src="https://img.shields.io/badge/audit-Blake3_%2B_Ed25519-8e44ad?style=flat-square" alt="bifrost"/>
-  <img src="https://img.shields.io/badge/license-SSL_v1.0-555?style=flat-square" alt="license"/>
-  <img src="https://img.shields.io/badge/mode-contribution--only-c0392b?style=flat-square" alt="contribution-only"/>
-  <img src="https://img.shields.io/badge/node--key-required-2e86c1?style=flat-square" alt="node key"/>
-</p>
+<br/>
 
-> The Monster doesn't run on infrastructure. The Monster *is* the infrastructure.
+[![Language](https://img.shields.io/badge/Fortran_2018_%2B_C--%2B_MLIR-c0392b?style=flat-square&logo=fortran&logoColor=white)](src/)
+[![Targets](https://img.shields.io/badge/ARM64_SVE2_%7C_AVX--512_%7C_PTX-2e86c1?style=flat-square)](build_monster.sh)
+[![Deps](https://img.shields.io/badge/dependencies-ZERO-00b894?style=flat-square)](Cargo.toml)
+[![libc](https://img.shields.io/badge/libc-NONE-e74c3c?style=flat-square)](start.S)
+[![Attest](https://img.shields.io/badge/audit-Blake3_%2B_Ed25519-8e44ad?style=flat-square)](sov_monster_kernel.f90)
+[![Cert](https://img.shields.io/badge/Ω·III-machine--checked-00d4cc?style=flat-square)](lean/)
+[![License](https://img.shields.io/badge/license-SSL_v3.0-555?style=flat-square)](LICENSE)
+[![Prior Art](https://img.shields.io/badge/prior_art-PAR--001_→_PAR--007-ffd700?style=flat-square)](LICENSE#part-ix--prior-art-preservation)
 
----
-
-## What It Is
-
-SOV-KERNEL-MONSTER is the sovereign compute kernel for the SnapKitty stack. It computes density matrix evolution under a Hamiltonian (`rho = exp(-iHdt) * rho * exp(+iHdt)`), attests every output with Blake3 + Ed25519, and compiles to bare metal with zero dependencies.
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    SOV-KERNEL-MONSTER                           │
-├─────────────────────────────────────────────────────────────────┤
-│  SPEC:    Lean 4  (SovMonster.lean — @[extern] FFI bindings)   │
-│  KERNEL:  Fortran 2018  (sov_monster_kernel.f90 — ~1100 lines) │
-│  CONTROL: C--  (sov_control.cmm — state machine loop)          │
-│  FUSION:  MLIR  (sov_pipeline.mlir — polyhedral linalg fusion) │
-│  BACKEND: LLVM  (ARM64 SVE2 | x86_64 AVX-512 | PTX | SPIR-V)  │
-│  RUNTIME: ZERO  (start.S — bare entry, no libc, no crt0)       │
-│  ATTEST:  Blake3 + Ed25519 baked into .note.sov ELF section    │
-└─────────────────────────────────────────────────────────────────┘
-```
+</div>
 
 ---
 
-## Architecture — Data Flow
+> **The Monster doesn't run on infrastructure. The Monster *is* the infrastructure.**
+
+SOV-KERNEL-MONSTER is the sovereign quantum compute kernel. It evolves density matrices under a Hamiltonian, attests every output with Blake3 + Ed25519, and compiles to bare metal — ARM64 SVE2, x86-64 AVX-512, NVIDIA PTX — with zero runtime dependencies. No libc. No BLAS. No crypto libraries. Pure Fortran 2018 + MLIR.
+
+---
+
+## Architecture
 
 ```
-  INPUT: H (Hermitian n×n), rho (density matrix n×n), dt, sk, pk
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         SOV-KERNEL-MONSTER                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  SPEC     Lean 4          @[extern] FFI bindings → sov_* C ABI         │
+│  KERNEL   Fortran 2018    sov_monster_kernel.f90  1506 lines            │
+│           boolean_spectral_lens.f90                296 lines            │
+│           measurement_head.f90                     305 lines            │
+│           jordan_block.f90                         284 lines            │
+│           spe_encoder.f90                          444 lines            │
+│           training_adjoint.f90                     354 lines            │
+│           bob_kinds / state / gates / lattice / metrics                 │
+│           bob_hamiltonian / integrator / measurement / rng / abi        │
+│                                                    4224 lines            │
+│  CONTROL  C--             sov_control.cmm   state machine loop         │
+│  FUSION   MLIR            sov_pipeline.mlir polyhedral linalg fusion   │
+│  BACKEND  LLVM            ARM64 SVE2 · x86_64 AVX-512 · PTX · SPIR-V  │
+│  RUNTIME  Assembly        start.S  bare entry, no libc, no crt0        │
+│  ATTEST   Blake3+Ed25519  .note.sov ELF section, every output sealed   │
+│  BROWSER  WASM            quantum-wasm/src/lib.rs  JS fallback          │
+│  GAME     HTML            vortex_doom_quantum.html  zero deps           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Data Flow
+
+```
+INPUT   H ∈ ℂⁿˣⁿ (Hermitian)   ρ ∈ ℂⁿˣⁿ (density matrix)   dt   sk   pk
          │
          ▼
-  ┌──────────────────────────────────────────────────────────────┐
-  │  PLASMA PRE-FLIGHT  (sov_plasma_verify)                      │
-  │  H Hermitian? rho density matrix? shapes valid? Blake3 hash? │
-  │  sov_fault on any failure — no undefined behavior            │
-  └──────────────────────────┬───────────────────────────────────┘
-                             │ PASS
-                             ▼
-  ┌──────────────────────────────────────────────────────────────┐
-  │  MATRIX EXPONENTIAL  (sov_zmexp_scaling_squaring)            │
-  │  U = exp(-i*dt*H)   Pade-13 + scaling & squaring             │
-  │  Higham 2005 — pure Fortran, no LAPACK                       │
-  │  LU: sov_zgetrf   Solve: sov_zgetrs                          │
-  └──────────────────────────┬───────────────────────────────────┘
-                             │
-                             ▼
-  ┌──────────────────────────────────────────────────────────────┐
-  │  FUSED MATMUL KERNEL  (OpenMP target + MLIR polyhedral)      │
-  │  tmp    = U * rho      (GEMM 1)                              │
-  │  out_rho = tmp * U†    (GEMM 2)                              │
-  │  MLIR --affine-loop-fusion merges both → ONE kernel          │
-  │  Single source → SVE2 / AVX-512 / PTX / SPIR-V              │
-  └──────────────────────────┬───────────────────────────────────┘
-                             │
-                             ▼
-  ┌──────────────────────────────────────────────────────────────┐
-  │  PLASMA POST-FLIGHT                                          │
-  │  out_rho Hermitian? Trace=1? → sov_fault if broken           │
-  └──────────────────────────┬───────────────────────────────────┘
-                             │
-                             ▼
-  ┌──────────────────────────────────────────────────────────────┐
-  │  BIFROST ATTESTATION                                         │
-  │  hash = Blake3(out_rho)          RFC 9561, pure Fortran      │
-  │  sig  = Ed25519_sign(hash, sk)   RFC 8032, constant-time     │
-  │  Receipt: [hash:32][sig:64] = 96 bytes                       │
-  └──────────────────────────────────────────────────────────────┘
-
-  OUTPUT: out_rho (evolved density matrix) + Receipt (96 bytes)
+┌────────────────────┐
+│  PLASMA PRE-FLIGHT │  sov_plasma_verify — H Hermitian? ρ density? shapes valid?
+│  sov_plasma_verify │  Blake3 hash of input. sov_fault on any failure.
+└────────┬───────────┘
+         │ PASS
+         ▼
+┌────────────────────┐
+│  MATRIX EXPONENTIAL│  U = exp(−i·dt·H)   Padé-13 + scaling & squaring
+│  sov_zmexp_        │  No LAPACK. LU: sov_zgetrf. Solve: sov_zgetrs.
+│  scaling_squaring  │
+└────────┬───────────┘
+         │
+         ▼
+┌────────────────────┐
+│  TIME EVOLUTION    │  ρ(t+dt) = U · ρ(t) · U†   fused ZGEMM
+│  sov_apl_step_     │  OpenACC/OpenMP parallel. AVX-512 auto-vectorized.
+│  zgemm_fused       │
+└────────┬───────────┘
+         │
+         ▼
+┌────────────────────┐
+│  MEASUREMENT HEAD  │  Born rule: p_j = tr(q_j ρ)
+│  born_rule         │  Fibonacci temperature: τ_k = φ⁻ᵏ
+│  born_rule_        │  APL: p ← *p ÷ +/*p   (softmax in one line)
+│  temperature       │
+└────────┬───────────┘
+         │
+         ▼
+┌────────────────────┐
+│  BLAKE3 ATTESTATION│  Hash(output ‖ input ‖ timestamp) → 32-byte digest
+│  sov_bifrost_sign  │  Ed25519 signature → baked into .note.sov ELF section
+│  sov_bifrost_verify│  Every output is cryptographically sealed. Forever.
+└────────┬───────────┘
+         │
+         ▼
+OUTPUT  ρ(t+dt)   SHA-256 hash   Ed25519 signature   receipt
 ```
 
----
+## Modules
 
-## Concurrency & ISA
+### `sov_monster_kernel.f90` — 1506 lines
 
-```
-  OpenMP target offload (n > 64):
-    CPU:   sequential fallback (!$omp parallel do simd)
-    GPU:   !$omp target teams distribute → PTX / SPIR-V
+| Function | Description |
+|---|---|
+| `sov_plasma_verify` | Pre-flight Hermiticity + trace-1 check with Blake3 hash |
+| `sov_bifrost_sign` | Ed25519 signature of payload |
+| `sov_bifrost_verify` | Ed25519 verification |
+| `sov_apl_step_zgemm_fused` | Fused U·ρ·U† with inline attestation |
+| `sov_apl_evolve_sequence` | N-step sequence with per-step sealing |
+| `sov_zmexp_scaling_squaring` | Matrix exponential via Padé-13 |
+| `sov_blake3_init/update/finalize` | Pure Fortran BLAKE3 |
+| `sov_zgetrf / sov_zgetrs` | LU factorization and solve, no LAPACK |
 
-  MLIR fusion pipeline:
-    --affine-loop-fusion      merge two matmul loop nests into one
-    --linalg-tile             16x16 tile (L1 cache fit)
-    --vectorize               emit SVE2 / AVX-512 intrinsics
+### `measurement_head.f90` — 305 lines
 
-  ISA targets (single Fortran source, three objects):
-    aarch64-linux-gnu    -mattr=+sve2,+aes,+sha3
-    x86_64-linux-gnu     -mattr=+avx512f,+avx512vl,+gfni,+vaes
-    nvptx64-nvidia-cuda  -mattr=+ptx80
-```
+| Function | Description |
+|---|---|
+| `born_rule` | p_j = tr(q_j ρ) — Born projections, APL: `+/ (q_j × ρ)` |
+| `born_rule_temperature` | Softmax Born at Fibonacci temperature τ = φ⁻ᵏ |
+| `argmax_spectral` | APL: `⍒p` — grade down to sharpest eigenvalue |
+| `sample_spectral` | APL: `p ⌸ ⍳m` — sample from probability simplex |
 
----
+### `boolean_spectral_lens.f90` — 296 lines
 
-## Files
+Jordan algebra of Hermitian matrices: TRUE = I, FALSE = 0, AND = A∘B = ½(AB+BA), XOR = A+B−2(A∘B). Inverted lens observes the whole (density matrix) through the part (eigenvalue). Full Lisp world dump as S-expressions for checkpoint.
 
-```
-sov-kernel-monster/
-├── sov_monster_kernel.f90   Fortran 2018 (~1100 lines, zero deps)
-│   ├── sov_plasma_verify        plasma gate: shape + Hermitian + Blake3
-│   ├── sov_bifrost_sign/verify  Ed25519 RFC 8032 (complete)
-│   ├── sov_apl_step_zgemm_fused core: U*rho*U† + plasma + bifrost
-│   ├── sov_apl_evolve_sequence  multi-step evolution loop
-│   ├── sov_zmexp_scaling_squaring  Pade-13 matrix exp (Higham 2005)
-│   ├── sov_zgetrf / sov_zgetrs  LU factorization + solve (no LAPACK)
-│   ├── sov_blake3_*             Blake3 RFC 9561 (complete)
-│   └── sov_ed25519_*            Ed25519 RFC 8032 (complete — GF(2²⁵⁵-19) + scalar mod L + point ladder)
-├── sov_control.cmm          C-- state machine: evolution loop + fault path
-├── sov_pipeline.mlir        MLIR polyhedral fusion spec
-├── start.S                  ARM64 + x86_64 bare-metal entry, .note.sov
-├── build_monster.sh         forge: flang → mlir-opt → llc → lld → attest
-└── lean/
-    ├── SovMonster.lean      Lean 4 @[extern] FFI + sovereignty theorem stubs
-    ├── lakefile.lean        lake build, links Fortran .o
-    └── lean-toolchain       leanprover/lean4:v4.14.0
-```
+### `jordan_block.f90` — 284 lines
 
----
+| Function | Description |
+|---|---|
+| `jordan_step` | Single Trotter step with Blake3 attestation |
+| `jordan_fib` | Fibonacci-scheduled multi-layer evolution |
+| `jordan_fixpoint` | Fixed-point iteration with convergence check |
+| `jordan_gradient` | Adjoint gradient for training |
+
+### `bob_*.f90` — 4224 lines (11 modules)
+
+The quantum physics substrate: `bob_kinds`, `bob_errors`, `bob_rng`, `bob_state`, `bob_gates`, `bob_lattice`, `bob_measurement`, `bob_hamiltonian`, `bob_integrator`, `bob_metrics`, `bob_abi`.
+
+Implements: 8-qubit state vector (dim=256), 16×16 Josephson vortex lattice, Trotter evolution of Ising Hamiltonian H = −JΣσᶻᵢσᶻⱼ − hΣσˣᵢ, Born rule measurement with wavefunction collapse.
 
 ## Build
 
 ```bash
-# Requires: LLVM 19+ (flang-new, mlir-opt, mlir-translate, llc, ld.lld)
-# Install: wget https://apt.llvm.org/llvm.sh && bash llvm.sh 19
+# Requires: flang-new-19, mlir-opt-19, llc-19, ld.lld-19
 
-chmod +x build_monster.sh
-./build_monster.sh
+# With node key (sealed output)
+SOV_SK=path/to/node_sk.bin ./build_monster.sh
+
+# Dev mode (unsigned output, for local testing)
+SOV_SK=dev ./build_monster.sh
 
 # Outputs:
-#   build/sov_monster_arm64   ARM64 SVE2, static, no libc
-#   build/sov_monster_x86     x86_64 AVX-512, static, no libc
-#   build/sov.ptx             NVIDIA PTX assembly
+#   build/sov_monster_arm64   — ARM64 SVE2 static binary
+#   build/sov_monster_x86     — x86-64 AVX-512 static binary
+#   build/sov.ptx             — NVIDIA PTX
 ```
 
-### Lean FFI
+## Browser / WASM
+
+No LLVM needed. The full quantum simulation runs in-browser:
 
 ```bash
-./build_monster.sh          # build Fortran objects first
-cd lean && lake build
+# Build WASM (requires wasm-pack)
+cd quantum-wasm && wasm-pack build --target web
+
+# Open without building (JS fallback, identical math)
+open vortex_doom_quantum.html
 ```
 
----
+`vortex_doom_quantum.html` is a self-contained 799-line file. No npm. No server. Open it and the Monster is running in your GPU.
 
-## Lean FFI
+## The Game
 
-```lean
-import SovMonster
+`vortex_doom_quantum.html` — DOOM-style raycaster with the Monster's math as the physics engine:
 
--- Single step: evolve rho by one dt under H, get receipt
-SovMonster.aplStepFused hPtr n rhoPtr n dt skPtr pkPtr outRhoPtr hashPtr sigPtr
+- **BLAKE3 WORM** seals every game event (`sov_blake3_*`)
+- **Born rule** (`born_rule_temperature`) selects which agent speaks each frame
+- **Fibonacci temperature** τ = φ⁻ˢ controls sharpness vs entropy of agent dialogue
+- **Plasma gate** (`sov_plasma_verify`) verifies state before evidence collection
+- **Trotter evolution** runs Ising Hamiltonian every frame
+- **Josephson coupling** drives the 16×16 vortex lattice
+- **Topological charge** spawns and destroys SILENCE enemies
+- Wall shading phase-shifted by quantum lattice at ray hit position
+- Agent sprite size modulated by Born probability
 
--- Verify a receipt:
-let ok := SovMonster.bifrostVerify hashPtr 32 sigPtr pkPtr
-```
+Controls: `WASD`/arrows — move · `Space` — evidence pulse · `Q` — Hadamard all · `E` — measure q0 · `M` — WORM seal
 
----
+## Prior Art
 
-## Why Fortran 2018 + C-- + MLIR
+Mathematical derivations in this repository are recorded as Prior Art Entries PAR-001 through PAR-007 under the Sovereign Source License v3.0, Part IX:
 
-| | Rust / C++ | **Monster** |
+| Entry | Subject | Date |
 |---|---|---|
-| Array semantics | `ndarray` / `faer` (library) | **native** — compiler knows shape, stride, aliasing |
-| GEMM fusion | manual | **polyhedral** — `--affine-loop-fusion`, proven optimal |
-| GPU offload | fragmented (`rust-gpu`, `cublas`) | **single source** — `!$omp target` → SVE2/AVX-512/PTX |
-| Formal spec | Prusti/Kani (experimental) | **Lean 4 `@[extern]`** — proof obligations at type level |
-| Audit | logs | **`.note.sov`** — Blake3+Ed25519 baked into binary |
-| Boot time | ~ms | **~μs** — static PIE, no dynamic linker |
-| Deps | Cargo.io / crates.io | **ZERO** — source = binary = proof |
+| PAR-001 | GKN I₄ quartic invariant on State56 (zero sorry, Lean 4) | 2026-06-01 |
+| PAR-002 | I₄ homogeneity theorem (State108, degree-6) | 2026-06-01 |
+| PAR-003 | E₇ Weyl group invariance of I₄ | 2026-06-01 |
+| PAR-004 | Gates Normalization Constraint (softmax simplex) | 2026-07-18 |
+| PAR-005 | Bifrost Attestation Protocol (Blake3 + Ed25519) | 2026-06-15 |
+| PAR-006 | Plasma Gate Architecture (x86-64 + Datalog) | 2026-07-19 |
+| PAR-007 | Fused U·ρ·U† kernel with inline attestation | 2026-07-19 |
+
+## License
+
+[Sovereign Source License v3.0](LICENSE) — Jessica (SNAPKITTYWEST) / Bel Esprit D'Accord Trust.
+
+Not open source. Not MIT. Not Apache. **SSL v3.0.**
+
+The Sovereign Substrate (mathematical primitives) is public domain under Part II. Formed works require attribution. Commercial use requires permission. AI/ML training is prohibited. Anti-misattribution enforcement is in Parts X–XI.
 
 ---
 
-## Sovereign Stack
-
-```
-  claudes-harness (Prolog)      agent identity + prohibited actions
-         │ governs
-         ▼
-  sovereign-transformer         Datalog + x86 corpus gate (POST /gate)
-         │ approved records
-         ▼
-  sov-kernel-monster            Fortran 2018 compute kernel (THIS REPO)
-  (Fortran + C-- + MLIR)        U*rho*U†, Pade exp, Bifrost attestation
-         │ receipts
-         ▼
-  Bifrost WORM chain            Blake3 + Ed25519 immutable audit log
-```
-
----
-
-## Cryptography Status
-
-Both Blake3 (RFC 9561) and Ed25519 (RFC 8032) are complete in pure Fortran 2018:
-
-| Component | Status |
-|-----------|--------|
-| Blake3 compress / hash / chain | Complete ✅ |
-| GF(2²⁵⁵-19) fe_add/sub/mul/sq | Complete ✅ |
-| fe_inv (2^255-21 chain) | Complete ✅ |
-| fe_tobytes / fe_frombytes | Complete ✅ |
-| sc_reduce64 (512-bit → mod L) | Complete ✅ |
-| sc_muladd (a·b+c mod L) | Complete ✅ |
-| ge_add / ge_double (twisted Edwards) | Complete ✅ |
-| ge_scalarmult (double-and-add ladder) | Complete ✅ |
-| Point encode / decode (RFC 8032 §5.1.2/3) | Complete ✅ |
-| sov_bifrost_sign / sov_bifrost_verify | Complete ✅ |
-
-Zero stubs. Zero external deps. Every signature produced by `sov_bifrost_sign` is verifiable by standard Ed25519 implementations.
-
----
-
-## Sovereign Node Key
-
-**To run the Monster you must hold a Sovereign Node Key.**
-
-The key is an Ed25519 keypair. Without it, `sov_bifrost_sign` will not seal outputs.
-Unsigned outputs cannot propagate through the Bifrost WORM chain.
-
-```bash
-# Check if you have a key:
-ls node_sk.bin
-
-# Build with your key:
-SOV_SK=node_sk.bin ./build_monster.sh
-
-# Build in dev mode (unsealed outputs, local only):
-SOV_SK=dev ./build_monster.sh
-```
-
-**Get a key:** Donate to the Bel Esprit D'Accord Irrevocable Trust.
-See [SOVEREIGN_NODE_KEY.md](SOVEREIGN_NODE_KEY.md) for tiers, payment, and instructions.
-
-> The key is not DRM. It is a covenant.
-> Building this took years. Running it without contributing is extraction.
-
----
-
-*SnapKitty West · Sovereign Source License v1.0 · Evidence or Silence — 2026*
+<div align="center">
+<sub>Ω·III · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · SOVEREIGN</sub>
+</div>

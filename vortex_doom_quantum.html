@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOB ENGINE: VORTEX DOOM — Sovereign Quantum Civilization</title>
+<style>
+:root{
+  --bg:#020204;--panel:#071017;--line:#113444;--teal:#00d4cc;--gold:#ffd700;
+  --green:#00ff88;--red:#ff4444;--mag:#d36bff;--muted:#73808a;--white:#e8fbff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:"Courier New",monospace;color:var(--white)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:10;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.02),rgba(255,255,255,.02) 1px,transparent 1px,transparent 4px);mix-blend-mode:screen}
+#game{display:block;width:100vw;height:100vh;background:#020204;cursor:crosshair}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:4}
+.topbar{position:absolute;left:14px;right:14px;top:12px;height:58px;display:flex;align-items:center;justify-content:space-between;background:rgba(2,8,14,.85);border:1px solid var(--line);box-shadow:0 0 24px rgba(0,212,204,.1);padding:10px 14px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:38px;height:38px;border:2px solid var(--teal);transform:rotate(30deg);box-shadow:0 0 18px rgba(0,212,204,.5) inset,0 0 18px rgba(0,212,204,.22)}
+.brand h1{font-size:15px;margin:0;color:var(--gold);letter-spacing:.16em}
+.brand p{font-size:9px;margin:4px 0 0;color:var(--muted);letter-spacing:.12em}
+.stats{display:grid;grid-template-columns:repeat(6,auto);gap:12px;font-size:10px;text-align:right;color:var(--muted)}
+.stats b{display:block;font-size:13px;margin-top:2px}
+.leftpanel,.rightpanel{position:absolute;top:84px;bottom:84px;width:260px;background:rgba(2,8,14,.82);border:1px solid var(--line);padding:12px}
+.leftpanel{left:14px}.rightpanel{right:14px}
+.panel-title{font-size:11px;color:var(--gold);letter-spacing:.14em;margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+#dialogue{font-size:10px;line-height:1.45;color:var(--white);height:38%;overflow:hidden}
+#dialogue div{margin:0 0 6px;padding:5px;background:rgba(255,255,255,.04);border-left:2px solid var(--teal)}
+#dialogue .bad{border-left-color:var(--red);color:#ffd0d0}
+#dialogue .good{border-left-color:var(--green);color:#d8ffe9}
+#dialogue .quantum{border-left-color:var(--mag);color:#e8d8ff}
+#minimap{width:100%;height:160px;border:1px solid var(--line);background:#020204}
+#quantum-panel{margin-top:10px;font-size:9px;color:var(--muted)}
+.qrow{display:flex;justify-content:space-between;margin-bottom:3px}
+.qv{color:var(--teal)}
+#mission{font-size:10px;line-height:1.55;color:var(--muted)}
+#mission b{color:var(--gold)}
+#state-bars{margin-top:8px}
+.sbar-row{display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.sbar-lbl{font-size:8px;color:var(--muted);width:20px;text-align:right}
+.sbar-outer{flex:1;height:5px;background:#0a1218;border-radius:2px;overflow:hidden}
+.sbar-inner{height:100%;border-radius:2px;transition:width .15s}
+#worm{position:absolute;left:14px;right:14px;bottom:12px;height:54px;background:rgba(2,8,14,.9);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 14px;font-size:10px;color:var(--muted)}
+#worm b{color:var(--gold)}
+#ticker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--teal)}
+#crosshair{position:absolute;left:50%;top:50%;width:34px;height:34px;transform:translate(-50%,-50%);opacity:.8}
+#crosshair::before,#crosshair::after{content:"";position:absolute;background:var(--white);box-shadow:0 0 10px var(--teal)}
+#crosshair::before{left:16px;top:3px;width:2px;height:28px}
+#crosshair::after{left:3px;top:16px;width:28px;height:2px}
+.flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle,rgba(0,255,136,.32),transparent 60%);transition:opacity .14s}
+.flash.on{opacity:1}
+.plasma-flash{background:radial-gradient(circle,rgba(211,107,255,.4),transparent 60%)}
+@media(max-width:900px){.leftpanel,.rightpanel{display:none}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark"></div>
+      <div><h1>BOB ENGINE: VORTEX DOOM</h1><p>SOV-KERNEL-MONSTER · QUANTUM CIVILIZATION · EVIDENCE OR SILENCE</p></div>
+    </div>
+    <div class="stats">
+      <span>HEALTH<b id="health" style="color:var(--green)">100</b></span>
+      <span>EVIDENCE<b id="evidence" style="color:var(--teal)">0/6</b></span>
+      <span>SEALS<b id="seals" style="color:var(--gold)">0</b></span>
+      <span>ENTROPY<b id="s-entropy" style="color:var(--mag)">0.00</b></span>
+      <span>TOPO<b id="s-topo" style="color:var(--teal)">0</b></span>
+      <span>FPS<b id="fps" style="color:var(--muted)">0</b></span>
+    </div>
+  </div>
+  <div class="leftpanel">
+    <div class="panel-title">AGENT RADIO · BORN RULE</div>
+    <div id="dialogue"></div>
+    <div class="panel-title" style="margin-top:10px">QUANTUM ENGINE</div>
+    <div id="quantum-panel">
+      <div class="qrow"><span>State energy</span><span class="qv" id="q-energy">—</span></div>
+      <div class="qrow"><span>Lattice energy</span><span class="qv" id="q-latenergy">—</span></div>
+      <div class="qrow"><span>Coherence</span><span class="qv" id="q-coh">—</span></div>
+      <div class="qrow"><span>Fib temperature</span><span class="qv" id="q-temp">—</span></div>
+      <div class="qrow"><span>Plasma gate</span><span class="qv" id="q-plasma">OK</span></div>
+      <div class="qrow"><span>Vortex count</span><span class="qv" id="q-vortices">—</span></div>
+      <div class="qrow"><span>Norm</span><span class="qv" id="q-norm">—</span></div>
+    </div>
+    <div id="state-bars" style="margin-top:8px">
+      <div class="panel-title">STATE VECTOR |ψ⟩</div>
+    </div>
+  </div>
+  <div class="rightpanel">
+    <div class="panel-title">KITTYVERSE MAP</div>
+    <canvas id="minimap" width="236" height="160"></canvas>
+    <div class="panel-title" style="margin-top:8px">CIVILIZATION STATE</div>
+    <div id="mission">
+      <b>1.</b> Collect 6 EVIDENCE shards<br>
+      <b>2.</b> Defend 6 agents — Born rule selects who speaks<br>
+      <b>3.</b> Reach Vortex Core — plasma gate seals Trust Deed<br><br>
+      SPACE/Click: evidence pulse<br>
+      WASD/Arrows: move/turn<br>
+      Q: apply Hadamard · E: measure q0<br>
+      M: WORM seal
+    </div>
+  </div>
+  <div id="crosshair"></div>
+  <div class="flash" id="flash"></div>
+  <div class="flash plasma-flash" id="plasma-flash" style="display:none;position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .2s"></div>
+  <div id="worm">
+    <span><b>BLAKE3·WORM</b> <span id="seal">GENESIS</span></span>
+    <span id="ticker">(boot SOV_KERNEL_MONSTER "vortex-quantum")</span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ══════════════════════════════════════════════════════════════════
+// SOV-KERNEL-MONSTER MATH — JS port of sov_monster_kernel.f90,
+// measurement_head.f90, jordan_block.f90, boolean_spectral_lens.f90
+// ══════════════════════════════════════════════════════════════════
+
+// ── BLAKE3 (port of sov_blake3_* in sov_monster_kernel.f90) ──────
+// Simplified BLAKE3-inspired hash for WORM chain
+// Full spec: https://github.com/BLAKE3-team/BLAKE3-specs
+const BLAKE3_IV = [
+  0x6A09E667, 0xF3BCC908, 0xBB67AE85, 0x84CAA73B,
+  0x3C6EF372, 0xFE94F82B, 0xA54FF53A, 0x5F1D36F1,
+  0x510E527F, 0xADE682D1, 0x9B05688C, 0x2B3E6C1F,
+  0x1F83D9AB, 0xFB41BD6B, 0x5BE0CD19, 0x137E2179
+];
+const MSG_PERMUTATION = [2,6,3,10,7,0,4,13,1,11,12,5,9,14,15,8];
+
+function rot32(x, n) { return ((x >>> n) | (x << (32 - n))) >>> 0; }
+
+function g(state, a, b, c, d, mx, my) {
+  state[a] = (state[a] + state[b] + mx) >>> 0;
+  state[d] = rot32(state[d] ^ state[a], 16);
+  state[c] = (state[c] + state[d]) >>> 0;
+  state[b] = rot32(state[b] ^ state[c], 12);
+  state[a] = (state[a] + state[b] + my) >>> 0;
+  state[d] = rot32(state[d] ^ state[a], 8);
+  state[c] = (state[c] + state[d]) >>> 0;
+  state[b] = rot32(state[b] ^ state[c], 7);
+}
+
+function blake3_compress(cv, block_words, counter, block_len, flags) {
+  const m = block_words.slice(0, 16);
+  const state = [
+    cv[0], cv[1], cv[2], cv[3],
+    cv[4], cv[5], cv[6], cv[7],
+    BLAKE3_IV[0], BLAKE3_IV[1], BLAKE3_IV[2], BLAKE3_IV[3],
+    (counter & 0xFFFFFFFF) >>> 0, Math.floor(counter / 0x100000000) >>> 0,
+    block_len >>> 0, flags >>> 0
+  ];
+  for (let round = 0; round < 7; round++) {
+    g(state,0,4,8,12,  m[0], m[1]);
+    g(state,1,5,9,13,  m[2], m[3]);
+    g(state,2,6,10,14, m[4], m[5]);
+    g(state,3,7,11,15, m[6], m[7]);
+    g(state,0,5,10,15, m[8], m[9]);
+    g(state,1,6,11,12, m[10],m[11]);
+    g(state,2,7,8,13,  m[12],m[13]);
+    g(state,3,4,9,14,  m[14],m[15]);
+    const p = []; for (let i=0;i<16;i++) p[i]=m[MSG_PERMUTATION[i]];
+    for (let i=0;i<16;i++) m[i]=p[i];
+  }
+  const out = new Array(8);
+  for (let i=0;i<8;i++) out[i] = (state[i] ^ state[i+8]) >>> 0;
+  return out;
+}
+
+function blake3_hash_string(s) {
+  // Encode string to bytes, hash with one compression round
+  const enc = new TextEncoder();
+  const bytes = enc.encode(s);
+  const block = new Uint32Array(16);
+  for (let i=0; i<Math.min(64, bytes.length); i++) {
+    block[i>>2] |= bytes[i] << ((i&3)*8);
+  }
+  const cv = BLAKE3_IV.slice(0,8);
+  const out = blake3_compress(cv, Array.from(block), 0, Math.min(64,bytes.length), 0b00001011);
+  return out.map(v => v.toString(16).padStart(8,'0')).join('');
+}
+
+// ── COMPLEX ARITHMETIC ─────────────────────────────────────────────
+const c   = (re, im=0) => ({re, im});
+const cadd = (a,b) => c(a.re+b.re, a.im+b.im);
+const cmul = (a,b) => c(a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re);
+const cscale = (a,s) => c(a.re*s, a.im*s);
+const cconj = a => c(a.re, -a.im);
+const cabs2 = a => a.re*a.re + a.im*a.im;
+const cphase = a => Math.atan2(a.im, a.re);
+const cexp_i = t => c(Math.cos(t), Math.sin(t));
+
+// ── QUANTUM STATE (mirrors bob_state.f90 + sov_monster_kernel.f90) ─
+class QuantumState {
+  constructor(nq) {
+    this.nq = nq;
+    this.dim = 1 << nq;
+    this.psi = Array.from({length: this.dim}, () => c(0));
+    const s = 1/Math.sqrt(this.dim);
+    for (let i=0;i<this.dim;i++) this.psi[i] = c(s);
+  }
+  norm() { return Math.sqrt(this.psi.reduce((s,a) => s+cabs2(a), 0)); }
+  normalize() {
+    const n = this.norm();
+    if (n < 1e-15) return;
+    for (let i=0;i<this.dim;i++) this.psi[i] = cscale(this.psi[i], 1/n);
+  }
+  prob(i) { return cabs2(this.psi[i]); }
+}
+
+// ── PLASMA GATE (mirrors sov_plasma_verify in sov_monster_kernel.f90) ─
+// Verifies state is valid: normalized, no NaN, norm within tolerance
+function plasma_verify(qs) {
+  const n = qs.norm();
+  if (isNaN(n) || n < 0.99 || n > 1.01) return false;
+  for (const a of qs.psi) {
+    if (isNaN(a.re) || isNaN(a.im) || !isFinite(a.re) || !isFinite(a.im)) return false;
+  }
+  return true;
+}
+
+// ── BORN RULE (mirrors born_rule in measurement_head.f90) ────────────
+// p_j = tr(q_j ρ) where ρ = |ψ⟩⟨ψ| and q_j are projectors onto agent subspaces
+// For agents: project onto qubit basis subsets, return probability distribution
+function born_rule(qs, n_agents) {
+  // Partition the state space evenly among agents
+  // APL: p_j ← +/ (q_j × ρ) — Born projections
+  const probs = new Array(n_agents).fill(0);
+  const chunk = Math.floor(qs.dim / n_agents);
+  for (let j=0; j<n_agents; j++) {
+    const start = j * chunk;
+    const end = j === n_agents-1 ? qs.dim : start + chunk;
+    for (let i=start; i<end; i++) probs[j] += qs.prob(i);
+  }
+  // Normalize: assert (+/p) = 1
+  const total = probs.reduce((a,b)=>a+b, 0);
+  if (total < 1e-15) return probs.map(() => 1/n_agents);
+  return probs.map(p => p/total);
+}
+
+// ── BORN RULE WITH TEMPERATURE (mirrors born_rule_temperature) ────────
+// Fibonacci temperature: τ_k = φ^{-k}, φ = golden ratio
+// p_j(τ) = exp(tr(q_j ρ)/τ) / Σ exp(...)
+// τ→0: argmax (sharpest agent speaks), τ→∞: uniform
+const PHI = (1 + Math.sqrt(5)) / 2;
+function fibonacci_temperature(step) {
+  // τ = φ^{-step/100} — decays by golden ratio
+  return Math.pow(PHI, -(step % 200) / 100);
+}
+
+function born_rule_temperature(raw_probs, tau) {
+  const maxP = Math.max(...raw_probs);
+  const exp_p = raw_probs.map(p => Math.exp((p - maxP) / tau));
+  const Z = exp_p.reduce((a,b)=>a+b, 0);
+  return exp_p.map(e => e/Z);
+}
+
+// ── SAMPLE SPECTRAL (mirrors sample_spectral in measurement_head.f90) ─
+// APL: p ⌸ ⍳m — sample index from probability distribution
+function sample_spectral(probs) {
+  const u = Math.random();
+  let cum = 0;
+  for (let i=0; i<probs.length; i++) {
+    cum += probs[i];
+    if (u <= cum) return i;
+  }
+  return probs.length - 1;
+}
+
+// ── ISING HAMILTONIAN TROTTER STEP (mirrors sov_apl_step_zgemm_fused) ─
+// U(dt) = exp(-iHdt) via Trotter decomposition
+// H = -J Σ σ_i^z σ_j^z - h Σ σ_i^x
+function trotter_step(qs, J, h, dt) {
+  const n = qs.dim, nq = qs.nq;
+  // ZZ half
+  for (let i=0;i<n;i++) {
+    let ps=0;
+    for (let q=0;q<nq-1;q++) {
+      const si=(i>>q)&1?1:-1, sj=(i>>(q+1))&1?1:-1;
+      ps += si*sj;
+    }
+    qs.psi[i] = cmul(qs.psi[i], cexp_i(J*dt*0.5*ps));
+  }
+  // X rotations R_x(hdt)
+  for (let q=0;q<nq;q++) {
+    const cc=Math.cos(h*dt), ss=Math.sin(h*dt);
+    const block=1<<q, stride=block<<1;
+    for (let i=0;i<n;i+=stride) {
+      for (let j=i;j<i+block;j++) {
+        const {re:ar,im:ai}=qs.psi[j], {re:br,im:bi}=qs.psi[j+block];
+        qs.psi[j]       = c(cc*ar+ss*bi, cc*ai-ss*br);
+        qs.psi[j+block] = c(cc*br+ss*ai, cc*bi-ss*ar);
+      }
+    }
+  }
+  // ZZ half again
+  for (let i=0;i<n;i++) {
+    let ps=0;
+    for (let q=0;q<nq-1;q++) {
+      const si=(i>>q)&1?1:-1, sj=(i>>(q+1))&1?1:-1;
+      ps += si*sj;
+    }
+    qs.psi[i] = cmul(qs.psi[i], cexp_i(J*dt*0.5*ps));
+  }
+  qs.normalize();
+}
+
+// ── VORTEX LATTICE (mirrors bob_lattice.f90 Josephson coupling) ──────
+class VortexLattice {
+  constructor(n, coupling, dt) {
+    this.n = n; this.coupling = coupling; this.dt = dt; this.time = 0;
+    this.vx = [];
+    for (let iy=0;iy<n;iy++) for (let ix=0;ix<n;ix++) {
+      const ph = ((ix*7+iy*13)*1.618033988%1)*2*Math.PI;
+      const w = (ix+iy)%7===0?1:(ix*iy)%11===0?-1:0;
+      this.vx.push({x:ix,y:iy,winding:w,phase:ph,energy:Math.abs(w)*0.5,coherence:1});
+    }
+  }
+  evolve() {
+    const old=this.vx.map(v=>({...v})), n=this.n, c=this.coupling, dt=this.dt;
+    for (let iy=0;iy<n;iy++) for (let ix=0;ix<n;ix++) {
+      const idx=iy*n+ix;
+      let dp=0, tc=0;
+      const nb=[ ((ix+1)%n)+iy*n, ((ix+n-1)%n)+iy*n, ix+((iy+1)%n)*n, ix+((iy+n-1)%n)*n ];
+      for (const ni of nb) { const d=old[idx].phase-old[ni].phase; dp-=c*Math.sin(d); tc+=Math.cos(d); }
+      const v=this.vx[idx];
+      v.phase=((old[idx].phase+dt*dp)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+      v.coherence=(tc/4+1)*0.5;
+      v.energy=Math.abs(v.winding)*0.5+c*(1-v.coherence);
+    }
+    if (Math.floor(this.time*10)%50===0) {
+      const fi=Math.floor(this.time*97.3)%this.vx.length;
+      const w=this.vx[fi].winding; this.vx[fi].winding=w===0?1:w===1?-1:0;
+    }
+    this.time+=dt;
+  }
+  meanCoherence() { return this.vx.reduce((s,v)=>s+v.coherence,0)/this.vx.length; }
+  topoCharge() { return this.vx.reduce((s,v)=>s+v.winding,0); }
+  vortexCount() { return this.vx.filter(v=>v.winding!==0).length; }
+  totalEnergy() { return this.vx.reduce((s,v)=>s+v.energy,0); }
+  // Get coherence at normalized position [0,1]x[0,1]
+  coherenceAt(fx, fy) {
+    const ix=Math.floor(fx*this.n)%this.n, iy=Math.floor(fy*this.n)%this.n;
+    return this.vx[iy*this.n+ix]?.coherence ?? 0.5;
+  }
+  phaseAt(fx, fy) {
+    const ix=Math.floor(fx*this.n)%this.n, iy=Math.floor(fy*this.n)%this.n;
+    return this.vx[iy*this.n+ix]?.phase ?? 0;
+  }
+}
+
+// ── VON NEUMANN ENTROPY (mirrors compute_von_neumann_entropy in bob_metrics.f90) ─
+function vonNeumannEntropy(qs) {
+  return qs.psi.reduce((s,a)=>{const p=cabs2(a);return p>1e-15?s-p*Math.log(p):s;},0);
+}
+
+// ── QUANTUM SIMULATION STATE ──────────────────────────────────────────
+const QS = {
+  qs: new QuantumState(8),       // 8 qubits, dim=256
+  lat: new VortexLattice(16, 0.3, 0.01),
+  J: 0.4, h: 0.2, dt: 0.01,
+  step: 0,
+  fibTemp: 1.0,
+};
+
+function qsStep(n=3) {
+  for (let i=0;i<n;i++) {
+    trotter_step(QS.qs, QS.J, QS.h, QS.dt);
+    QS.lat.evolve();
+  }
+  QS.step++;
+  QS.fibTemp = fibonacci_temperature(QS.step);
+}
+
+// ── DOOM ENGINE ───────────────────────────────────────────────────────
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d", {alpha:false});
+const mini = document.getElementById("minimap");
+const mctx = mini.getContext("2d");
+let W=0, H=0, strip=2, last=performance.now(), fps=0, frames=0, fpsMark=last;
+
+function resize() { W=canvas.width=Math.max(640,innerWidth); H=canvas.height=Math.max(360,innerHeight); strip=W>1100?2:3; }
+addEventListener("resize", resize); resize();
+
+const MAP = [
+"########################",
+"#..e......#.....e......#",
+"#..###....#..######..#.#",
+"#....#....#.......#..#.#",
+"#....#..n....e....#....#",
+"#..#######..#######.####",
+"#.........a............#",
+"#.###.#######.#######..#",
+"#...#.....#.....#......#",
+"#...#..e..#..f..#..e...#",
+"###.####..#..####..#####",
+"#......#.....#.........#",
+"#..r...#..p..#..c......#",
+"#......#######......e..#",
+"####......#......#######",
+"#..e..b...#...x.......o#",
+"#.........#............#",
+"#..######...######..####",
+"#......#.....#.........#",
+"#..e...#..v..#...e.....#",
+"#......#.....#.........#",
+"#..######..######..##..#",
+"#......................#",
+"########################"
+];
+const MW=MAP[0].length, MH=MAP.length;
+const tileAt=(x,y)=>x<0||y<0||x>=MW||y>=MH?"#":MAP[Math.floor(y)][Math.floor(x)];
+const solid=t=>"#nafcpbxr".includes(t);
+const wallBase = t => ({
+  "#": ["#1b3340","#0b151d","#3c7684"],
+  "n": ["#05363a","#03181b","#00d4cc"],
+  "a": ["#2b1d05","#120c03","#ffd700"],
+  "f": ["#3a2107","#140903","#ff8c1a"],
+  "c": ["#241232","#0d0614","#d36bff"],
+  "p": ["#173016","#071308","#00ff88"],
+  "b": ["#302606","#120d02","#ffd700"],
+  "x": ["#341111","#130606","#ff4444"],
+  "r": ["#06333a","#031316","#5df7ff"],
+}[t]||["#26333a","#0b1116","#7aa8b4"]);
+
+// Wall color modulated by lattice coherence at hit position
+function wallColor(t, hitX, hitY) {
+  const base = wallBase(t);
+  const coh = QS.lat.coherenceAt(hitX/MW, hitY/MH);
+  const ph = QS.lat.phaseAt(hitX/MW, hitY/MH);
+  // Coherence brightens wall; phase shifts hue slightly
+  return [base[0], base[1], base[2], coh, ph];
+}
+
+const player = {x:2.8,y:2.8,a:0,hp:100,evidence:0,seals:0,won:false,cool:0,dead:false};
+const keys = {};
+addEventListener("keydown", e => {
+  keys[e.code]=true;
+  if(e.code==="Space") pulse();
+  if(e.code==="KeyM") sealEvent("MINIMAP_SEAL");
+  if(e.code==="KeyQ") { applyHadamard(); }
+  if(e.code==="KeyE") { measureQ0(); }
+});
+addEventListener("keyup", e=>keys[e.code]=false);
+canvas.addEventListener("click",()=>{canvas.requestPointerLock?.();pulse();});
+addEventListener("mousemove",e=>{if(document.pointerLockElement===canvas)player.a+=e.movementX*0.0028;});
+
+const AGENTS = [
+  {kind:"agent",name:"CARTO",role:"MAYOR",   x:15.5,y:12.5,c:"#ffd700",msg:'(rule CARTO ALL "Trust Deed — Born rule confirmed")'},
+  {kind:"agent",name:"NOVA", role:"ARTIST",  x:4.5, y:4.5, c:"#d36bff",msg:'(paint NOVA WALL-7 "vortex chronicle sealed")'},
+  {kind:"agent",name:"FORGE",role:"ARCHITECT",x:13.5,y:9.5,c:"#ff8c1a",msg:'(build FORGE "portal buttress at coherence node")'},
+  {kind:"agent",name:"FLUX", role:"TRADER",  x:7.5, y:15.5,c:"#00d4cc",msg:'(trade FLUX ROBOB "evidence shard — entropy low")'},
+  {kind:"agent",name:"PHANTOM",role:"SHERIFF",x:10.5,y:12.5,c:"#00ff88",msg:'(audit PHANTOM "no agent acts without evidence")'},
+  {kind:"agent",name:"ROBOB",role:"ORACLE",  x:3.5, y:15.5,c:"#5df7ff",msg:'(verdict ROBOB "EVIDENCE or SILENCE — plasma gate OK")'},
+];
+let enemies = [
+  {kind:"enemy",name:"SILENCE",x:19.5,y:4.5, c:"#ff4444",hp:3,alive:true},
+  {kind:"enemy",name:"SILENCE",x:18.5,y:16.5,c:"#ff4444",hp:3,alive:true},
+  {kind:"enemy",name:"SILENCE",x:6.5, y:20.5,c:"#ff4444",hp:3,alive:true},
+];
+const shards = [];
+for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) if(MAP[y][x]==="e") shards.push({x:x+.5,y:y+.5,c:"#00ff88",alive:true});
+const portal = {kind:"portal",x:12.5,y:19.5,c:"#00d4ff"};
+const sprites = [...AGENTS, ...enemies];
+
+// ── WORM CHAIN (BLAKE3) ───────────────────────────────────────────────
+let wormHash = "GENESIS"; let tick=0; let dialogue=[];
+
+function say(text, cls="") {
+  dialogue.unshift({text,cls,t:performance.now()});
+  dialogue = dialogue.slice(0,7);
+  document.getElementById("dialogue").innerHTML =
+    dialogue.map(d=>`<div class="${d.cls}">${d.text}</div>`).join("");
+}
+
+async function sealEvent(evt) {
+  // BLAKE3 WORM: hash(prev_hash | event | state | position)
+  const entropy = vonNeumannEntropy(QS.qs).toFixed(4);
+  const coh = QS.lat.meanCoherence().toFixed(4);
+  const msg = `${wormHash}|${evt}|${tick}|${player.x.toFixed(2)},${player.y.toFixed(2)}|E=${entropy}|C=${coh}`;
+
+  // Use Web Crypto SHA-256 if available, else BLAKE3-inspired JS
+  if (crypto?.subtle) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(msg));
+    wormHash = Array.from(new Uint8Array(buf)).map(x=>x.toString(16).padStart(2,"0")).join("");
+  } else {
+    wormHash = blake3_hash_string(msg);
+  }
+
+  player.seals++;
+  document.getElementById("seal").textContent = wormHash.slice(0,32)+"...";
+  document.getElementById("ticker").textContent = `(seal BLAKE3 "${evt}" "${wormHash.slice(0,16)}..." E=${entropy})`;
+}
+
+// ── PLASMA GATE (mirrors sov_plasma_verify) ────────────────────────────
+function plasmaPulseEffect() {
+  const pf = document.getElementById("plasma-flash");
+  pf.style.display = "block"; pf.style.opacity = "1";
+  setTimeout(()=>{pf.style.opacity="0";setTimeout(()=>pf.style.display="none",300);},150);
+}
+
+function pulse() {
+  if(player.cool>0||player.hp<=0) return;
+  player.cool=18;
+  document.getElementById("flash").classList.add("on");
+  setTimeout(()=>document.getElementById("flash").classList.remove("on"),90);
+
+  // Plasma gate verification before evidence collection
+  const plasmaOK = plasma_verify(QS.qs);
+  document.getElementById("q-plasma").textContent = plasmaOK ? "OK" : "FAULT";
+  document.getElementById("q-plasma").style.color = plasmaOK ? "var(--green)" : "var(--red)";
+
+  if (!plasmaOK) {
+    say('(plasma FAULT "state invalid — normalize and retry")',"bad");
+    return;
+  }
+
+  let best=null, bd=999;
+  for(const s of sprites) if(s.kind==="enemy"&&s.alive) {
+    const dx=s.x-player.x, dy=s.y-player.y, dist=Math.hypot(dx,dy);
+    const da=Math.atan2(dy,dx)-player.a, norm=Math.atan2(Math.sin(da),Math.cos(da));
+    if(dist<6&&Math.abs(norm)<0.26&&dist<bd){best=s;bd=dist;}
+  }
+
+  if(best) {
+    best.hp--;
+    say(`(invoke ROBOB "evidence pulse → ${best.name}" plasma=OK)`,"good");
+    sealEvent("EVIDENCE_PULSE");
+    plasmaPulseEffect();
+    if(best.hp<=0){best.alive=false;say('(silence COLLAPSED "topological charge restored")',"good");}
+  } else {
+    say('(invoke ROBOB "empty corridor — SILENCE")',"bad");
+  }
+}
+
+// ── QUANTUM GATES (Q key) ────────────────────────────────────────────
+function applySingleQubitGate(q, u) {
+  const n=QS.qs.dim, block=1<<q, stride=block<<1;
+  for(let i=0;i<n;i+=stride) for(let j=i;j<i+block;j++) {
+    const a=QS.qs.psi[j], b=QS.qs.psi[j+block];
+    QS.qs.psi[j]       = cadd(cmul(u[0][0],a), cmul(u[0][1],b));
+    QS.qs.psi[j+block] = cadd(cmul(u[1][0],a), cmul(u[1][1],b));
+  }
+}
+function applyHadamard() {
+  const s=1/Math.sqrt(2), sc=c(s);
+  for(let q=0;q<QS.qs.nq;q++) applySingleQubitGate(q,[[sc,sc],[sc,c(-s)]]);
+  QS.qs.normalize();
+  say('(gate HADAMARD "all qubits — superposition restored")',"quantum");
+  sealEvent("GATE_HADAMARD");
+}
+function measureQ0() {
+  let p1=0;
+  for(let i=0;i<QS.qs.dim;i++) if((i>>0)&1) p1+=QS.qs.prob(i);
+  const outcome = Math.random()<p1?1:0;
+  for(let i=0;i<QS.qs.dim;i++) if(((i>>0)&1)!==outcome) QS.qs.psi[i]=c(0);
+  QS.qs.normalize();
+  say(`(measure q0 → |${outcome}⟩ "wavefunction collapsed")`,"quantum");
+  sealEvent(`MEASURE_Q0_${outcome}`);
+  // Topological charge affects health
+  const topo = QS.lat.topoCharge();
+  if(Math.abs(topo)>5) { player.hp=Math.max(player.hp-5,0); say('(topo-charge HIGH "vortex field unstable")',"bad"); }
+}
+
+// ── MOVEMENT ─────────────────────────────────────────────────────────
+function move(dt) {
+  const turn=(keys.ArrowLeft?-1:0)+(keys.ArrowRight?1:0); player.a+=turn*dt*2.3;
+  const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+  const st=(keys.KeyD?1:0)-(keys.KeyA?1:0);
+  const sp=dt*3.0;
+  const nx=player.x+Math.cos(player.a)*f*sp+Math.cos(player.a+Math.PI/2)*st*sp;
+  const ny=player.y+Math.sin(player.a)*f*sp+Math.sin(player.a+Math.PI/2)*st*sp;
+  if(!solid(tileAt(nx,player.y)))player.x=nx;
+  if(!solid(tileAt(player.x,ny)))player.y=ny;
+  player.x=Math.max(1.1,Math.min(MW-1.1,player.x));
+  player.y=Math.max(1.1,Math.min(MH-1.1,player.y));
+}
+
+// ── UPDATE ────────────────────────────────────────────────────────────
+function update(dt) {
+  tick++;
+  if(player.cool>0) player.cool--;
+
+  // Quantum step
+  qsStep(2);
+
+  // Topological charge → spawn new SILENCE if charge spikes
+  const topo = Math.abs(QS.lat.topoCharge());
+  if(topo>6 && enemies.filter(e=>e.alive).length < 2 && tick%200===0) {
+    enemies.push({kind:"enemy",name:"SILENCE",x:1+Math.random()*22,y:1+Math.random()*22,c:"#ff4444",hp:2,alive:true});
+    say('(topo-spike "new SILENCE spawned from vortex")',"bad");
+    sprites.push(enemies[enemies.length-1]);
+  }
+
+  // Evidence shards
+  for(const sh of shards) if(sh.alive&&Math.hypot(sh.x-player.x,sh.y-player.y)<0.55) {
+    sh.alive=false; player.evidence++;
+    say(`(collect BOB "EVIDENCE-SHARD-${player.evidence}" plasma=OK)`,"good");
+    sealEvent("EVIDENCE_SHARD");
+  }
+
+  // Agent dialogue — Born rule selects speaker
+  const raw = born_rule(QS.qs, AGENTS.length);
+  const tempered = born_rule_temperature(raw, QS.fibTemp);
+  for(const a of AGENTS) {
+    const j = AGENTS.indexOf(a);
+    const nearDist = Math.hypot(a.x-player.x, a.y-player.y);
+    if(nearDist<1.25 && Math.random() < tempered[j]*0.15) {
+      say(a.msg,"good");
+    }
+  }
+
+  // Enemy AI
+  for(const e of sprites) if(e.kind==="enemy"&&e.alive) {
+    const d=Math.hypot(e.x-player.x,e.y-player.y);
+    // Coherence modulates enemy speed
+    const coh=QS.lat.coherenceAt(e.x/MW,e.y/MH);
+    if(d<8){const dx=(player.x-e.x)/d,dy=(player.y-e.y)/d;const speed=dt*0.55*(0.5+coh*0.5);const nx=e.x+dx*speed,ny=e.y+dy*speed;if(!solid(tileAt(nx,e.y)))e.x=nx;if(!solid(tileAt(e.x,ny)))e.y=ny;}
+    if(d<0.75){player.hp=Math.max(0,player.hp-dt*18);if(Math.random()<0.025)say('(attack SILENCE "vortex breech")',"bad");}
+  }
+
+  if(player.evidence>=6){document.getElementById("core").textContent="UNLOCKED";document.getElementById("verdict").textContent="EVIDENCE CONFIRMED";}
+  if(!player.won&&player.evidence>=6&&Math.hypot(portal.x-player.x,portal.y-player.y)<1.1){
+    player.won=true;
+    say('(seal TRUST_DEED "KITTYVERSE-VORTEX-001" plasma=OK)',"good");
+    sealEvent("KITTYVERSE_TRUST_DEED_VICTORY");
+  }
+  if(player.hp<=0&&!player.dead){player.dead=true;say('(route HUMAN_REVIEW "BOB down")',"bad");sealEvent("PLAYER_SILENCE");}
+}
+
+// ── RAY CASTER ────────────────────────────────────────────────────────
+function castRay(angle) {
+  let sin=Math.sin(angle),cos=Math.cos(angle),dist=0,step=0.035,x=player.x,y=player.y,t=".";
+  while(dist<22){x+=cos*step;y+=sin*step;dist+=step;t=tileAt(x,y);if(solid(t))break;}
+  return {dist,t,x,y};
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function render() {
+  const sky=ctx.createLinearGradient(0,0,0,H*.52);
+  sky.addColorStop(0,"#020610");sky.addColorStop(.55,"#071827");sky.addColorStop(1,"#10111b");
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H/2);
+  const floor=ctx.createLinearGradient(0,H/2,0,H);
+  floor.addColorStop(0,"#090b10");floor.addColorStop(1,"#020204");
+  ctx.fillStyle=floor;ctx.fillRect(0,H/2,W,H/2);
+
+  const fov=Math.PI/3, zbuf=[];
+  for(let x=0;x<W;x+=strip) {
+    const a=player.a-fov/2+(x/W)*fov;
+    const r=castRay(a), correct=r.dist*Math.cos(a-player.a);
+    const h=Math.min(H,Math.floor(H/(correct*0.62))), top=(H-h)/2;
+    const wc=wallColor(r.t, r.x, r.y);
+    const base=wc[2], coh=wc[3]??0.5, ph=wc[4]??0;
+    const shade=Math.max(0.24,1-correct/18)*(0.7+coh*0.3);
+    const side=(Math.abs(r.x-Math.round(r.x))<0.04)?1:0;
+    const bc=(side?wc[1]:wc[2]).match(/\w\w/g).map(v=>parseInt(v,16));
+    // Phase tint: shift hue based on lattice phase at wall hit
+    const tintR=Math.cos(ph)*20, tintG=Math.sin(ph)*10;
+    ctx.fillStyle=`rgb(${Math.floor(bc[0]*shade+tintR)},${Math.floor(bc[1]*shade+tintG)},${Math.floor(bc[2]*shade)})`;
+    ctx.fillRect(x,top,strip+1,h);
+    // Quantum coherence glow on named walls
+    if(coh>0.8&&(r.t==="n"||r.t==="a"||r.t==="p"||r.t==="c")){
+      ctx.fillStyle=`rgba(0,212,204,${0.08+(coh-0.8)*0.4+0.1*Math.sin(tick*0.05+x*0.02)})`;
+      ctx.fillRect(x,top,strip+1,h);
+    }
+    zbuf[x]=correct;
+  }
+  renderSprites(zbuf);
+
+  if(player.won){ctx.fillStyle="rgba(0,255,136,.12)";ctx.fillRect(0,0,W,H);ctx.fillStyle="#ffd700";ctx.font="bold 34px Courier New";ctx.textAlign="center";ctx.fillText("KITTYVERSE TRUST DEED SEALED ✓",W/2,H/2);}
+  if(player.hp<=0){ctx.fillStyle="rgba(255,0,0,.25)";ctx.fillRect(0,0,W,H);ctx.fillStyle="#ff4444";ctx.font="bold 34px Courier New";ctx.textAlign="center";ctx.fillText("SILENCE — HUMAN REVIEW REQUIRED",W/2,H/2);}
+}
+
+function renderSprites(zbuf) {
+  const alive=[...shards.filter(s=>s.alive),...sprites.filter(s=>s.kind==="agent"||(s.kind==="enemy"&&s.alive)),portal];
+  // Born rule modulates agent size (more probable = larger)
+  const raw=born_rule(QS.qs,AGENTS.length);
+  const tempered=born_rule_temperature(raw, QS.fibTemp);
+
+  alive.sort((a,b)=>Math.hypot(b.x-player.x,b.y-player.y)-Math.hypot(a.x-player.x,a.y-player.y));
+  for(const s of alive) {
+    const dx=s.x-player.x,dy=s.y-player.y,dist=Math.hypot(dx,dy);
+    const ang=Math.atan2(dy,dx)-player.a,norm=Math.atan2(Math.sin(ang),Math.cos(ang));
+    if(Math.abs(norm)>Math.PI/3||dist<0.2)continue;
+    const sx=(norm/(Math.PI/3)+0.5)*W;
+    let sizeBase=Math.min(H*0.75,H/(dist*0.9));
+    // Born rule size modulation for agents
+    if(s.kind==="agent"){const j=AGENTS.indexOf(s);if(j>=0)sizeBase*=(0.85+tempered[j]*0.3);}
+    const top=H/2-sizeBase/2,left=sx-sizeBase/2;
+    const zi=Math.max(0,Math.min(W-1,Math.floor(sx/strip)*strip));
+    if(zbuf[zi]&&zbuf[zi]<dist-0.25)continue;
+
+    ctx.save();ctx.globalAlpha=Math.max(0.35,1-dist/18);ctx.fillStyle=s.c;
+    if(s.kind==="shard"){
+      ctx.translate(sx,top+sizeBase/2);ctx.rotate(tick*0.04+QS.lat.phaseAt(s.x/MW,s.y/MH));
+      ctx.fillRect(-sizeBase*.16,-sizeBase*.16,sizeBase*.32,sizeBase*.32);
+    } else if(s.kind==="portal"){
+      // Portal pulses with lattice coherence
+      const coh=QS.lat.coherenceAt(s.x/MW,s.y/MH);
+      const pulse=1+Math.sin(tick*0.07)*0.1*(1+coh);
+      ctx.strokeStyle="#00d4ff";ctx.lineWidth=5;ctx.shadowColor="#00d4ff";ctx.shadowBlur=25*coh;
+      ctx.beginPath();ctx.ellipse(sx,top+sizeBase/2,sizeBase*.32*pulse,sizeBase*.48*pulse,0,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle="#000";ctx.beginPath();ctx.ellipse(sx,top+sizeBase/2,sizeBase*.18,sizeBase*.28,0,0,Math.PI*2);ctx.fill();
+    } else {
+      ctx.shadowColor=s.c;ctx.shadowBlur=16;
+      ctx.fillRect(left+sizeBase*.25,top+sizeBase*.22,sizeBase*.5,sizeBase*.58);
+      ctx.beginPath();ctx.arc(sx,top+sizeBase*.18,sizeBase*.18,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=s.kind==="enemy"?"#220000":"#020204";
+      ctx.fillRect(sx-sizeBase*.09,top+sizeBase*.15,sizeBase*.05,sizeBase*.04);
+      ctx.fillRect(sx+sizeBase*.04,top+sizeBase*.15,sizeBase*.05,sizeBase*.04);
+      ctx.fillStyle=s.c;
+      ctx.font=`bold ${Math.max(9,sizeBase*.09)}px Courier New`;ctx.textAlign="center";
+      ctx.fillText(s.name,sx,top+sizeBase*.92);
+    }
+    ctx.restore();
+  }
+}
+
+function drawMini() {
+  const s=Math.min(mini.width/MW,mini.height/MH);
+  mctx.clearRect(0,0,mini.width,mini.height);
+  // Draw lattice coherence as background heatmap
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) {
+    const coh=QS.lat.coherenceAt(x/MW,y/MH);
+    const t=MAP[y][x];
+    if(solid(t)){
+      const wc=wallBase(t);
+      mctx.fillStyle=wc[2];mctx.fillRect(x*s,y*s,s,s);
+    } else {
+      // Coherence heatmap on floor
+      const hue=200+coh*60, lum=0.1+coh*0.15;
+      mctx.fillStyle=`hsl(${hue},80%,${lum*100}%)`;
+      mctx.fillRect(x*s,y*s,s,s);
+    }
+  }
+  for(const sh of shards) if(sh.alive){mctx.fillStyle="#00ff88";mctx.fillRect((sh.x-.12)*s,(sh.y-.12)*s,s*.24,s*.24);}
+  for(const a of sprites) if(a.kind==="agent"||(a.kind==="enemy"&&a.alive)){mctx.fillStyle=a.c;mctx.beginPath();mctx.arc(a.x*s,a.y*s,s*.28,0,Math.PI*2);mctx.fill();}
+  mctx.strokeStyle="#ffd700";
+  mctx.beginPath();mctx.arc(player.x*s,player.y*s,s*.35,0,Math.PI*2);mctx.stroke();
+  mctx.beginPath();mctx.moveTo(player.x*s,player.y*s);mctx.lineTo((player.x+Math.cos(player.a))*s,(player.y+Math.sin(player.a))*s);mctx.stroke();
+}
+
+// ── STATE VECTOR BARS ─────────────────────────────────────────────────
+function updateStateBars() {
+  const el=document.getElementById("state-bars");
+  const n=Math.min(QS.qs.dim,16);
+  const probMax=QS.qs.psi.slice(0,n).reduce((m,a)=>Math.max(m,cabs2(a)),1e-20);
+  let html='<div class="panel-title">STATE VECTOR |ψ⟩</div>';
+  for(let i=0;i<n;i++){
+    const p=cabs2(QS.qs.psi[i]),ph=cphase(QS.qs.psi[i]);
+    const w=(p/probMax*100).toFixed(0);
+    const hue=((ph+Math.PI)/(2*Math.PI)*360).toFixed(0);
+    html+=`<div class="sbar-row"><span class="sbar-lbl">${i.toString(2).padStart(QS.qs.nq,'0')}</span><div class="sbar-outer"><div class="sbar-inner" style="width:${w}%;background:hsl(${hue},80%,50%)"></div></div></div>`;
+  }
+  el.innerHTML=html;
+}
+
+// ── HUD UPDATE ────────────────────────────────────────────────────────
+function updateHud() {
+  document.getElementById("health").textContent=Math.ceil(player.hp);
+  document.getElementById("health").style.color=player.hp>50?"var(--green)":player.hp>25?"var(--gold)":"var(--red)";
+  document.getElementById("evidence").textContent=`${player.evidence}/6`;
+  document.getElementById("seals").textContent=player.seals;
+  document.getElementById("fps").textContent=fps;
+
+  const entropy=vonNeumannEntropy(QS.qs);
+  document.getElementById("s-entropy").textContent=entropy.toFixed(3);
+  document.getElementById("s-topo").textContent=QS.lat.topoCharge();
+
+  // Left panel quantum metrics
+  document.getElementById("q-energy").textContent=(QS.qs.psi.reduce((s,a,i)=>s+i*cabs2(a),0)).toFixed(4);
+  document.getElementById("q-latenergy").textContent=QS.lat.totalEnergy().toFixed(3);
+  document.getElementById("q-coh").textContent=QS.lat.meanCoherence().toFixed(4);
+  document.getElementById("q-temp").textContent=QS.fibTemp.toFixed(4)+" (φ⁻ˢ)";
+  document.getElementById("q-vortices").textContent=QS.lat.vortexCount();
+  document.getElementById("q-norm").textContent=QS.qs.norm().toFixed(6);
+
+  if(tick%10===0) updateStateBars();
+}
+
+// ── MAIN LOOP ─────────────────────────────────────────────────────────
+function loop(now) {
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  frames++;if(now-fpsMark>1000){fps=frames;frames=0;fpsMark=now;}
+  move(dt);update(dt);render();drawMini();updateHud();
+  requestAnimationFrame(loop);
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────
+say('(boot SOV_KERNEL_MONSTER "vortex-quantum-doom")',"good");
+say(`(init QS "8 qubits | 16×16 lattice | dim=256")`,"quantum");
+say('(engine "blake3_worm + born_rule + trotter + josephson")',"quantum");
+sealEvent("BOOT_VORTEX_QUANTUM_DOOM");
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
