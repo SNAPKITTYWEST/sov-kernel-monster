@@ -127,12 +127,12 @@ partialDerivative (Poly f) v = Poly $ Map.fromList
   ]
 
 evaluate :: Polynomial -> [Rational] -> Rational
-evaluate (Poly f) vals
-  | length vals < 2 = error "evaluate: need at least 2 variables"
-  | otherwise =
-      let (u:x:_) = vals  -- Take first 2 variables, ignore rest
-      in sum [ c * (u^u') * (x^x')
-             | ((u',x'),c) <- Map.toList f ]
+evaluate (Poly f) vals =
+  sum [ c * (u^u') * (x^x')
+      | ((u',x'),c) <- Map.toList f
+      , let u = if null vals then 0 else vals !! 0
+      , let x = if length vals < 2 then 0 else vals !! 1
+      ]
 
 -- =====================================================================
 -- Basic Queries

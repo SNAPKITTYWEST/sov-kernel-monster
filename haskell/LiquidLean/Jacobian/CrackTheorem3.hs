@@ -47,8 +47,18 @@ forceGenusZero hPoly = do
     then pure (Left (NonRationalCurve "Zero polynomial"))
     else do
       -- Step 2: Find all singularities via resultant method
-      -- For now: collect known singular points (origin + TODO: add resultant-based search)
-      let singularPoints = [(0, 0)]  -- TODO: Compute full singular locus via resultant of ∂h/∂u, ∂h/∂x
+      let fu = partialDerivative hPoly 0
+      let fx = partialDerivative hPoly 1
+      -- Singular points: h=0, ∂h/∂u=0, ∂h/∂x=0
+      -- Search over bounded region [−d, d]² with integer points (simplified)
+      let searchRange = [(-d)..d]
+      let singularPoints =
+            [(fromIntegral u, fromIntegral x)
+            | u <- searchRange, x <- searchRange
+            , evaluate hPoly [fromIntegral u, fromIntegral x] == 0
+            , evaluate fu [fromIntegral u, fromIntegral x] == 0
+            , evaluate fx [fromIntegral u, fromIntegral x] == 0
+            ]
 
       -- Step 3: Analyze each singular point and collect δ-invariants
       deltasResults <- mapM (\pt -> analyseSingularity hPoly pt) singularPoints
