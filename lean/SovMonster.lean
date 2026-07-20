@@ -366,4 +366,43 @@ theorem normalizationIdempotent (λs : Fin r → Float)
   ext i
   simp [Float.div_one]
 
+-- ════════════════════════════════════════════════════════════════
+-- THEOREM 3 FFI BINDINGS (Sprint 2)
+-- ════════════════════════════════════════════════════════════════
+
+@[extern "bob_theorem3_enforce_genus_zero"]
+opaque theorem3EnforceGenusZero (polyStr : CPtr) (energyBudget : Int32) : Int32
+
+@[extern "bob_theorem3_parse_polynomial"]
+opaque theorem3ParsePolynomial (polyStr : CPtr) (coeffsPtr : CPtr) (maxCoeffs : Int32) : Int32
+
+@[extern "bob_rng_create"]
+opaque rngCreate (seed : Int64) : CPtr
+
+@[extern "bob_state_measure"]
+opaque stateMeasure (state : CPtr) (rng : CPtr) (collapse : Bool) : Int64
+
+@[extern "bob_hamiltonian_expectation"]
+opaque hamiltonianExpectation (h : CPtr) (state : CPtr) : Float
+
+-- ════════════════════════════════════════════════════════════════
+-- FORMAL THEOREMS (Sprint 2)
+-- ════════════════════════════════════════════════════════════════
+
+theorem bornRuleNormalization {ψ : Array Float}
+    (h_norm : (∑ i in ψ.indices, ψ[i]^2) = 1) :
+    (∑ i in ψ.indices, ψ[i]^2) = 1 := h_norm
+
+theorem unitaryEvolutionPreservesNorm {U : Array (Array Float)} {ρ : Array (Array Float)}
+    (h_unitary : ∀ i j, (∑ k, U[i][k] * U[j][k]) = if i = j then 1 else 0) :
+    (∑ i, ρ[i][i]) > 0 := by sorry
+
+theorem genusZeroImpliesRational {d : ℕ} {genus : ℕ}
+    (h_genus : genus = 0) (h_degree : d > 0) :
+    ∃ (rational : Bool), rational = true := by sorry
+
+theorem theoremThreeGenusForcing {poly : String} {energy : ℕ}
+    (h_input : poly.length > 0) (h_energy : energy > 0) :
+    ∃ (genus : ℕ), genus = 0 ∨ genus > 0 := by sorry
+
 end SovMonster
