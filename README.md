@@ -1,3 +1,9 @@
+# 🌀 SOV-KERNEL-MONSTER
+
+**Sovereign Quantum Civilization Engine** — 9,039 lines Fortran 2018 | 21 modules | Zero dependencies | WASM-ready
+
+Density matrix evolution under Hamiltonian with Blake3 + Ed25519 attestation, compiled to bare metal.
+
 <div align="center">
 
 [![Fortran](https://img.shields.io/badge/Fortran_2018-9039_lines-c0392b?style=flat-square)](src/)
