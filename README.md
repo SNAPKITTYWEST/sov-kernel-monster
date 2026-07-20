@@ -25,14 +25,14 @@
 
 ## 🌍 MISSION CONTROL VIEW
 
-![Earth Station - Civilization Nodes Active](earth-station-night.jpg)
+![Earth Station - Civilization Nodes Active](earth-station-iss.png)
 *Quantum Bob Kernel observing Level 5 Civilization from ISS perspective*
 
 ---
 
 ## 🌀 QUANTUM BOB CIVILIZATION HUB
 
-![Quantum City - AI Civilization Protocol Level 5 Enabled](quantum-civilization-hub.jpg)
+![Quantum City - AI Civilization Protocol Level 5 Enabled](quantum-city-hub.png)
 *Sovereign quantum mesh infrastructure: 11D topology, wormhole stabilized, entanglement verified*
 
 ---
