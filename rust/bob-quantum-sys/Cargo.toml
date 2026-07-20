@@ -1,0 +1,15 @@
+[package]
+name = "bob-quantum-sys"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "bob_quantum_sys"
+link-lib = "bob_quantum"
+
+[dependencies]
+num-complex = "0.4"
+libc = "0.2"
+
+[build-dependencies]
+cc = "1.0"
