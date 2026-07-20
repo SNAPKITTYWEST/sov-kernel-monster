@@ -20,7 +20,7 @@ module mlir_forge_kernels
 
   public :: mlir_forge_pipeline
   public :: inject_quantum_adapters
-  public :: mlir_opt_pass_pipeline
+  public :: build_pass_pipeline
 
   !====================================================================
   ! C FFI DECLARATIONS — MLIR C API (Phase 2: link to mlir-c-lib)
@@ -116,7 +116,7 @@ contains
 
     ! String inputs (C-interop)
     character(len=*), intent(in) :: target_triple
-    real(kind=rp), dimension(4), intent(in) :: constraints
+    real(kind=wp), dimension(4), intent(in) :: constraints
 
     ! Output (allocatable for Fortran caller)
     integer(c_int8_t), dimension(:), allocatable, intent(out) :: optimized_ir_bytes
@@ -258,11 +258,11 @@ contains
     implicit none
 
     character(len=*), intent(in) :: target_triple
-    real(kind=rp), dimension(4), intent(in) :: constraints
+    real(kind=wp), dimension(4), intent(in) :: constraints
     integer, intent(in) :: quantum_available
     character(len=512), intent(out) :: pipeline_str
 
-    real(kind=rp) :: latency_ms, memory_mb, power_w, quantum_budget
+    real(kind=wp) :: latency_ms, memory_mb, power_w, quantum_budget
     character(len=128) :: tile_sizes
 
     latency_ms = constraints(1)
@@ -277,10 +277,10 @@ contains
     pipeline_str = trim(pipeline_str) // "affine-loop-fusion,"
 
     ! Linalg tiling (adaptive based on constraints)
-    if (latency_ms < 1.0_rp) then
+    if (latency_ms < 1.0_wp) then
       ! Low latency: fine-grained tiling (4x4 blocks)
       tile_sizes = "4,4"
-    else if (memory_mb < 512.0_rp) then
+    else if (memory_mb < 512.0_wp) then
       ! Low memory: conservative tiling (32x32 blocks)
       tile_sizes = "32,32"
     else
@@ -290,7 +290,7 @@ contains
     pipeline_str = trim(pipeline_str) // "linalg-tile{tile-sizes=" // trim(tile_sizes) // "},"
 
     ! Vectorization (power-aware)
-    if (power_w < 10.0_rp) then
+    if (power_w < 10.0_wp) then
       ! Low power: restrict SIMD width
       pipeline_str = trim(pipeline_str) // "vectorize{vectorize-vector-width=128},"
     else
@@ -312,7 +312,7 @@ contains
     end if
 
     ! Quantum injection (Phase 2)
-    if (quantum_available /= 0 .and. quantum_budget > 0.0_rp) then
+    if (quantum_available /= 0 .and. quantum_budget > 0.0_wp) then
       ! Placeholder: Phase 2 will add convert-linalg-to-quantum
       pipeline_str = trim(pipeline_str) // "convert-linalg-to-quantum,"
     end if
