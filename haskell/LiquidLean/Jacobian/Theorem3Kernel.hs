@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds, GADTs, KindSignatures, TypeOperators, ScopedTypeVariables #-}
 {-# LANGUAGE StrictData, BangPatterns, PatternSynonyms, ViewPatterns #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- =====================================================================
 -- LIQUIDLEAN // THEOREM 3 CRACK: KERNEL & TYPES
@@ -8,12 +9,11 @@
 -- =====================================================================
 
 module LiquidLean.Jacobian.Theorem3Kernel
-  ( Rational
-  , Z
+  ( Z
   , Polynomial(..)
   , RationalFunction(..)
   , LocalMonomial(..)
-  , Thermal
+  , Thermal(..)
   , Energy(..)
   , Obstruction(..)
   , Result
@@ -36,6 +36,7 @@ module LiquidLean.Jacobian.Theorem3Kernel
   , monomial
   ) where
 
+import Prelude hiding (Rational)
 import GHC.TypeLits (Nat, KnownNat, natVal)
 import Data.Ratio (Ratio, denominator, numerator)
 import Data.Map.Strict (Map)
@@ -44,7 +45,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Control.Monad.State.Strict
 
--- | Exact rationals
+-- | Exact rationals (redefine to avoid shadowing Prelude.Rational in type sigs)
 type Rational = Ratio Integer
 type Z = Integer
 
@@ -119,16 +120,17 @@ scalePoly c (Poly f) = Poly (Map.map (c*) f)
 -- =====================================================================
 
 partialDerivative :: Polynomial -> Int -> Polynomial
-partialDerivative (Poly f) v = Poly $ Map.mapMaybeWithKey (\(u,x) c ->
-  if v == 0
-    then if u > 0 then Just ((u-1,x), c * fromIntegral u) else Nothing
-    else if x > 0 then Just ((u,x-1), c * fromIntegral x) else Nothing) f
+partialDerivative (Poly f) v = Poly $ Map.fromList
+  [ ((if v == 0 then u-1 else u, if v == 0 then x else x-1), c * fromIntegral (if v == 0 then u else x))
+  | ((u,x), c) <- Map.toList f
+  , (v == 0 && u > 0) || (v /= 0 && x > 0)
+  ]
 
 evaluate :: Polynomial -> [Rational] -> Rational
 evaluate (Poly f) vals
   | length vals < 2 = error "evaluate: need at least 2 variables"
   | otherwise =
-      let [u,x] = take 2 vals  -- Take first 2 variables, ignore rest
+      let (u:x:_) = vals  -- Take first 2 variables, ignore rest
       in sum [ c * (u^u') * (x^x')
              | ((u',x'),c) <- Map.toList f ]
 

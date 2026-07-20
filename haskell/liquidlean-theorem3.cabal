@@ -1,0 +1,57 @@
+cabal-version:      2.4
+name:               liquidlean-theorem3
+version:            0.1.0.0
+synopsis:           Jacobian Conjecture Crack — Theorem 3 in Haskell
+description:
+    Rigorous formalization of the Jacobian Conjecture attack via genus-0 forcing.
+    Core pipeline: singularity analysis → δ-invariants (Mora) → Plücker genus formula.
+    Integrated with sov-kernel-monster quantum kernel via energy accounting and WORM attestation.
+
+license:            LicenseRef-SSL
+license-file:       ../../LICENSE
+author:             Ahmad Ali Parr
+maintainer:         ahmedparr93@gmail.com
+copyright:          2026 SnapKitty Collective
+category:           Math
+build-type:         Simple
+extra-source-files:
+    INTEGRATION_GUIDE.md
+
+common warnings
+    ghc-options: -Wall -Wcompat -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns -Wredundant-constraints
+                 -Wno-name-shadowing
+
+library
+    import:           warnings
+    exposed-modules:
+        LiquidLean.Jacobian.Theorem3Kernel
+        LiquidLean.Jacobian.MoraLocal
+        LiquidLean.Jacobian.SingularityAnalysis
+        LiquidLean.Jacobian.CrackTheorem3
+        LiquidLean.Jacobian.Theorem3Entry
+
+    other-modules:
+    hs-source-dirs:   .
+    default-language: Haskell2010
+    default-extensions:
+        DataKinds
+        GADTs
+        KindSignatures
+        TypeOperators
+        ScopedTypeVariables
+        StrictData
+        BangPatterns
+        PatternSynonyms
+        ViewPatterns
+
+    build-depends:
+        base >=4.16 && <5,
+        containers >=0.6.5,
+        mtl >=2.2.2
+
+    ghc-options:
+        -O2
+        -fspec-constr-recursive=16
+        -fstatic-argument-transformation
+

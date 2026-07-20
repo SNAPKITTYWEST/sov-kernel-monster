@@ -13,6 +13,8 @@ module LiquidLean.Jacobian.SingularityAnalysis
 
 import LiquidLean.Jacobian.Theorem3Kernel
 import LiquidLean.Jacobian.MoraLocal
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 
 -- =====================================================================
 -- Singularity Data Type
