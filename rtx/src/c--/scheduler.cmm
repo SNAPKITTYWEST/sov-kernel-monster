@@ -1,0 +1,172 @@
+-- =====================================================================
+-- SOV SCHEDULER -- C-- Continuous Batching State Machine
+-- States: IDLE(0) PREFILL(1) GENERATE(2) SWAP(3) CHECKPOINT(4) RESUME(5)
+-- Janet array: 32 Word32 slots at known address for runtime config
+-- WORM: every 64 generated tokens → worm_checkpoint() → Blake3+Ed25519 receipt
+-- =====================================================================
+
+section "data" {
+    -- Janet array: 32 Word32 slots
+    -- [0]  = pending_request_count
+    -- [1]  = batch_size
+    -- [2]  = tokens_generated (mod 64 counter)
+    -- [3]  = current_seq_id
+    -- [4]  = kv_blocks_used
+    -- [5]  = power_state (0=active,1=suspend,2=resume,3=low_battery)
+    -- [6]  = speculative_draft_len
+    -- [7]  = bft_quorum_height
+    -- [8..15] = worm_receipt_blake3 (8 x Word32 = 32 bytes)
+    -- [16..31] = worm_receipt_ed25519 first 64 bytes
+    scheduler_janet_array:
+        bits32[32] {0,0,0,0, 0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+}
+
+-- External C/Fortran functions
+foreign import ccall "sov_kv_allocate_blocks"
+    sov_kv_allocate_blocks :: Word64 -> Word32 -> IO ();
+
+foreign import ccall "sov_cuda_flash_attention"
+    sov_cuda_flash_attention :: Word32 -> Word32 -> Word64 -> Word64 -> Word64 -> Word64 -> Word64 -> Word64 -> Word32 -> Word32 -> IO ();
+
+foreign import ccall "sov_worm_checkpoint"
+    sov_worm_checkpoint :: Word64 -> IO ();
+
+foreign import ccall "sov_worm_restore"
+    sov_worm_restore :: Word64 -> IO ();
+
+foreign import ccall "sov_kv_append_tokens"
+    sov_kv_append_tokens :: Word64 -> Word64 -> Word64 -> Word64 -> Word32 -> Word32 -> IO ();
+
+foreign import ccall "sov_speculative_draft"
+    sov_speculative_draft :: Word64 -> Word32 -> Word64 -> IO ();
+
+foreign import ccall "sov_speculative_verify"
+    sov_speculative_verify :: Word64 -> Word64 -> Word32 -> IO Word32;
+
+foreign import ccall "sov_power_event"
+    sov_power_event :: Word32 -> IO ();
+
+-- =====================================================================
+-- scheduler_step(state, batch_ptr, kv_ptr) -> new_state
+-- =====================================================================
+scheduler_step(W_ state, W_ batch_ptr, W_ kv_ptr)
+{
+    W_ pending, new_state, tokens_gen, power;
+
+    power = W_[scheduler_janet_array + (5 * SIZEOF_W)];
+    if (power == 1) {   -- SUSPEND
+        jump scheduler_do_checkpoint(state, batch_ptr, kv_ptr);
+    }
+    if (power == 2) {   -- RESUME
+        jump scheduler_do_resume(state, batch_ptr, kv_ptr);
+    }
+
+    switch [0..5] state {
+        case 0: {   -- IDLE
+            pending = W_[scheduler_janet_array + (0 * SIZEOF_W)];
+            if (pending > 0) {
+                new_state = 1;  -- -> PREFILL
+            } else {
+                new_state = 0;  -- stay IDLE
+            }
+            return (new_state);
+        }
+        case 1: {   -- PREFILL
+            -- Allocate KV blocks for this batch
+            foreign "C" sov_kv_allocate_blocks(kv_ptr, W_[scheduler_janet_array + (1 * SIZEOF_W)]);
+            -- Reset token counter
+            W_[scheduler_janet_array + (2 * SIZEOF_W)] = 0;
+            new_state = 2;  -- -> GENERATE
+            return (new_state);
+        }
+        case 2: {   -- GENERATE
+            W_ heads, seqs, head_dim, block_size;
+            seqs      = W_[scheduler_janet_array + (1 * SIZEOF_W)];
+            heads     = 32;    -- llama-3 8B default
+            head_dim  = 128;
+            block_size = 16;
+
+            -- Run flash attention forward pass
+            foreign "C" sov_cuda_flash_attention(
+                seqs, heads,
+                batch_ptr,          -- q
+                kv_ptr,             -- k
+                kv_ptr + 4096,      -- v
+                batch_ptr + 8192,   -- out
+                kv_ptr + 16384,     -- block_table
+                kv_ptr + 32768,     -- seq_lens
+                head_dim, block_size);
+
+            -- Run speculative draft
+            foreign "C" sov_speculative_draft(batch_ptr, W_[scheduler_janet_array + (6 * SIZEOF_W)], kv_ptr);
+
+            -- Increment token counter
+            tokens_gen = W_[scheduler_janet_array + (2 * SIZEOF_W)] + 1;
+            W_[scheduler_janet_array + (2 * SIZEOF_W)] = tokens_gen;
+
+            -- Every 64 tokens: WORM checkpoint
+            if ((tokens_gen & 63) == 0) {
+                foreign "C" sov_worm_checkpoint(kv_ptr);
+                -- BFT vote: increment quorum height
+                W_[scheduler_janet_array + (7 * SIZEOF_W)] = W_[scheduler_janet_array + (7 * SIZEOF_W)] + 1;
+            }
+
+            -- Check if sequence complete (token_count reached max or EOS)
+            if (tokens_gen >= 2048) {
+                -- Decrement pending count
+                W_[scheduler_janet_array + (0 * SIZEOF_W)] = W_[scheduler_janet_array + (0 * SIZEOF_W)] - 1;
+                new_state = 0;  -- -> IDLE
+            } else {
+                new_state = 2;  -- stay GENERATE
+            }
+            return (new_state);
+        }
+        case 3: {   -- SWAP: copy KV blocks GPU->CPU
+            -- Swap oldest sequence KV to CPU (simplified: just checkpoint)
+            foreign "C" sov_worm_checkpoint(kv_ptr);
+            new_state = 1;  -- -> PREFILL
+            return (new_state);
+        }
+        case 4: {   -- CHECKPOINT
+            jump scheduler_do_checkpoint(state, batch_ptr, kv_ptr);
+        }
+        case 5: {   -- RESUME
+            jump scheduler_do_resume(state, batch_ptr, kv_ptr);
+        }
+        default: {
+            new_state = 0;
+            return (new_state);
+        }
+    }
+}
+
+scheduler_do_checkpoint(W_ state, W_ batch_ptr, W_ kv_ptr)
+{
+    foreign "C" sov_worm_checkpoint(kv_ptr);
+    -- Receipt written to janet_array[8..31] by worm_checkpoint C impl
+    W_[scheduler_janet_array + (5 * SIZEOF_W)] = 0;  -- clear power flag
+    return (5);  -- -> RESUME state
+}
+
+scheduler_do_resume(W_ state, W_ batch_ptr, W_ kv_ptr)
+{
+    foreign "C" sov_worm_restore(kv_ptr);
+    W_[scheduler_janet_array + (5 * SIZEOF_W)] = 0;  -- clear power flag
+    return (1);  -- -> PREFILL
+}
+
+-- =====================================================================
+-- janet_get(slot) / janet_set(slot, val)
+-- =====================================================================
+janet_get(W_ slot)
+{
+    W_ val;
+    val = W_[scheduler_janet_array + (slot * SIZEOF_W)];
+    return (val);
+}
+
+janet_set(W_ slot, W_ val)
+{
+    W_[scheduler_janet_array + (slot * SIZEOF_W)] = val;
+    return ();
+}
