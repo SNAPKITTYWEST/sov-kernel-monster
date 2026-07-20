@@ -1,11 +1,5 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/SNAPKITTYWEST/sov-kernel-monster/main/docs/bob_quantum_vortex.svg" width="900" height="650" alt="BOB QUANTUM CIVILIZATION ENGINE"/>
-
-**Animated quantum centerpiece** — Vortex dynamics, Hamiltonian evolution, quantum metrics live simulation.
-
-</div>
-
 [![Fortran](https://img.shields.io/badge/Fortran_2018-9039_lines-c0392b?style=flat-square)](src/)
 [![Targets](https://img.shields.io/badge/ARM64_SVE2_%7C_AVX--512_%7C_PTX-2e86c1?style=flat-square)](Makefile)
 [![Deps](https://img.shields.io/badge/dependencies-ZERO-00b894?style=flat-square)](src/)
