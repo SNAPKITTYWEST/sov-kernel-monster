@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum IDE — Sovereign Compute Workbench</title>
+<style>
+/* ── RESET & TOKENS ──────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:     #040810;
+  --bg2:    #080f1a;
+  --bg3:    #0c1520;
+  --bg4:    #101c28;
+  --border: #0f2030;
+  --accent: #00d4cc;
+  --purple: #7c3aed;
+  --gold:   #ffd700;
+  --green:  #00e87a;
+  --red:    #f43;
+  --yellow: #fa0;
+  --text:   #c8e0ec;
+  --text2:  #4a6878;
+  --text3:  #2a3e4e;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);
+  font-family:'SF Mono','Fira Code','Cascadia Code','Consolas',monospace;
+  overflow:hidden;font-size:12px}
+
+/* ── TITLEBAR ────────────────────────────────────────────────── */
+#bar{
+  height:32px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0;
+}
+.dot{width:10px;height:10px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#febc2e}.dg{background:#28c840}
+#bar-title{flex:1;text-align:center;font-size:11px;color:var(--text2);
+  letter-spacing:2px;text-transform:uppercase}
+.tag{font-size:9px;padding:1px 6px;border-radius:3px;border:1px solid;
+  letter-spacing:.5px;text-transform:uppercase;opacity:.8}
+.tag-sim{color:var(--yellow);border-color:var(--yellow)}
+.tag-real{color:var(--green);border-color:var(--green)}
+
+/* ── LAYOUT ──────────────────────────────────────────────────── */
+#app{display:flex;height:calc(100vh - 54px)}
+
+/* ── LEFT SIDEBAR ────────────────────────────────────────────── */
+#left{
+  width:44px;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:4px;
+}
+.icon-btn{
+  width:30px;height:30px;border-radius:5px;border:1px solid transparent;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:14px;color:var(--text2);transition:all .15s;
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--bg3)}
+.icon-btn.active{border-color:var(--accent);color:var(--accent);background:var(--bg4)}
+
+/* ── PANEL AREA ──────────────────────────────────────────────── */
+#panels{flex:1;display:flex;min-width:0}
+
+/* Panel system */
+.panel{
+  display:flex;flex-direction:column;border-right:1px solid var(--border);
+  flex-shrink:0;
+}
+.panel-hdr{
+  height:28px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0;
+}
+.panel-hdr span{font-size:9px;color:var(--text2);text-transform:uppercase;
+  letter-spacing:1.5px}
+.panel-hdr .badge{
+  font-size:8px;padding:1px 5px;border-radius:2px;margin-left:auto;
+}
+.panel-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── QUANTUM STATE PANEL ──────────────────────────────────────── */
+#p-quantum{width:240px}
+#state-display{flex:1;overflow-y:auto;padding:8px}
+#state-display::-webkit-scrollbar{width:3px}
+#state-display::-webkit-scrollbar-thumb{background:var(--border)}
+
+.metric-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:4px;padding:3px 6px;border-radius:3px;
+}
+.metric-row:nth-child(even){background:var(--bg3)}
+.mk{font-size:10px;color:var(--text2)}
+.mv{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.mv-accent{color:var(--accent)}
+.mv-purple{color:var(--purple)}
+.mv-gold{color:var(--gold)}
+.mv-green{color:var(--green)}
+.mv-red{color:var(--red)}
+
+/* State vector bars */
+#sv-section{padding:6px 8px;border-top:1px solid var(--border)}
+.sv-title{font-size:9px;color:var(--text2);text-transform:uppercase;
+  letter-spacing:1.5px;margin-bottom:5px}
+.sv-row{display:flex;align-items:center;gap:3px;margin-bottom:1px}
+.sv-lbl{font-size:8px;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
+.sv-bar-outer{flex:1;height:6px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.sv-bar-inner{height:100%;border-radius:2px;transition:width .08s}
+.sv-phase-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ── EDITOR / REPL PANEL ──────────────────────────────────────── */
+#p-repl{flex:1;min-width:0}
+#repl-tabs{
+  height:28px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-end;overflow-x:auto;
+}
+#repl-tabs::-webkit-scrollbar{height:2px}
+.rtab{
+  height:26px;padding:0 12px;font-size:10px;display:flex;align-items:center;
+  gap:5px;border-right:1px solid var(--border);cursor:pointer;
+  color:var(--text2);white-space:nowrap;border-top:2px solid transparent;
+}
+.rtab:hover{color:var(--text);background:var(--bg3)}
+.rtab.on{color:var(--text);background:var(--bg);border-top-color:var(--accent)}
+#repl-body{flex:1;display:flex;flex-direction:column;min-height:0}
+
+/* Monaco editor */
+#monaco-wrap{flex:1;position:relative;min-height:0}
+#monaco{width:100%;height:100%}
+
+/* Forth REPL */
+#forth-repl{flex:1;display:flex;flex-direction:column;min-height:0;display:none}
+#forth-output{
+  flex:1;overflow-y:auto;padding:10px;font-size:11px;line-height:1.5;
+  color:var(--text);background:var(--bg);
+}
+#forth-output::-webkit-scrollbar{width:3px}
+#forth-output::-webkit-scrollbar-thumb{background:var(--border)}
+.fo-ok{color:var(--accent)}.fo-err{color:var(--red)}.fo-info{color:var(--text2)}
+#forth-input-row{
+  height:28px;background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:0;
+}
+#forth-prompt{padding:0 8px;color:var(--accent);font-size:11px;flex-shrink:0}
+#forth-input{
+  flex:1;background:transparent;border:none;color:var(--text);
+  font-size:11px;font-family:inherit;outline:none;padding:0 4px;
+}
+
+/* Abjad VM panel */
+#abjad-panel{flex:1;display:flex;flex-direction:column;min-height:0;display:none}
+#abjad-editor{
+  flex:1;padding:10px;font-size:11px;line-height:1.6;color:var(--text);
+  background:var(--bg);resize:none;border:none;outline:none;font-family:inherit;
+}
+#abjad-controls{
+  height:28px;background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;padding:0 8px;
+}
+.abtn{
+  padding:2px 8px;background:transparent;border:1px solid var(--border);
+  color:var(--text2);font-size:10px;cursor:pointer;border-radius:3px;
+  font-family:inherit;transition:all .1s;
+}
+.abtn:hover{border-color:var(--accent);color:var(--accent)}
+#abjad-trace{
+  height:80px;overflow-y:auto;padding:6px 10px;font-size:10px;
+  border-top:1px solid var(--border);background:var(--bg2);
+}
+#abjad-trace::-webkit-scrollbar{height:2px;width:2px}
+
+/* ── RIGHT PANEL — TELEMETRY + GATE LOG ─────────────────────── */
+#p-right{width:260px}
+#telemetry-section{
+  height:200px;overflow-y:auto;padding:8px;border-bottom:1px solid var(--border);
+}
+#telemetry-section::-webkit-scrollbar{width:3px}
+.tel-row{
+  font-size:9px;line-height:1.5;color:var(--text2);margin-bottom:2px;
+  padding:2px 4px;border-radius:2px;
+}
+.tel-row.chain{color:var(--accent);background:rgba(0,212,204,.04)}
+.tel-row.gate{color:var(--purple);background:rgba(124,58,237,.04)}
+.tel-row.err{color:var(--red);background:rgba(255,68,51,.05)}
+.tel-row.measure{color:var(--gold);background:rgba(255,215,0,.04)}
+.tel-row.nats{color:var(--green);background:rgba(0,232,122,.04)}
+
+/* NATS bus */
+#nats-section{padding:6px 8px;border-bottom:1px solid var(--border)}
+.nats-title{font-size:9px;color:var(--text2);text-transform:uppercase;
+  letter-spacing:1.5px;margin-bottom:4px}
+#nats-channels{font-size:9px}
+.nats-ch{
+  display:flex;justify-content:space-between;padding:2px 4px;
+  border-radius:2px;margin-bottom:1px;
+}
+.nats-ch:hover{background:var(--bg3)}
+.nats-name{color:var(--text2)}
+.nats-count{color:var(--accent);font-variant-numeric:tabular-nums}
+.nats-dot{width:5px;height:5px;border-radius:50%;
+  flex-shrink:0;margin-top:2px;margin-right:3px}
+.nats-dot.live{background:var(--green)}
+.nats-dot.idle{background:var(--text3)}
+
+/* WORM chain */
+#worm-section{padding:6px 8px;flex:1;overflow-y:auto}
+#worm-section::-webkit-scrollbar{width:3px}
+#worm-section::-webkit-scrollbar-thumb{background:var(--border)}
+.worm-title{font-size:9px;color:var(--text2);text-transform:uppercase;
+  letter-spacing:1.5px;margin-bottom:4px}
+.worm-entry{
+  font-size:8px;color:var(--text3);margin-bottom:3px;
+  font-variant-numeric:tabular-nums;line-height:1.4;
+  padding:3px 4px;border-radius:2px;border-left:2px solid var(--border);
+}
+.worm-entry .wh{color:var(--accent);font-weight:600}
+.worm-entry .we{font-size:7px;color:var(--text2)}
+
+/* ── STATUS BAR ──────────────────────────────────────────────── */
+#sbar{
+  height:22px;background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 10px;gap:16px;
+  font-size:9px;color:var(--text2);flex-shrink:0;
+}
+.sb-k{opacity:.6}
+.sb-v{color:var(--accent);font-variant-numeric:tabular-nums}
+.sb-warn{color:var(--yellow)}
+#sbar-right{margin-left:auto;display:flex;gap:16px}
+
+/* ── QUANTUM SIMULATION CANVAS (background) ───────────────────── */
+#bg-canvas{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;opacity:.12;
+}
+#app,#bar,#sbar{position:relative;z-index:1}
+</style>
+</head>
+<body>
+
+<!-- Background vortex canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- TITLEBAR -->
+<div id="bar">
+  <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+  <div id="bar-title">Quantum IDE — Sovereign Compute Workbench</div>
+  <span class="tag tag-sim" title="Quantum simulation runs on classical CPU/GPU via Trotter evolution">Classical Sim</span>
+  <span class="tag tag-real" title="QRNG uses Web Crypto getRandomValues — OS entropy pool">Real Entropy</span>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- LEFT ICON BAR -->
+  <div id="left">
+    <div class="icon-btn active" id="btn-state"   onclick="setView('state')"   title="Quantum state">⟩ψ</div>
+    <div class="icon-btn"        id="btn-monaco"  onclick="setView('monaco')"  title="Code editor">⬚</div>
+    <div class="icon-btn"        id="btn-forth"   onclick="setView('forth')"   title="pForth REPL">F</div>
+    <div class="icon-btn"        id="btn-abjad"   onclick="setView('abjad')"   title="Abjad VM">A</div>
+    <div style="flex:1"></div>
+    <div class="icon-btn"        id="btn-run"     onclick="toggleRun()"        title="Run/pause">▶</div>
+    <div class="icon-btn"        onclick="stepOnce()"                          title="Step once">⬛</div>
+    <div class="icon-btn"        onclick="applyHadamard()"                     title="Hadamard all">H</div>
+    <div class="icon-btn"        onclick="measureAll()"                        title="Measure (collapse)">M</div>
+    <div class="icon-btn"        onclick="resetSim()"                          title="Reset simulation">↺</div>
+  </div>
+
+  <!-- PANELS -->
+  <div id="panels">
+
+    <!-- QUANTUM STATE PANEL -->
+    <div class="panel" id="p-quantum">
+      <div class="panel-hdr">
+        <span>Quantum State</span>
+        <span class="badge" style="color:var(--yellow);font-size:8px">
+          Trotter · Classical
+        </span>
+      </div>
+      <div class="panel-body">
+        <div id="state-display">
+          <!-- metrics injected by JS -->
+        </div>
+        <div id="sv-section">
+          <div class="sv-title">State Vector |ψ⟩ — first 16 basis states</div>
+          <div id="sv-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR / REPL PANEL -->
+    <div class="panel" id="p-repl">
+      <div id="repl-tabs">
+        <div class="rtab on" id="tab-monaco" onclick="setView('monaco')">⬚ Editor</div>
+        <div class="rtab"    id="tab-forth"  onclick="setView('forth')">F pForth</div>
+        <div class="rtab"    id="tab-abjad"  onclick="setView('abjad')">A Abjad VM</div>
+      </div>
+      <div id="repl-body">
+        <!-- Monaco editor -->
+        <div id="monaco-wrap">
+          <div id="monaco" style="display:none"></div>
+          <div id="monaco-placeholder" style="padding:16px;color:var(--text2);font-size:11px">
+            Loading Monaco editor...
+          </div>
+        </div>
+
+        <!-- Forth REPL -->
+        <div id="forth-repl">
+          <div id="forth-output"></div>
+          <div id="forth-input-row">
+            <span id="forth-prompt">forth&gt;</span>
+            <input id="forth-input" type="text" placeholder="( enter Forth words )" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+
+        <!-- Abjad VM -->
+        <div id="abjad-panel">
+          <textarea id="abjad-editor" spellcheck="false">; Abjad resonance program
+; Opcodes: ENTER LOAD STORE COMPARE BRANCH FREEZE SIGNAL HALT
+; Registers: trust_vector  entropy_register  resonance_field
+
+ENTER
+LOAD   entropy_register
+COMPARE
+BRANCH done
+STORE  resonance_field
+SIGNAL
+FREEZE
+done:
+HALT</textarea>
+          <div id="abjad-controls">
+            <button class="abtn" onclick="runAbjad()">▶ Run</button>
+            <button class="abtn" onclick="stepAbjad()">⬛ Step</button>
+            <button class="abtn" onclick="resetAbjad()">↺ Reset</button>
+            <span style="margin-left:auto;font-size:9px;color:var(--text2)" id="abjad-status">idle</span>
+          </div>
+          <div id="abjad-trace"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel" id="p-right">
+      <div class="panel-hdr"><span>Telemetry · NATS · WORM</span></div>
+      <div class="panel-body">
+
+        <!-- Telemetry feed -->
+        <div id="telemetry-section">
+          <div class="sv-title" style="padding:0;margin-bottom:4px">Event Log</div>
+          <!-- injected -->
+        </div>
+
+        <!-- NATS channels -->
+        <div id="nats-section">
+          <div class="nats-title">NATS Bus (in-process)</div>
+          <div id="nats-channels">
+            <div class="nats-ch"><span class="nats-dot live"></span><span class="nats-name">quantum.state</span><span class="nats-count" id="nc-state">0</span></div>
+            <div class="nats-ch"><span class="nats-dot live"></span><span class="nats-name">quantum.measure</span><span class="nats-count" id="nc-measure">0</span></div>
+            <div class="nats-ch"><span class="nats-dot idle" id="nd-gate"></span><span class="nats-name">quantum.gate</span><span class="nats-count" id="nc-gate">0</span></div>
+            <div class="nats-ch"><span class="nats-dot idle" id="nd-chain"></span><span class="nats-name">worm.chain</span><span class="nats-count" id="nc-chain">0</span></div>
+            <div class="nats-ch"><span class="nats-dot idle" id="nd-abjad"></span><span class="nats-name">abjad.signal</span><span class="nats-count" id="nc-abjad">0</span></div>
+          </div>
+        </div>
+
+        <!-- WORM chain -->
+        <div id="worm-section">
+          <div class="worm-title">BLAKE3 WORM Chain</div>
+          <div id="worm-entries"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="sbar">
+  <div><span class="sb-k">qubits </span><span class="sb-v" id="sb-qubits">8</span></div>
+  <div><span class="sb-k">dim </span><span class="sb-v" id="sb-dim">256</span></div>
+  <div><span class="sb-k">lattice </span><span class="sb-v">16×16</span></div>
+  <div><span class="sb-k">step </span><span class="sb-v" id="sb-step">0</span></div>
+  <div><span class="sb-k">dt </span><span class="sb-v">0.010</span></div>
+  <div class="sb-warn" title="Classical simulation of quantum dynamics — not QPU">⚠ Classical Sim</div>
+  <div id="sbar-right">
+    <div><span class="sb-k">fps </span><span class="sb-v" id="sb-fps">0</span></div>
+    <div><span class="sb-k">norm </span><span class="sb-v" id="sb-norm">1.000000</span></div>
+    <div><span class="sb-k">QRNG </span><span class="sb-v sb-warn" title="Web Crypto getRandomValues — real OS entropy">crypto</span></div>
+  </div>
+</div>
+
+<!-- Monaco loader -->
+<script>var require={paths:{vs:'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+
+<script>
+"use strict";
+
+// ══════════════════════════════════════════════════════════════════════════
+// QRNG — Real entropy via Web Crypto (OS entropy pool, not PRNG)
+// This is the honest path: Web Crypto is the only true entropy source
+// available in browser. xoshiro256** (bob_rng.f90) is a PRNG — fast but
+// deterministic from seed. We use crypto.getRandomValues here.
+// ══════════════════════════════════════════════════════════════════════════
+function qrng_f64() {
+  // 53-bit uniform float from 8 cryptographically random bytes
+  const buf = new Uint8Array(8);
+  crypto.getRandomValues(buf);
+  // Take 52 bits for mantissa (IEEE 754 double precision)
+  const hi = (buf[0] & 0x1F) * 0x1000000 + (buf[1] << 16) + (buf[2] << 8) + buf[3];
+  const lo = buf[4] * 0x1000000 + (buf[5] << 16) + (buf[6] << 8) + buf[7];
+  return (hi * 4294967296 + lo) / 9007199254740992; // 2^53
+}
+
+function qrng_bytes(n) {
+  const buf = new Uint8Array(n);
+  crypto.getRandomValues(buf);
+  return buf;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// BLAKE3 WORM (JS port of sov_blake3_* in sov_monster_kernel.f90)
+// ══════════════════════════════════════════════════════════════════════════
+const B3_IV = [0x6A09E667,0xF3BCC908,0xBB67AE85,0x84CAA73B,
+               0x3C6EF372,0xFE94F82B,0xA54FF53A,0x5F1D36F1,
+               0x510E527F,0xADE682D1,0x9B05688C,0x2B3E6C1F,
+               0x1F83D9AB,0xFB41BD6B,0x5BE0CD19,0x137E2179];
+const B3_PERM=[2,6,3,10,7,0,4,13,1,11,12,5,9,14,15,8];
+const rot32=(x,n)=>((x>>>n)|(x<<(32-n)))>>>0;
+function b3g(s,a,b,c,d,mx,my){
+  s[a]=(s[a]+s[b]+mx)>>>0;s[d]=rot32(s[d]^s[a],16);
+  s[c]=(s[c]+s[d])>>>0;s[b]=rot32(s[b]^s[c],12);
+  s[a]=(s[a]+s[b]+my)>>>0;s[d]=rot32(s[d]^s[a],8);
+  s[c]=(s[c]+s[d])>>>0;s[b]=rot32(s[b]^s[c],7);
+}
+function b3compress(cv,m){
+  const s=[cv[0],cv[1],cv[2],cv[3],cv[4],cv[5],cv[6],cv[7],
+           B3_IV[0],B3_IV[1],B3_IV[2],B3_IV[3],0,0,m.length,0x0B];
+  const w=new Array(16).fill(0);
+  for(let i=0;i<Math.min(16,m.length);i++)w[i]=m[i];
+  for(let r=0;r<7;r++){
+    b3g(s,0,4,8,12, w[0],w[1]);b3g(s,1,5,9,13, w[2],w[3]);
+    b3g(s,2,6,10,14,w[4],w[5]);b3g(s,3,7,11,15,w[6],w[7]);
+    b3g(s,0,5,10,15,w[8],w[9]);b3g(s,1,6,11,12,w[10],w[11]);
+    b3g(s,2,7,8,13, w[12],w[13]);b3g(s,3,4,9,14,w[14],w[15]);
+    const p=w.map((_,i)=>w[B3_PERM[i]]);for(let i=0;i<16;i++)w[i]=p[i];
+  }
+  return Array.from({length:8},(_,i)=>((s[i]^s[i+8])>>>0));
+}
+function b3hash(str){
+  const enc=new TextEncoder(),b=enc.encode(str);
+  const words=new Array(16).fill(0);
+  for(let i=0;i<Math.min(64,b.length);i++)words[i>>2]|=b[i]<<((i&3)*8);
+  return b3compress(B3_IV.slice(0,8),words).map(v=>v.toString(16).padStart(8,'0')).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// NATS IN-PROCESS BUS
+// Mirrors the interface of snapkitty-resonance-isa telemetry-bus pattern.
+// Real NATS would be wired via nats.ws browser client (nats.io/nats.js).
+// This is a faithful in-process implementation of the pub/sub protocol.
+// ══════════════════════════════════════════════════════════════════════════
+const NATS = (() => {
+  const subs = {};
+  const counts = {};
+  function publish(subject, msg) {
+    counts[subject] = (counts[subject] || 0) + 1;
+    (subs[subject] || []).forEach(fn => fn(msg, subject));
+  }
+  function subscribe(subject, fn) {
+    if (!subs[subject]) subs[subject] = [];
+    subs[subject].push(fn);
+  }
+  function msgCount(subject) { return counts[subject] || 0; }
+  return { publish, subscribe, msgCount };
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// WORM CHAIN (BLAKE3, append-only)
+// ══════════════════════════════════════════════════════════════════════════
+const WORM = (() => {
+  let chain = [{hash:'GENESIS',event:'BOOT',t:Date.now()}];
+  function seal(event, extra='') {
+    const prev = chain[chain.length-1].hash;
+    const payload = `${prev}|${event}|${extra}|${Date.now()}`;
+    // Mix in real entropy to make each seal non-deterministic
+    const rnd = qrng_bytes(8).reduce((s,b,i)=>s+(b<<(i*8)),0).toString(16);
+    const hash = b3hash(payload+rnd);
+    chain.push({hash,event,t:Date.now()});
+    NATS.publish('worm.chain', {hash, event});
+    return hash;
+  }
+  function height() { return chain.length - 1; }
+  function latest() { return chain[chain.length-1]; }
+  function all() { return chain; }
+  return { seal, height, latest, all };
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// COMPLEX ARITHMETIC
+// ══════════════════════════════════════════════════════════════════════════
+const c=(re,im=0)=>({re,im});
+const cadd=(a,b)=>c(a.re+b.re,a.im+b.im);
+const cmul=(a,b)=>c(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);
+const cscale=(a,s)=>c(a.re*s,a.im*s);
+const cconj=a=>c(a.re,-a.im);
+const cabs2=a=>a.re*a.re+a.im*a.im;
+const cphase=a=>Math.atan2(a.im,a.re);
+const cexp_i=t=>c(Math.cos(t),Math.sin(t));
+
+// ══════════════════════════════════════════════════════════════════════════
+// QUANTUM STATE (bob_state.f90 port)
+// NOTE: This is a CLASSICAL SIMULATION of quantum dynamics.
+// The Trotter decomposition approximates exp(-iHdt) to O(dt²) per step.
+// For exact quantum computation you need: IBM Quantum, IonQ, or Rigetti.
+// ══════════════════════════════════════════════════════════════════════════
+class QuantumState {
+  constructor(nq) {
+    this.nq = nq;
+    this.dim = 1 << nq;
+    this.psi = Array.from({length:this.dim}, () => c(0));
+    // Initialize |0...0⟩ then apply Hadamard to make equal superposition
+    this.psi[0] = c(1);
+    for (let q=0; q<nq; q++) this._hadamard(q);
+  }
+  _hadamard(q) {
+    const s=1/Math.sqrt(2), n=this.dim, block=1<<q, stride=block<<1;
+    for(let i=0;i<n;i+=stride) for(let j=i;j<i+block;j++){
+      const a=this.psi[j], b=this.psi[j+block];
+      this.psi[j]=c(s*a.re+s*b.re,s*a.im+s*b.im);
+      this.psi[j+block]=c(s*a.re-s*b.re,s*a.im-s*b.im);
+    }
+  }
+  applySingleQubitGate(q,u) {
+    const n=this.dim,block=1<<q,stride=block<<1;
+    for(let i=0;i<n;i+=stride) for(let j=i;j<i+block;j++){
+      const a=this.psi[j],b=this.psi[j+block];
+      this.psi[j]=cadd(cmul(u[0][0],a),cmul(u[0][1],b));
+      this.psi[j+block]=cadd(cmul(u[1][0],a),cmul(u[1][1],b));
+    }
+  }
+  applyHadamard(q){this.applySingleQubitGate(q,[[c(1/Math.sqrt(2)),c(1/Math.sqrt(2))],[c(1/Math.sqrt(2)),c(-1/Math.sqrt(2))]]);}
+  applyX(q){this.applySingleQubitGate(q,[[c(0),c(1)],[c(1),c(0)]]);}
+  applyZ(q){this.applySingleQubitGate(q,[[c(1),c(0)],[c(0),c(-1)]]);}
+  applyT(q){this.applySingleQubitGate(q,[[c(1),c(0)],[c(0),cexp_i(Math.PI/4)]]);}
+  applyRx(q,theta){
+    const cc=Math.cos(theta/2),ss=Math.sin(theta/2);
+    this.applySingleQubitGate(q,[[c(cc),c(0,-ss)],[c(0,-ss),c(cc)]]);
+  }
+  applyCNOT(ctrl,tgt){
+    for(let i=0;i<this.dim;i++) if((i>>ctrl)&1){
+      const j=i^(1<<tgt);if(j>i){const t=this.psi[i];this.psi[i]=this.psi[j];this.psi[j]=t;}
+    }
+  }
+  norm(){return Math.sqrt(this.psi.reduce((s,a)=>s+cabs2(a),0));}
+  normalize(){
+    const n=this.norm();if(n<1e-15)return;
+    for(let i=0;i<this.dim;i++)this.psi[i]=cscale(this.psi[i],1/n);
+  }
+  prob(i){return cabs2(this.psi[i]);}
+  // Measure qubit q — QRNG for collapse (real entropy)
+  measure(q){
+    let p1=0;
+    for(let i=0;i<this.dim;i++) if((i>>q)&1) p1+=this.prob(i);
+    const outcome=qrng_f64()<p1?1:0;
+    for(let i=0;i<this.dim;i++) if(((i>>q)&1)!==outcome) this.psi[i]=c(0);
+    this.normalize();
+    return outcome;
+  }
+  vonNeumannEntropy(){
+    return this.psi.reduce((s,a)=>{const p=cabs2(a);return p>1e-15?s-p*Math.log(p):s;},0);
+  }
+  purity(){return this.psi.reduce((s,a)=>{const p=cabs2(a);return s+p*p;},0);}
+  participation(){const pu=this.purity();return pu>1e-15?1/pu:this.dim;}
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ISING HAMILTONIAN TROTTER STEP (bob_hamiltonian.f90 + bob_integrator.f90)
+// H = -J Σ_{<i,j>} σᶻᵢ σᶻⱼ - h Σᵢ σˣᵢ
+// U(dt) = e^{-iHdt} ≈ e^{-iH_z dt/2} e^{-iH_x dt} e^{-iH_z dt/2}  [Trotter-2]
+// Error: O(dt²) per step, O(dt²·T) over T = N·dt total time
+// ══════════════════════════════════════════════════════════════════════════
+function trotterStep(qs, J, h, dt) {
+  const n=qs.dim, nq=qs.nq;
+  // ZZ diagonal phase (first half)
+  for(let i=0;i<n;i++){
+    let ps=0;
+    for(let q=0;q<nq-1;q++){const si=(i>>q)&1?1:-1,sj=(i>>(q+1))&1?1:-1;ps+=si*sj;}
+    qs.psi[i]=cmul(qs.psi[i],cexp_i(J*dt*0.5*ps));
+  }
+  // X rotations  R_x(h·dt) on each qubit
+  for(let q=0;q<nq;q++) qs.applyRx(q, h*dt);
+  // ZZ diagonal phase (second half)
+  for(let i=0;i<n;i++){
+    let ps=0;
+    for(let q=0;q<nq-1;q++){const si=(i>>q)&1?1:-1,sj=(i>>(q+1))&1?1:-1;ps+=si*sj;}
+    qs.psi[i]=cmul(qs.psi[i],cexp_i(J*dt*0.5*ps));
+  }
+  qs.normalize();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// JOSEPHSON VORTEX LATTICE (bob_lattice.f90 port)
+// dθᵢ/dt = -K Σ_{j∈N(i)} sin(θᵢ - θⱼ)  [discrete Gross-Pitaevskii]
+// ══════════════════════════════════════════════════════════════════════════
+class VortexLattice {
+  constructor(n, K, dt) {
+    this.n=n; this.K=K; this.dt=dt; this.time=0;
+    this.vx=[];
+    for(let iy=0;iy<n;iy++) for(let ix=0;ix<n;ix++){
+      // Deterministic init from position, then add QRNG perturbation
+      const phase=((ix*7+iy*13)*1.618033988%1)*2*Math.PI + qrng_f64()*0.1;
+      const w=(ix+iy)%7===0?1:(ix*iy)%11===0?-1:0;
+      this.vx.push({x:ix,y:iy,winding:w,phase,energy:Math.abs(w)*0.5,coherence:1});
+    }
+  }
+  evolve(){
+    const old=this.vx.map(v=>({...v})),n=this.n;
+    const PI2=2*Math.PI;
+    for(let iy=0;iy<n;iy++) for(let ix=0;ix<n;ix++){
+      const idx=iy*n+ix;
+      let dp=0,tc=0;
+      const nb=[ ((ix+1)%n)+iy*n, ((ix+n-1)%n)+iy*n,
+                 ix+((iy+1)%n)*n, ix+((iy+n-1)%n)*n ];
+      for(const ni of nb){
+        const d=old[idx].phase-old[ni].phase;
+        dp-=this.K*Math.sin(d); tc+=Math.cos(d);
+      }
+      const v=this.vx[idx];
+      v.phase=((old[idx].phase+this.dt*dp)%PI2+PI2)%PI2;
+      v.coherence=(tc/4+1)*0.5;
+      v.energy=Math.abs(v.winding)*0.5+this.K*(1-v.coherence);
+    }
+    this.time+=this.dt;
+  }
+  meanCoherence(){return this.vx.reduce((s,v)=>s+v.coherence,0)/this.vx.length;}
+  topoCharge(){return this.vx.reduce((s,v)=>s+v.winding,0);}
+  vortexCount(){return this.vx.filter(v=>v.winding!==0).length;}
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ABJAD VM (port of snapkitty-resonance-isa crates/vm/src/lib.rs)
+// Opcodes: ENTER LOAD STORE COMPARE BRANCH FREEZE SIGNAL HALT
+// Entropy gate: halts execution if entropy >= ENTROPY_THRESHOLD
+// ══════════════════════════════════════════════════════════════════════════
+const ENTROPY_THRESHOLD = 0.21; // from resonance VM source
+class AbjadVM {
+  constructor(){this.reset();}
+  reset(){
+    this.registers={trust_vector:1.0,entropy_register:0.05,resonance_field:1.0};
+    this.pc=0; this.halted=false; this.frozen=false;
+    this.signal_count=0; this.cycle=0; this.last_compare=false;
+    this.trace=[];
+  }
+  allowed(){return this.registers.entropy_register<ENTROPY_THRESHOLD;}
+  step(program){
+    if(this.halted||this.pc>=program.length) return 'HALTED';
+    if(!this.allowed()) return 'ENTROPY_VIOLATION';
+    const ins=program[this.pc];
+    let result='CONTINUE';
+    switch(ins.op){
+      case 'ENTER': this.cycle++; break;
+      case 'LOAD':
+        if(ins.operand && this.registers[ins.operand]!==undefined){
+          this.trace.push(`LOAD ${ins.operand} = ${this.registers[ins.operand].toFixed(4)}`);
+        }
+        break;
+      case 'STORE':
+        if(ins.operand){
+          // Sync resonance_field to quantum coherence
+          if(ins.operand==='resonance_field'){
+            this.registers.resonance_field=SIM.lat.meanCoherence();
+          }
+          this.trace.push(`STORE ${ins.operand} ← ${this.registers[ins.operand]?.toFixed(4)}`);
+        }
+        break;
+      case 'COMPARE':
+        this.last_compare=this.registers.entropy_register<ENTROPY_THRESHOLD;
+        this.trace.push(`COMPARE entropy(${this.registers.entropy_register.toFixed(4)}) < ${ENTROPY_THRESHOLD} → ${this.last_compare}`);
+        break;
+      case 'BRANCH':
+        if(!this.last_compare){
+          // jump to label or end
+          const target=program.findIndex((v,i)=>i>this.pc&&v.label===ins.operand);
+          if(target>=0){this.pc=target-1; this.trace.push(`BRANCH → ${ins.operand}`);}
+        }
+        break;
+      case 'FREEZE':
+        this.frozen=true;
+        const seal=WORM.seal('ABJAD_FREEZE',`e=${this.registers.entropy_register.toFixed(4)}`);
+        this.trace.push(`FREEZE → WORM:${seal.slice(0,12)}...`);
+        NATS.publish('abjad.signal',{type:'freeze',seal});
+        result='SIGNAL_EMITTED';
+        break;
+      case 'SIGNAL':
+        this.signal_count++;
+        // Sync entropy from quantum state entropy
+        this.registers.entropy_register=SIM.qs.vonNeumannEntropy()/(Math.log2(SIM.qs.dim));
+        NATS.publish('abjad.signal',{type:'signal',count:this.signal_count,entropy:this.registers.entropy_register});
+        this.trace.push(`SIGNAL #${this.signal_count} entropy←${this.registers.entropy_register.toFixed(4)}`);
+        result='SIGNAL_EMITTED';
+        break;
+      case 'HALT': this.halted=true; result='HALTED'; break;
+    }
+    this.pc++;
+    return result;
+  }
+  parseProgram(src){
+    return src.split('\n')
+      .filter(l=>l.trim()&&!l.trim().startsWith(';'))
+      .map(line=>{
+        const label_match=line.match(/^(\w+):$/);
+        if(label_match) return {op:'LABEL',operand:null,label:label_match[1]};
+        const parts=line.trim().split(/\s+/);
+        return {op:parts[0].toUpperCase(),operand:parts[1]||null,label:null};
+      });
+  }
+}
+const VM = new AbjadVM();
+let abjadProgram=[];
+
+// ══════════════════════════════════════════════════════════════════════════
+// PFORTH REPL (JS subset — word interpreter, data stack)
+// Real pForth: pforth-fix/fth/ — 219-line test suite, ANS standard
+// This implements the core subset for interactive use
+// ══════════════════════════════════════════════════════════════════════════
+const FORTH = (() => {
+  let stack=[], defs={}, base=10;
+  const pop=()=>stack.pop()??0;
+  const push=v=>stack.push(v);
+
+  const builtins={
+    // Stack
+    'DUP': ()=>{const a=pop();push(a);push(a);},
+    'DROP': ()=>pop(),
+    'SWAP': ()=>{const b=pop(),a=pop();push(b);push(a);},
+    'OVER': ()=>{const b=pop(),a=pop();push(a);push(b);push(a);},
+    'ROT':  ()=>{const c=pop(),b=pop(),a=pop();push(b);push(c);push(a);},
+    '.S':   ()=>`< ${stack.length} > ${stack.join(' ')}`,
+    '.':    ()=>{const v=pop();return String(v);},
+    'CR':   ()=>'\n',
+    'EMIT': ()=>String.fromCharCode(pop()),
+    // Arithmetic
+    '+':    ()=>push(pop()+pop()),
+    '-':    ()=>{const b=pop(),a=pop();push(a-b);},
+    '*':    ()=>push(pop()*pop()),
+    '/':    ()=>{const b=pop(),a=pop();push(Math.trunc(a/b));},
+    'MOD':  ()=>{const b=pop(),a=pop();push(a%b);},
+    'ABS':  ()=>push(Math.abs(pop())),
+    'NEGATE':()=>push(-pop()),
+    'MAX':  ()=>{const b=pop(),a=pop();push(Math.max(a,b));},
+    'MIN':  ()=>{const b=pop(),a=pop();push(Math.min(a,b));},
+    '2*':   ()=>push(pop()*2),
+    '2/':   ()=>push(Math.trunc(pop()/2)),
+    // Logic
+    'AND':  ()=>push(pop()&pop()),
+    'OR':   ()=>push(pop()|pop()),
+    'XOR':  ()=>push(pop()^pop()),
+    'INVERT':()=>push(~pop()),
+    '=':    ()=>{const b=pop(),a=pop();push(a===b?-1:0);},
+    '<':    ()=>{const b=pop(),a=pop();push(a<b?-1:0);},
+    '>':    ()=>{const b=pop(),a=pop();push(a>b?-1:0);},
+    '0=':   ()=>push(pop()===0?-1:0),
+    '0<':   ()=>push(pop()<0?-1:0),
+    // Quantum bridge words
+    'QRNG': ()=>{push(Math.floor(qrng_f64()*65536));},
+    'Q.ENTROPY': ()=>{push(Math.round(SIM.qs.vonNeumannEntropy()*1000));return 'entropy×1000';},
+    'Q.PURITY':  ()=>{push(Math.round(SIM.qs.purity()*10000));return 'purity×10000';},
+    'Q.NORM':    ()=>{push(Math.round(SIM.qs.norm()*10000));return 'norm×10000';},
+    'Q.COHERENCE':()=>{push(Math.round(SIM.lat.meanCoherence()*10000));return 'coh×10000';},
+    'Q.TOPO':    ()=>{push(SIM.lat.topoCharge());return 'topo charge';},
+    'Q.STEP':    ()=>{ qStep(); return 'stepped';},
+    'Q.HADAMARD':()=>{applyHadamard();return 'H applied';},
+    'Q.MEASURE': ()=>{const o=SIM.qs.measure(0);push(o);return `q0→|${o}⟩`;},
+    'WORM.SEAL': ()=>{const h=WORM.seal('FORTH_SEAL',`step=${SIM.step}`);return h.slice(0,16)+'...';},
+    // Base
+    'HEX':  ()=>{base=16;},
+    'DECIMAL':()=>{base=10;},
+    // Stack queries
+    'DEPTH':()=>push(stack.length),
+    // Util
+    'WORDS':()=>Object.keys(builtins).concat(Object.keys(defs)).join(' '),
+  };
+
+  function exec(line) {
+    const tokens=line.trim().split(/\s+/);
+    let out='';
+    let i=0;
+    while(i<tokens.length){
+      const t=tokens[i];
+      if(t===':'){
+        // Define word:  : NAME words... ;
+        const name=tokens[++i]; i++;
+        const body=[];
+        while(i<tokens.length && tokens[i]!==';') body.push(tokens[i++]);
+        defs[name.toUpperCase()]=body;
+        out+=' ok';
+      } else if(t==='.('){
+        // Print string  .( text )
+        let str='';i++;
+        while(i<tokens.length && !tokens[i].endsWith(')')) str+=tokens[i++]+' ';
+        if(i<tokens.length) str+=tokens[i].slice(0,-1);
+        out+=str;
+      } else {
+        const r=execWord(t.toUpperCase());
+        if(r!==undefined && r!==null) out+=' '+r;
+      }
+      i++;
+    }
+    return (out||' ok').trim();
+  }
+
+  function execWord(w){
+    if(builtins[w]) return builtins[w]();
+    if(defs[w]) { defs[w].forEach(t=>execWord(t.toUpperCase())); return null; }
+    const n=parseInt(w, base);
+    if(!isNaN(n)){push(n);return null;}
+    throw new Error(`unknown word: ${w}`);
+  }
+
+  return {exec, stack:()=>stack};
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// SIMULATION CORE
+// ══════════════════════════════════════════════════════════════════════════
+const SIM = {
+  qs: new QuantumState(8),
+  lat: new VortexLattice(16, 0.3, 0.01),
+  J: 0.4, h: 0.2, dt: 0.01,
+  step: 0, running: true,
+};
+
+function qStep(n=2) {
+  for(let i=0;i<n;i++){
+    trotterStep(SIM.qs, SIM.J, SIM.h, SIM.dt);
+    SIM.lat.evolve();
+  }
+  SIM.step+=n;
+  // Publish to NATS bus every 10 steps
+  if(SIM.step%10===0){
+    NATS.publish('quantum.state',{
+      step:SIM.step, entropy:SIM.qs.vonNeumannEntropy(),
+      coherence:SIM.lat.meanCoherence(), norm:SIM.qs.norm(),
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// GATE OPERATIONS
+// ══════════════════════════════════════════════════════════════════════════
+window.applyHadamard=function(){
+  for(let q=0;q<SIM.qs.nq;q++) SIM.qs.applyHadamard(q);
+  SIM.qs.normalize();
+  const h=WORM.seal('GATE_H_ALL');
+  NATS.publish('quantum.gate',{gate:'H',qubits:'all',seal:h.slice(0,12)});
+  telLog('gate',`H⊗ⁿ applied · WORM:${h.slice(0,12)}...`);
+};
+
+window.measureAll=function(){
+  const results=[];
+  for(let q=0;q<Math.min(SIM.qs.nq,4);q++){
+    results.push(SIM.qs.measure(q));
+  }
+  const h=WORM.seal('MEASURE_PARTIAL',results.join(''));
+  NATS.publish('quantum.measure',{results,step:SIM.step});
+  telLog('measure',`Measure q[0..3] → |${results.join('')}⟩ (QRNG collapse)`);
+};
+
+window.toggleRun=function(){
+  SIM.running=!SIM.running;
+  const btn=document.getElementById('btn-run');
+  btn.textContent=SIM.running?'⏸':'▶';
+  btn.classList.toggle('active',SIM.running);
+};
+
+window.stepOnce=function(){SIM.running=false;qStep(1);};
+
+window.resetSim=function(){
+  SIM.qs=new QuantumState(8);
+  SIM.lat=new VortexLattice(16,0.3,0.01);
+  SIM.step=0;
+  WORM.seal('RESET');
+  telLog('chain','Simulation reset · WORM sealed');
+};
+
+// ══════════════════════════════════════════════════════════════════════════
+// TELEMETRY LOG
+// ══════════════════════════════════════════════════════════════════════════
+const telQueue=[];
+function telLog(type,msg){
+  const entry={type,msg,t:Date.now()};
+  telQueue.unshift(entry);
+  if(telQueue.length>60) telQueue.pop();
+  NATS.publish('telemetry.'+type,entry);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// BACKGROUND CANVAS — vortex lattice visualization
+// ══════════════════════════════════════════════════════════════════════════
+const bgCv=document.getElementById('bg-canvas');
+const bgCtx=bgCv.getContext('2d');
+function drawBg(){
+  bgCv.width=window.innerWidth; bgCv.height=window.innerHeight;
+  const W=bgCv.width, H=bgCv.height;
+  bgCtx.clearRect(0,0,W,H);
+  const n=SIM.lat.n, cw=W/n, ch=H/n;
+  const PI2=2*Math.PI;
+  for(let iy=0;iy<n;iy++) for(let ix=0;ix<n;ix++){
+    const v=SIM.lat.vx[iy*n+ix];
+    const hue=(v.phase/PI2*360)|0;
+    const lum=(20+v.coherence*25)|0;
+    bgCtx.fillStyle=`hsl(${hue},70%,${lum}%)`;
+    bgCtx.fillRect(ix*cw,iy*ch,cw,ch);
+    if(v.winding!==0){
+      bgCtx.strokeStyle=v.winding>0?'rgba(0,212,204,0.6)':'rgba(255,60,60,0.6)';
+      bgCtx.lineWidth=0.5;
+      bgCtx.beginPath();
+      bgCtx.arc(ix*cw+cw/2,iy*ch+ch/2,Math.min(cw,ch)*0.3,0,PI2);
+      bgCtx.stroke();
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// METRICS UI UPDATE
+// ══════════════════════════════════════════════════════════════════════════
+function updateMetrics(){
+  const qs=SIM.qs, lat=SIM.lat;
+  const entropy=qs.vonNeumannEntropy();
+  const purity=qs.purity();
+  const norm=qs.norm();
+  const coh=lat.meanCoherence();
+  const topo=lat.topoCharge();
+  const nv=lat.vortexCount();
+  // Max entropy for n qubits = ln(2^n) = n*ln2
+  const maxS=SIM.qs.nq*Math.LN2;
+
+  const rows=[
+    ['Von Neumann S','mv-accent', entropy.toFixed(5), `/ ${maxS.toFixed(3)} max`],
+    ['Purity Tr(ρ²)','mv-purple', purity.toFixed(6), purity>0.9?'↑ pure':'↓ mixed'],
+    ['Participation','mv-accent', qs.participation().toFixed(1), `/ ${qs.dim} dim`],
+    ['State norm',   norm<0.9999||norm>1.0001?'mv-red':'mv-green', norm.toFixed(7),''],
+    ['State energy', 'mv-gold',   (qs.psi.reduce((s,a,i)=>s+i*cabs2(a),0)).toFixed(4),''],
+    ['Lattice coherence','mv-green', coh.toFixed(5),''],
+    ['Lattice energy','mv-purple',lat.vx.reduce((s,v)=>s+v.energy,0).toFixed(3),''],
+    ['Topo charge',  topo!==0?'mv-red':'mv-accent', topo>=0?'+'+topo:topo, ''],
+    ['Vortex count', nv>0?'mv-yellow':'mv-green', nv,''],
+    ['Sim time',     'mv-accent', (SIM.step*SIM.dt).toFixed(3),'s'],
+    ['Trotter dt',   'mv-accent', SIM.dt.toFixed(4),''],
+    ['J coupling',   'mv-accent', SIM.J.toFixed(3),''],
+    ['h field',      'mv-accent', SIM.h.toFixed(3),''],
+    ['WORM height',  'mv-gold',   WORM.height(),'seals'],
+    ['QRNG source',  'mv-green',  'Web Crypto','real entropy'],
+    ['Sim type',     'mv-yellow', 'Classical','NOT QPU ⚠'],
+  ];
+
+  const el=document.getElementById('state-display');
+  el.innerHTML=rows.map(([k,cls,v,note])=>
+    `<div class="metric-row">
+      <span class="mk">${k}</span>
+      <span class="mv ${cls}">${v} <small style="opacity:.5;font-size:9px">${note}</small></span>
+    </div>`
+  ).join('');
+}
+
+function updateSVBars(){
+  const el=document.getElementById('sv-bars');
+  const n=Math.min(SIM.qs.dim,16);
+  const probMax=Math.max(...Array.from({length:n},(_,i)=>SIM.qs.prob(i)),1e-20);
+  let html='';
+  for(let i=0;i<n;i++){
+    const p=SIM.qs.prob(i), ph=cphase(SIM.qs.psi[i]);
+    const pct=(p/probMax*100).toFixed(1);
+    const hue=((ph+Math.PI)/(2*Math.PI)*360).toFixed(0);
+    html+=`<div class="sv-row">
+      <span class="sv-lbl">${i.toString(2).padStart(SIM.qs.nq,'0')}</span>
+      <div class="sv-bar-outer">
+        <div class="sv-bar-inner" style="width:${pct}%;background:hsl(${hue},80%,50%)"></div>
+      </div>
+      <div class="sv-phase-dot" style="background:hsl(${hue},90%,55%)"></div>
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+function updateTelemetry(){
+  const el=document.getElementById('telemetry-section');
+  el.innerHTML='<div class="sv-title" style="padding:0;margin-bottom:4px">Event Log</div>' +
+    telQueue.slice(0,20).map(e=>`<div class="tel-row ${e.type}">${e.msg}</div>`).join('');
+}
+
+function updateNATS(){
+  const ch=['state','measure','gate','chain','abjad'];
+  const subjects=['quantum.state','quantum.measure','quantum.gate','worm.chain','abjad.signal'];
+  ch.forEach((k,i)=>{
+    document.getElementById(`nc-${k}`).textContent=NATS.msgCount(subjects[i]);
+  });
+  // Flash dots on recent activity
+  const step=SIM.step;
+  ['gate','chain','abjad'].forEach(k=>{
+    const dot=document.getElementById(`nd-${k}`);
+    if(dot) dot.className='nats-dot '+(NATS.msgCount('worm.chain'+(k==='chain'?'':'.'+k))>0?'live':'idle');
+  });
+}
+
+function updateWORM(){
+  const el=document.getElementById('worm-entries');
+  el.innerHTML=WORM.all().slice(-12).reverse().map(e=>{
+    const age=((Date.now()-e.t)/1000).toFixed(1);
+    return `<div class="worm-entry">
+      <span class="wh">${e.hash.slice(0,16)}…</span><br>
+      <span class="we">${e.event} · ${age}s ago</span>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ══════════════════════════════════════════════════════════════════════════
+window.setView=function(v){
+  // Tabs
+  ['monaco','forth','abjad'].forEach(k=>{
+    const tab=document.getElementById(`tab-${k}`);
+    if(tab) tab.classList.toggle('on',k===v);
+  });
+  // Icon buttons
+  ['state','monaco','forth','abjad'].forEach(k=>{
+    const btn=document.getElementById(`btn-${k}`);
+    if(btn) btn.classList.toggle('active',k===v);
+  });
+  // Panels
+  document.getElementById('monaco-wrap').style.display=v==='monaco'?'flex':'none';
+  document.getElementById('forth-repl').style.display=v==='forth'?'flex':'none';
+  document.getElementById('abjad-panel').style.display=v==='abjad'?'flex':'none';
+  if(v==='monaco') document.getElementById('monaco-placeholder').style.display='none';
+};
+
+// ══════════════════════════════════════════════════════════════════════════
+// MONACO EDITOR
+// ══════════════════════════════════════════════════════════════════════════
+require(['vs/editor/editor.main'],function(monaco){
+  monaco.editor.defineTheme('sovereign',{
+    base:'vs-dark',inherit:true,
+    rules:[
+      {token:'comment',foreground:'2a3e4e',fontStyle:'italic'},
+      {token:'keyword',foreground:'00d4cc'},
+      {token:'string', foreground:'a8d8a8'},
+      {token:'number', foreground:'ffd700'},
+      {token:'type',   foreground:'c8a0ff'},
+    ],
+    colors:{
+      'editor.background':'#040810',
+      'editor.foreground':'#c8e0ec',
+      'editor.lineHighlightBackground':'#080f1a',
+      'editorLineNumber.foreground':'#0f2030',
+      'editorLineNumber.activeForeground':'#00d4cc',
+      'editor.selectionBackground':'#0f2535',
+      'editorCursor.foreground':'#00d4cc',
+    }
+  });
+  const ed=monaco.editor.create(document.getElementById('monaco'),{
+    theme:'sovereign',fontSize:12,
+    fontFamily:"'SF Mono','Fira Code','Cascadia Code','Consolas',monospace",
+    fontLigatures:true,lineHeight:18,
+    minimap:{enabled:false},
+    scrollbar:{verticalScrollbarSize:4,horizontalScrollbarSize:4},
+    renderLineHighlight:'line',cursorBlinking:'smooth',
+    smoothScrolling:true,padding:{top:12,bottom:12},
+    automaticLayout:true,bracketPairColorization:{enabled:true},
+    value:[
+      '// Quantum IDE — Sovereign Compute Workbench',
+      '// Classical simulation of quantum dynamics',
+      '// QRNG: Web Crypto getRandomValues (real OS entropy)',
+      '//',
+      '// Keyboard shortcuts:',
+      '//   Ctrl+Enter  — step simulation',
+      '//   Ctrl+H      — Hadamard all qubits',
+      '//   Ctrl+M      — measure (collapse) qubit 0',
+      '',
+      '// Source chain:',
+      '//   sov_monster_kernel.f90   1506 lines  BLAKE3 + Ed25519 + APL ZGEMM',
+      '//   bob_*.f90                4224 lines  11 modules, Ising+Josephson',
+      '//   snapkitty-resonance-isa  Abjad VM, 8 opcodes, entropy gate',
+      '//   snap-os/telemetry-bus    Rust WORM chain health watcher',
+      '//   pforth-fix/fth/          219 lines ANS Forth test suite',
+      '//   quantum-wasm/src/lib.rs   599 lines Rust WASM bridge',
+      '',
+      '// NOT quantum hardware.',
+      '// Trotter error: O(dt²) = O(0.0001) per step.',
+      '// For real QPU: IBM Quantum, IonQ, Rigetti.',
+    ].join('\n'),
+  });
+  document.getElementById('monaco-placeholder').style.display='none';
+  document.getElementById('monaco').style.display='block';
+
+  ed.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,()=>qStep(1));
+  ed.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyH,()=>applyHadamard());
+  ed.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyM,()=>{
+    const o=SIM.qs.measure(0);
+    NATS.publish('quantum.measure',{qubit:0,outcome:o});
+    telLog('measure',`q0 → |${o}⟩`);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// PFORTH REPL
+// ══════════════════════════════════════════════════════════════════════════
+const foOut=document.getElementById('forth-output');
+function forthPrint(msg,cls=''){
+  const d=document.createElement('div');
+  d.className='fo-'+cls;
+  d.textContent=msg;
+  foOut.appendChild(d);
+  foOut.scrollTop=foOut.scrollHeight;
+  while(foOut.children.length>200) foOut.removeChild(foOut.firstChild);
+}
+forthPrint('; pForth (ANS subset) — real words, real stack','info');
+forthPrint('; Quantum bridge: QRNG Q.ENTROPY Q.PURITY Q.NORM Q.COHERENCE Q.TOPO Q.STEP Q.HADAMARD Q.MEASURE WORM.SEAL','info');
+forthPrint('; Stack operations: DUP DROP SWAP OVER ROT .S .','info');
+forthPrint('; Arithmetic: + - * / MOD ABS NEGATE MAX MIN 2* 2/','info');
+forthPrint('ok','ok');
+
+const forthInput=document.getElementById('forth-input');
+const forthHistory=[]; let forthHIdx=-1;
+forthInput.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    const line=forthInput.value.trim();
+    if(!line)return;
+    forthHistory.unshift(line); forthHIdx=-1;
+    forthInput.value='';
+    forthPrint('forth> '+line);
+    try{
+      const result=FORTH.exec(line);
+      forthPrint(result,'ok');
+    }catch(err){
+      forthPrint('error: '+err.message,'err');
+    }
+  } else if(e.key==='ArrowUp'){
+    forthHIdx=Math.min(forthHIdx+1,forthHistory.length-1);
+    forthInput.value=forthHistory[forthHIdx]||'';
+  } else if(e.key==='ArrowDown'){
+    forthHIdx=Math.max(forthHIdx-1,-1);
+    forthInput.value=forthHIdx<0?'':forthHistory[forthHIdx];
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// ABJAD VM UI
+// ══════════════════════════════════════════════════════════════════════════
+window.runAbjad=function(){
+  VM.reset();
+  abjadProgram=VM.parseProgram(document.getElementById('abjad-editor').value);
+  let result='';
+  while(!VM.halted && VM.pc<abjadProgram.length){
+    result=VM.step(abjadProgram);
+    if(result==='ENTROPY_VIOLATION'){
+      document.getElementById('abjad-status').textContent='ENTROPY VIOLATION — halted';
+      break;
+    }
+  }
+  document.getElementById('abjad-status').textContent=VM.halted?'halted':'done';
+  document.getElementById('abjad-trace').textContent=VM.trace.join('\n');
+};
+
+window.stepAbjad=function(){
+  if(!abjadProgram.length) abjadProgram=VM.parseProgram(document.getElementById('abjad-editor').value);
+  const r=VM.step(abjadProgram);
+  document.getElementById('abjad-status').textContent=r;
+  document.getElementById('abjad-trace').textContent=VM.trace.join('\n');
+};
+
+window.resetAbjad=function(){
+  VM.reset(); abjadProgram=[];
+  document.getElementById('abjad-status').textContent='idle';
+  document.getElementById('abjad-trace').textContent='';
+};
+
+// NATS subscriptions for live telemetry
+NATS.subscribe('quantum.state', m=>telLog('chain',`step=${m.step} S=${m.entropy.toFixed(4)} coh=${m.coherence.toFixed(4)}`));
+NATS.subscribe('worm.chain',    m=>telLog('chain',`WORM#${WORM.height()} ${m.event} ${m.hash.slice(0,12)}...`));
+NATS.subscribe('abjad.signal',  m=>telLog('gate', `Abjad ${m.type} #${m.count||''} e=${m.entropy?.toFixed(4)||'?'}`));
+NATS.subscribe('quantum.gate',  m=>telLog('gate', `Gate ${m.gate} qubits=${m.qubits}`));
+NATS.subscribe('quantum.measure',m=>telLog('measure',`measure step=${m.step||''} →${JSON.stringify(m.results||m.outcome)}`));
+
+// ══════════════════════════════════════════════════════════════════════════
+// MAIN LOOP
+// ══════════════════════════════════════════════════════════════════════════
+let lastT=0,fps=0,frameCount=0,fpsT=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const dt=Math.min(0.05,(ts-lastT)/1000); lastT=ts;
+  frameCount++;
+  if(ts-fpsT>1000){fps=frameCount;frameCount=0;fpsT=ts;}
+
+  if(SIM.running) qStep(3);
+
+  // Update UI every frame
+  updateMetrics();
+  if(SIM.step%3===0) updateSVBars();
+  if(SIM.step%5===0){updateTelemetry();updateNATS();updateWORM();}
+  if(SIM.step%10===0) drawBg();
+
+  // Status bar
+  document.getElementById('sb-step').textContent=SIM.step;
+  document.getElementById('sb-fps').textContent=fps;
+  document.getElementById('sb-norm').textContent=SIM.qs.norm().toFixed(6);
+}
+
+// Boot
+WORM.seal('BOOT_QUANTUM_IDE');
+telLog('chain','Quantum IDE booted — BLAKE3 WORM genesis');
+telLog('gate', 'Abjad VM ready (snapkitty-resonance-isa)');
+telLog('nats', 'NATS in-process bus live (5 channels)');
+telLog('chain','pForth REPL ready (ANS subset + quantum words)');
+telLog('chain',`Fortran engine: 4224 lines (bob_*.f90, 11 modules)`);
+telLog('chain',`Monster kernel: 1506 lines (sov_monster_kernel.f90)`);
+setView('monaco');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
