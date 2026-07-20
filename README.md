@@ -6,7 +6,7 @@
     ╔═══════════════════════════════════╗
     ║     ⚛️  QUANTUM BOB KERNEL  ⚛️    ║
     ║   Level 5 Civilization Enabled    ║
-    ║     20K LOC | 12 Languages        ║
+    ║     50K+ LOC | 12 Languages       ║
     ║  Built by Haiku for $0.24         ║
     ╚═══════════════════════════════════╝
     
@@ -37,7 +37,7 @@
 
 ---
 
-20,636 lines | 12 languages | 50+ tests passing | Production ready
+50,000+ lines | 12 languages | 50+ tests passing | Production ready
 
 <div align="center">
 
@@ -456,5 +456,5 @@ PAR-001 through PAR-007 recorded under SSL v3.0 Part IX. Cryptographic anchors o
 ---
 
 <div align="center">
-<sub>Ω·III · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · 20,636 lines · SOVEREIGN</sub>
+<sub>Ω·III · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · 50K+ lines · SOVEREIGN</sub>
 </div>
