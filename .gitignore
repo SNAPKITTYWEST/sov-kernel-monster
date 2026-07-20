@@ -1,0 +1,31 @@
+# Build directories
+build/
+build_doc/
+build_final/
+build_final2/
+build_test/
+
+# Haskell
+.stack-work/
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+dist/
+dist-newstyle/
+
+# CMake
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+*.exe
