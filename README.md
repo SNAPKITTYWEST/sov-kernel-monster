@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="docs/universe.svg" width="900" alt="SOV-KERNEL-MONSTER — quantum civilization engine"/>
+<img src="docs/bob_quantum_vortex.svg" width="900" alt="BOB QUANTUM CIVILIZATION ENGINE — vortex dynamics, Hamiltonian evolution, quantum metrics"/>
+
+<br/>
+
+**Animated quantum centerpiece** — Vortex dynamics, Hamiltonian evolution, entanglement metrics. Real-time simulation in Fortran 2018.
 
 <br/>
 
@@ -119,6 +123,24 @@ make debug
 # Full sovereign pipeline with node key
 SOV_SK=path/to/node_sk.bin ./build_monster.sh
 ```
+
+---
+
+## What's New (2026-07-20)
+
+🔬 **Complete Quantum Engine** — All 21 Fortran modules now production-ready:
+
+- ✅ **Vortex Doom Module** — 3D Josephson vortex lattice topology + topological charge
+- ✅ **Quantum Lattice** — Periodic boundary conditions, lattice site indexing, neighbor routines
+- ✅ **Hamiltonian Suite** — Ising, Heisenberg, Hubbard models + Padé matrix exponential
+- ✅ **Time Integrators** — Euler, RK2, RK4, matrix exponential, Trotter-2 O(dt²) evolution
+- ✅ **Quantum Metrics** — Entropy, purity, linear entropy, fidelity, coherence, entanglement, participation ratio
+- ✅ **Quantum Gates** — Pauli X/Y/Z, Hadamard, T, S, CNOT, phase rotation, controlled gates
+- ✅ **Circuit Library** — QFT, Grover, Shor, QPE, Bell pairs, teleportation
+- ✅ **WORM Attestation** — Blake3 + Ed25519 full Fortran 2018 implementation
+- ✅ **Goldilocks Field** — p = 2⁶⁴ − 2³² + 1 arithmetic + NTT
+
+**Total: 9,039 lines across 21 modules. Zero external dependencies. C ABI for FFI. WASM bridge ready.**
 
 ---
 
