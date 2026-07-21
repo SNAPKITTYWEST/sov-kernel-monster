@@ -43,7 +43,6 @@
 
 ![Sprint](badges/sprint.svg)
 ![LOC](badges/loc.svg)
-![Languages](badges/languages.svg)
 ![Tests](badges/tests.svg)
 ![Cost](badges/cost.svg)
 ![Model](badges/model.svg)
