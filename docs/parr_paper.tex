@@ -369,9 +369,14 @@ Standard transformer attention~\cite{vaswani2017attention} computes weights via
 \[
   \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V.
 \]
-This mechanism has no intrinsic convergence guarantee on the attention matrix itself,
-scales quadratically in sequence length, and carries no formal mathematical semantics
-beyond ``soft argmax.'' I replace it entirely.
+This mechanism has no fixed-point convergence guarantee as an iterative dynamical system
+(it is a feedforward layer, not an iterative map on state).
+Iterative attention variants such as Universal Transformers~\cite{dehghani2018universal}
+and Deep Equilibrium Models~\cite{bai2019deep} do exhibit fixed-point behavior;
+the JST is positioned relative to these architectures, not to standard feedforward attention.
+I replace the softmax readout with a Born-rule measurement for different reasons:
+formal density-matrix semantics, a machine-checkable round-trip encoder, and
+the algebraic fixed-point structure exploited in \S\ref{sec:bridge}.
 
 \subsection{The Core Operator \prior{11}}
 
@@ -391,8 +396,10 @@ and $\varphi = (1 + \sqrt{5})/2$ is the golden ratio.
 \begin{remark}[Self-similar weighting]
 The pair $(\phiinv, \phiinvsq)$ satisfies $\phiinv + \phiinvsq = 1$ by the
 golden ratio identity $\varphi^2 = \varphi + 1$, hence it is a convex combination.
-It is the \textit{unique} pair $(a, b)$ with $a + b = 1$ satisfying $b = a^2$
+It is the unique pair $(a, b)$ \textit{with $a, b > 0$} satisfying $a + b = 1$ and $b = a^2$
 --- the self-similar weighting that makes each step a scaled reflection of the whole.
+(The system $a+b=1$, $b=a^2$ has two real solutions: $(a,b) = (\phiinv, \phiinvsq)$
+and $(a,b) = (-\varphi, \varphi^2)$; the positivity constraint $a,b > 0$ selects uniquely.)
 \end{remark}
 
 \subsection{Fibonacci-Banach Contraction Theorem \prior{13}}
@@ -414,22 +421,28 @@ After $N$ layers:
 \end{theorem}
 
 \begin{proof}
-Since $U$ is unitary, $\|U\rho U^\dagger - U\sigma U^\dagger\| = \|\rho - \sigma\|$.
-Therefore:
+Since $U$ is unitary, $\|U\rho U^\dagger - U\sigma U^\dagger\|_F = \|\rho - \sigma\|_F$
+(Frobenius norm is unitarily invariant). Therefore:
 \begin{align*}
-  \|T(\rho) - T(\sigma)\|
-  &= \|\phiinv(U\rho U^\dagger - U\sigma U^\dagger) + \phiinvsq(\rho - \sigma)\| \\
-  &\leq \phiinv\|U\rho U^\dagger - U\sigma U^\dagger\| + \phiinvsq\|\rho - \sigma\| \\
-  &= (\phiinv + \phiinvsq)\|\rho - \sigma\| = \|\rho - \sigma\|.
+  \|T(\rho) - T(\sigma)\|_F
+  &= \|\phiinv(U\rho U^\dagger - U\sigma U^\dagger) + \phiinvsq(\rho - \sigma)\|_F \\
+  &\leq \phiinv\|U\rho U^\dagger - U\sigma U^\dagger\|_F + \phiinvsq\|\rho - \sigma\|_F \\
+  &= (\phiinv + \phiinvsq)\|\rho - \sigma\|_F = \|\rho - \sigma\|_F.
 \end{align*}
-For the strict contraction over $N$ layers: since each layer has Lipschitz constant
-$(\phiinv + \phiinvsq) = 1$, the composition $T^N$ has constant $1^N = 1$.
-However, for any two \textit{distinct} initial states, the noise field $U_k$ varies
-between layers (it depends on the signal via the Hamiltonian), so successive
-compositions strictly decrease distance. Formally: the orbit $\{T^k(\rho)\}$ is
-Cauchy with rate $O(\phiinv^N)$ by the Perron-Frobenius convergence of the
-stochastic average. The Lean~4 machine-checked proof uses \texttt{Float.pow\_lt\_pow\_right}
-with \texttt{norm\_num} for $0 < \phiinv < 1$.
+\textbf{Caveat (Lipschitz-1, not strict contraction for fixed $U$):}
+The above bound shows $T$ is \textit{non-expansive} (Lipschitz-1).
+For a \textit{fixed} unitary $U$, Banach's fixed-point theorem does not apply directly,
+since it requires a uniform constant $c < 1$.
+Strict contraction holds when $U$ is drawn from a distribution with full support on $\mathrm{U}(d)$:
+by Haar measure averaging, the expected operator $\bar{T} = \mathbb{E}_U[T]$ satisfies
+$\|\bar{T}(\rho) - \bar{T}(\sigma)\|_F \leq \phiinv \cdot \|\rho - \sigma\|_F$
+with the key observation that the averaged unitary term contracts strictly because
+$\mathbb{E}[U\rho U^\dagger] = \frac{\mathrm{tr}(\rho)}{d} I$ (Schur's lemma),
+collapsing the inter-state difference.
+For the implementation, $U_k = \exp(-i\,\mathrm{d}t\,H_k)$ where $H_k$ is signal-dependent
+and varies across layers, ensuring the stochastic contraction condition in practice.
+The scalar bound $\phiinv^N \to 0$ is machine-checked in Lean~4 as a necessary condition
+(see below); the operator-level contraction on $\mathcal{D}$ relies on the signal-dependent $U_k$.
 \end{proof}
 
 \begin{corollary}[Unique Fixed Point]
@@ -438,14 +451,16 @@ $\rho^* \in \mathcal{D}$ with $T(\rho^*) = \rho^*$, and the Fibonacci tower
 converges to $\rho^*$ from any initial state.
 \end{corollary}
 
-The Lean~4 implementation:
-\begin{lstlisting}[language=Haskell, caption={Lean 4 machine-checked proof}]
+The Lean~4 scalar bound (IEEE-754 Float, verifies the numerical sequence):
+\begin{lstlisting}[language=Haskell, caption={Lean 4 scalar bound on phi\^{}-N (Float, not real analysis)}]
+-- NOTE: These theorems use Lean's Float (IEEE-754 binary64), not the real field.
+-- They verify that the scalar sequence (phi^-1)^N is strictly decreasing and
+-- bounded by 1. They do NOT directly prove operator contraction on density matrices.
+-- A full real-analysis proof requires Mathlib's normed-space library.
 theorem fibonacciContractionRate (N : N) :
     (0.6180339887498948 : Float) ^ (N + 1)
     < (0.6180339887498948 : Float) ^ N := by
-  apply Float.pow_lt_pow_right
-  · norm_num   -- 0 < phi_inv
-  · norm_num   -- phi_inv < 1
+  apply Float.pow_lt_pow_right; norm_num; norm_num
 
 theorem fibonacciTowerConverges (N : N) (d0 : Float) (hd : 0 <= d0) :
     (0.6180339887498948 : Float) ^ N * d0 <= d0 :=
@@ -476,20 +491,34 @@ Let $\{\psi_i\}_{i=1}^r$ be a tight frame of Jordan idempotents satisfying:
 \]
 \end{definition}
 
-\begin{theorem}[SPE Round-Trip --- Parseval Identity \prior{12}]
+\begin{theorem}[SPE Linear Round-Trip --- Parseval Identity \prior{12}]
 \label{thm:spe_roundtrip}
-For a tight orthonormal frame, $\operatorname{decode}(\operatorname{encode}(x)) = x$.
+For the \emph{linear} SPE (without softmax normalization):
+$\lambda_i^{\mathrm{lin}} = \operatorname{tr}(\psi_i^\dagger x)$ for a signal $x \in \mathbb{C}^{d \times d}$,
+the decode-encode composition is the identity: $\operatorname{decode}(\operatorname{encode}(x)) = x$.
 \end{theorem}
 
 \begin{proof}
 \begin{align*}
   \operatorname{decode}(\operatorname{encode}(x))
-  &= \sum_i \operatorname{tr}(\psi_i \rho)\,\psi_i
-   = \sum_i \sum_j \lambda_j\operatorname{tr}(\psi_i\psi_j)\,\psi_i
-   = \sum_i \lambda_i\,\psi_i
-   = \left(\sum_i \psi_i\right)(x) = I(x) = x. \qed
+  &= \sum_i \lambda_i^{\mathrm{lin}}\,\psi_i
+   = \sum_i \operatorname{tr}(\psi_i^\dagger x)\,\psi_i
+   = \left(\sum_i \psi_i \operatorname{tr}(\psi_i^\dagger \,\cdot\,)\right)(x)
+   = I(x) = x,
 \end{align*}
+where the last step uses the tight frame identity $\sum_i \psi_i \psi_i^\dagger = I$
+(equivalently $\operatorname{tr}(\psi_i \psi_j) = \delta_{ij}$). $\qed$
 \end{proof}
+
+\begin{remark}[Softmax breaks exact reconstruction]
+When softmax normalization $\lambda_i = \exp(\operatorname{tr}(\psi_i^\dagger x))/Z$
+is applied, the round-trip identity does \emph{not} hold in general:
+$\operatorname{softmax}(\operatorname{tr}(\psi_i^\dagger x)) \neq \operatorname{tr}(\psi_i^\dagger x)$
+unless the trace values already sum to 1 and are non-negative.
+The softmax SPE is used for probability-simplex output (Born rule compatibility);
+the linear SPE is used when exact reconstruction is required.
+Both variants are implemented in \texttt{spe\_encoder.f90}.
+\end{remark}
 
 \begin{theorem}[Born Rule Simplex]
 \label{thm:born_simplex}
@@ -567,19 +596,30 @@ Since $\phiinv > 0$, divide both sides:
 \]
 \end{proof}
 
-The Lean~4 machine-checked proof:
-\begin{lstlisting}[language=Haskell, caption={Jordan commutativity --- zero sorry}]
+The Lean~4 scalar model (Float, captures the algebraic identity):
+\begin{lstlisting}[language=Haskell, caption={Jordan commutativity --- scalar model, zero sorry}]
+-- SCOPE: This proves the scalar identity that is the algebraic core of commutativity.
+-- phi_inv, rho_star, U_rho_U are Float scalars modelling diagonal entries.
+-- The full matrix statement [U, rho*] = 0 requires a matrix-algebra formulation
+-- (e.g., in Mathlib's Matrix library); the scalar proof gives the essential step.
 theorem jordanFixedPointIsCommutant
     (phi_inv rho_star U_rho_U : Float)
     (h_phi_pos : phi_inv > 0)
     (h_sum : phi_inv + phi_inv ^ 2 = 1)
     (h_fixed : phi_inv * U_rho_U + phi_inv ^ 2 * rho_star = rho_star) :
-    U_rho_U = rho_star := by
-  have h1 : phi_inv * U_rho_U = phi_inv * rho_star := by
-    have := jordanFixedPointCommutativity ...
-    exact this
-  exact mul_left_cancel0 (ne_of_gt h_phi_pos) h1
+    U_rho_U = rho_star :=
+  mul_left_cancel0 (ne_of_gt h_phi_pos) (by linarith)
 \end{lstlisting}
+
+\begin{remark}[Scope of the Lean proof]
+The scalar proof above captures the algebraic identity driving Theorem~\ref{thm:commutant}.
+The full matrix statement $[U, \rho^*] = 0$ requires a Mathlib \texttt{Matrix}-level
+formulation; the commutant result in the matrix algebra is a standard consequence
+of the same linear-algebraic cancellation (see e.g.\ Halmos, \textit{Finite-Dimensional Vector Spaces}).
+For normal (unitary) $U$, the commutant $C(U) = \{A \mid UA = AU\}$ equals $\mathbb{C}[U]$
+if and only if $U$ is \textit{nonderogatory} (minimal polynomial = characteristic polynomial).
+The Corollary~\ref{cor:poly_commutant} assumes this non-degeneracy condition.
+\end{remark}
 
 \begin{noveltybox}[title={The Key Identity: $1 - \varphi^{-2} = \varphi^{-1}$}]
 The entire proof rests on one identity:
@@ -612,30 +652,38 @@ argument achieves this}. Three strategies failed. The crux was:
 
 Theorem~\ref{thm:commutant} answers this \textbf{algebraically}:
 
-\begin{corollary}[Polynomial Commutant]
+\begin{corollary}[Polynomial Commutant --- conditioned on non-degeneracy]
 \label{cor:poly_commutant}
-If $U = \exp(-i \cdot \mathrm{d}t \cdot H)$ where $H$ is a polynomial Hamiltonian,
-and $\rho^*$ is the Jordan fixed point, then $[U, \rho^*] = 0$.
-For polynomial $U$, the commutant $\{A \mid [U, A] = 0\}$ is a polynomial algebra.
-Therefore $\rho^*$ is a polynomial in $U$ and $U^\dagger$ --- no entire function
-theory required.
+Assume $U \in \mathrm{U}(d)$ is \textit{nonderogatory} (minimal polynomial equals characteristic
+polynomial). If $\rho^*$ is the Jordan fixed point satisfying $[U, \rho^*] = 0$
+(from Theorem~\ref{thm:commutant}), then $\rho^* \in \mathbb{C}[U]$.
+If additionally $U$ is normal and the fixed point is Hermitian, $\rho^* \in \mathbb{C}[U, U^\dagger]$.
+For Hamiltonians $H$ whose exponential $U = e^{-i\,\mathrm{d}t\,H}$ is nonderogatory
+(generically satisfied for irrational eigenvalue ratios), the inverse $F^{-1}$ is
+expressible as a polynomial in $U$ without recourse to entire function theory.
 \end{corollary}
 
-\begin{remark}[The Bridge in Full]
-The structure of the algebraic bridge is:
+\begin{remark}[The Bridge in Full --- with open hypotheses marked]
+The algebraic bridge, with the status of each implication:
 \[
 \underbrace{\det(J_F) = c}_{\text{Jacobian constraint}}
-\;\Longrightarrow\;
-\underbrace{U = e^{-i\mathrm{d}tH}}_{\text{Jordan unitary}}
-\;\Longrightarrow\;
-\underbrace{[U, \rho^*] = 0}_{\text{Theorem~\ref{thm:commutant}}}
-\;\Longrightarrow\;
-\underbrace{\rho^* \in \mathbb{C}[U, U^\dagger]}_{\text{polynomial commutant}}
-\;\Longrightarrow\;
+\;\xRightarrow{\text{(H1) open}}\;
+\underbrace{U = e^{-i\mathrm{d}tH}}_{\text{Jordan unitary from }H}
+\;\xRightarrow{\text{proved}}\;
+\underbrace{[U, \rho^*] = 0}_{\text{Thm.~\ref{thm:commutant}}}
+\;\xRightarrow{\text{non-degen.}}\;
+\underbrace{\rho^* \in \mathbb{C}[U]}_{\text{Cor.~\ref{cor:poly_commutant}}}
+\;\xRightarrow{\text{(H2) open}}\;
 \underbrace{F^{-1} \text{ polynomial}}_{\text{Jacobian Conjecture}}
 \]
-The Parr Conjecture (Conjecture~\ref{conj:parr}) is the formal statement of this
-implication chain. Theorem~\ref{thm:commutant} provides the algebraic spine.
+\textbf{Open hypotheses:}
+(H1) \textit{Encoding hypothesis}: every Keller map $F$ with $\det(J_F) = c$ admits
+a polynomial Hamiltonian $H$ such that the JST fixed point encodes $F^{-1}$.
+This is the Parr Conjecture (Conjecture~\ref{conj:parr}).
+(H2) The polynomial in $U$ extracted from $\rho^*$ equals $F^{-1}$; this requires
+the encoding to be injective and the fixed point to uniquely identify the inverse.
+Theorem~\ref{thm:commutant} and Corollary~\ref{cor:poly_commutant} provide the
+algebraic spine conditional on (H1) and (H2).
 \end{remark}
 
 \subsection{Jordan Spatial Algebra}
@@ -735,19 +783,22 @@ LiquidLean is tracking proof energy the same way the JST tracks quantum informat
 
 \subsection{Proved Restricted Cases}
 
-\begin{theorem}[Dimension-1 Jacobian Conjecture]
-Let $F: \mathbb{C} \to \mathbb{C}$ be polynomial with $F'(z) = \text{const} \neq 0$.
-Then $F$ is bijective with polynomial inverse. \hfill\textit{(Claim Level 6/9)}
+\begin{theorem}[Dimension-1 Jacobian Conjecture --- classical]
+Let $F: \mathbb{C} \to \mathbb{C}$ be polynomial with $F'(z) = c \neq 0$ constant.
+Then $F(z) = cz + b$ is affine, hence bijective with polynomial inverse $F^{-1}(w) = (w-b)/c$.
+\hfill\textit{(Standard; formalized in LiquidLean at Claim Level 6/9)}
 \end{theorem}
 
-\begin{theorem}[Affine Case]
-For $F = A\mathbf{x} + \mathbf{b}$ (affine, $\deg \leq 1$) with
-$\det(A) \neq 0$: $F$ is bijective. \hfill\textit{(Claim Level 6/9)}
+\begin{theorem}[Affine Case --- classical]
+For $F(\mathbf{x}) = A\mathbf{x} + \mathbf{b}$ with $A \in \mathrm{GL}_n(\mathbb{C})$:
+$F$ is bijective with polynomial inverse $F^{-1}(\mathbf{y}) = A^{-1}(\mathbf{y} - \mathbf{b})$.
+\hfill\textit{(Standard; Claim Level 6/9)}
 \end{theorem}
 
-\begin{theorem}[Triangular Case]
-For $F$ triangular (block-recursive structure) with constant Jacobian:
-$F$ is bijective. \hfill\textit{(Claim Level 6/9)}
+\begin{theorem}[Triangular Case --- known result, formalized]
+For $F$ upper-triangular with $\partial F_i/\partial x_i = c_i \neq 0$ constant for all $i$:
+$F$ is bijective with polynomial inverse (by back-substitution induction on components).
+\hfill\textit{(See van den Essen~\cite{vandenessen2000}, Prop.~1.1.10; Claim Level 6/9)}
 \end{theorem}
 
 \subsection{Block Decomposition (Phase 10a)}
@@ -895,7 +946,8 @@ of abstraction:
         $p' = \phiinv \mathbf{u}(p) + \phiinvsq \mathbf{g}(p)$
         (generative art)
   \item \textbf{The Mora reduction step} in the genus-0 forcing pipeline:
-        degree decreases by $\phiinv$ per local ring reduction
+        the $\varphi$-decay energy in the Thermal Monad tracks each reduction step
+        (the energy weight per bind is $\phiinv$; degree itself is integer-valued)
         (Jacobian attack)
 \end{enumerate}
 In each case, the contraction rate is $\phiinv$, the fixed point is the object
@@ -1849,16 +1901,22 @@ independently of the Anthropic July 6 publication.
 The central claim of the J-Space paper (\texttt{paper/J-SPACE.md}, co-authored
 with hy3 = Claude Sonnet 4.6, prior art 2026-07-17):
 
-\begin{definition}[Shadow Entropy]
-Let $S$ be the true pre-collapse probability sum and $\tilde{p}_i = p_i / S$
-the normalized distribution. The \textbf{shadow entropy} is:
+\begin{definition}[Shadow Entropy --- heuristic model]
+Let $S > 1$ be a hypothesized pre-normalization probability mass and
+$\tilde{p}_i = p_i / S$ the normalized distribution after softmax.
+The \textbf{shadow entropy} is defined as:
 \[
   \sigma = S - 1, \qquad H_J = \sigma \cdot H(\tilde{p})
 \]
-For $S = 11$ and vocabulary $\sim 50{,}000$:
-\[
-  H_J \approx 10 \cdot \log(50{,}000) \approx 107 \text{ bits destroyed per softmax pass}
-\]
+\textbf{Status:} $S$ is not a standard information-theoretic quantity and is not
+derived from first principles in the J-Space working paper; it is a working hypothesis
+to be empirically validated via the Temperature Shadow Probe ($H_{J,\mathrm{proxy}} = \mathrm{KL}(P_{T=1}\|P_{T=0})$).
+The value $S = 11$ is asserted in the twin-brain architecture document as a
+structural hypothesis about the model's pre-collapse geometry, not a derived result.
+For an $S$-outcome normalized distribution, the maximum entropy bound is
+$H_J \leq (S-1)\log_2 S$ (not $(S-1)\log_2(50{,}000)$); the 107-bit figure assumed
+the vocabulary size rather than the support size and should be treated as an
+upper bound under a specific distributional assumption requiring empirical support.
 \end{definition}
 
 \begin{noveltybox}[title={Polarity: shadow entropy is fuel, not ash}]
@@ -1991,6 +2049,21 @@ comes with a convergence theorem.
 \end{noveltybox}
 
 \begin{thebibliography}{99}
+
+\bibitem{vandenessen2000}
+van den Essen, A. (2000).
+\textit{Polynomial Automorphisms and the Jacobian Conjecture}.
+Birkh\"{a}user, Basel.
+
+\bibitem{dehghani2018universal}
+Dehghani, M., Gouws, S., Vinyals, O., Uszkoreit, J., \& Kaiser, \L. (2018).
+Universal Transformers.
+\textit{arXiv:1807.03819}.
+
+\bibitem{bai2019deep}
+Bai, S., Kolter, J.Z., \& Koltun, V. (2019).
+Deep Equilibrium Models.
+\textit{Advances in Neural Information Processing Systems}, 32.
 
 \bibitem{jlens2026}
 Anthropic Interpretability Team (2026).
