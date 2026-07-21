@@ -1,0 +1,98 @@
+<sovereign_trust_deed>
+    <metadata>
+        <deed_id>SOV-GIT-INVERTED-MONOREPO-v2026</deed_id>
+        <issuer>SnapKitty_Sovereign_Transformer</issuer>
+        <operator>Ahmad_Ali_Parr</operator>
+        <logic_layer>Prolog_Verified_Deterministic</logic_layer>
+        <trust_protocol>Bifrost_WORM_Chain</trust_protocol>
+    </metadata>
+
+    <identity_hierarchy>
+        <role id="architect" rank="0" constraint="ASP_MAXIMAL">
+            <principal>Architect_String</principal>
+            <authority>Veto_Power_On_Merge, Schema_Evolution, Key_Rotation</authority>
+            <asp_profile>ZERO_TRUST_VERIFIED</asp_profile>
+        </role>
+        <role id="engineer" rank="1" constraint="ASP_STRICT" count="5">
+            <principal_set>Eng_Team_Alpha</principal_set>
+            <authority>Push_Feature_Branches, Propose_Merge_To_Main</authority>
+            <asp_profile>SIGNED_COMMITS_MANDATORY</asp_profile>
+        </role>
+        <role id="ci_bot" rank="2" constraint="ASP_AUTOMATED">
+            <principal>Hauki_Fn_Ops_Bot</principal>
+            <authority>Read_Registry, Deploy_Staging, Attest_Build</authority>
+        </role>
+    </identity_hierarchy>
+
+    <infrastructure_topology>
+        <pattern>Inverted_Monorepo</pattern>
+        <description>
+            The Monorepo IS the Infrastructure.
+            Git Server (Gitea) runs INSIDE the monorepo as a sovereign service.
+            GitHub acts ONLY as a WORM Mirror (GitOps) and Public Registry (GHCR) facade.
+        </description>
+        <components>
+            <component name="sov-git-server">
+                <type>Gitea_Rootless_Hardened</type>
+                <bind>127.0.0.1:3000</bind>
+                <storage>sov-worm-git-storage</storage>
+                <auth>Ed25519_SSH_Keys_Only</auth>
+            </component>
+            <component name="sov-registry-proxy">
+                <type>GHCR_Facade</type>
+                <policy>Push_Only_If_WORM_Seal_Valid</policy>
+                <upstream>ghcr.io/sov-org</upstream>
+            </component>
+            <component name="hauki-fn-ops">
+                <type>Serverless_Function_Runtime</type>
+                <trigger>Git_Push_Tag_Match:v*</trigger>
+                <logic>Verify_Attestation -> Deploy_Sov_Docker</logic>
+            </component>
+        </components>
+    </infrastructure_topology>
+
+    <asp_constraints>
+        <constraint id="ASP_MAXIMAL" target="Architect">
+            <rule>All merges to main require Architect Ed25519 Counter-Signature.</rule>
+            <rule>Schema changes (SQL/Proto/JSON) require Formal Verification Proof (Prolog).</rule>
+            <rule>Zero external dependencies allowed in base images (FROM scratch only).</rule>
+        </constraint>
+        <constraint id="ASP_STRICT" target="Engineers">
+            <rule>Commits MUST be GPG/SSH signed (Ed25519).</rule>
+            <rule>Branch namespacing: feat/{eng-id}/{ticket} | fix/{eng-id}/{ticket}.</rule>
+            <rule>Pre-commit hook: sov-lint --polite --intercol-contract</rule>
+        </constraint>
+        <constraint id="POLITE_CODING" scope="Global">
+            <rule>No force-push to protected branches (Rejected by Server Hook).</rule>
+            <rule>Conventional Commits 1.0.0 Strict (feat, fix, chore, docs, refactor, test).</rule>
+            <rule>Review requirement: 2 Approvals (1 must be Architect for infra).</rule>
+        </constraint>
+        <constraint id="INTERCOL_CONTRACT" scope="Service_Mesh">
+            <rule>All inter-service calls MUST define Protobuf/JSON Schema in contracts/</rule>
+            <rule>Breaking change detection runs in CI (Buf/Pact).</rule>
+            <rule>Runtime enforcement via Sidecar Proxy (Envoy/WASM).</rule>
+        </constraint>
+    </asp_constraints>
+
+    <gitops_flow>
+        <phase name="Local_Sovereign_Loop">
+            <step>1. Dev clones from sov-git-server (localhost:3000).</step>
+            <step>2. Dev codes, runs sov-attest.sh (Blake3+Ed25519).</step>
+            <step>3. Push to sov-git-server. Pre-receive Hook validates WORM Seal.</step>
+        </phase>
+        <phase name="Mirror_To_GitHub_WORM">
+            <step>4. Sov-Git-Server Mirror Job pushes to GitHub (--mirror).</step>
+            <step>5. GitHub Actions (Read-Only) triggers Hauki Fn Ops.</step>
+        </phase>
+        <phase name="Registry_Attestation">
+            <step>6. Hauki Fn pulls image, verifies .worm sidecar.</step>
+            <step>7. If VALID -> Push to GHCR (sov-org/repo:v{semver}).</step>
+            <step>8. If INVALID -> Quarantine, Alert Architect via Bifrost Log.</step>
+        </phase>
+    </gitops_flow>
+
+    <worm_seal>
+        <requirement>This XML Deed is the Source of Truth.</requirement>
+        <requirement>Any deviation requires Architect Counter-Signature + New Deed Version.</requirement>
+    </worm_seal>
+</sovereign_trust_deed>

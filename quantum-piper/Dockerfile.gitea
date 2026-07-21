@@ -1,0 +1,17 @@
+FROM alpine:3.20 AS builder
+RUN apk add --no-cache git go make gcc musl-dev libressl-dev
+
+ARG GITEA_VERSION=1.22.0
+RUN git clone --depth 1 --branch v${GITEA_VERSION} https://github.com/go-gitea/gitea /build \
+    && cd /build \
+    && make backend TAGS="netgo nomessages" LDFLAGS="-s -w -extldflags '-static'"
+
+FROM scratch
+COPY --from=builder /build/gitea /usr/local/bin/gitea
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+
+USER 1000:1000
+EXPOSE 3000 2222
+ENTRYPOINT ["/usr/local/bin/gitea", "web", "--config", "/data/gitea/conf/app.ini"]

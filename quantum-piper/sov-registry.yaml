@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  sov-registry:
+    image: registry:2
+    container_name: sov-registry
+    restart: always
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_HTTP_ADDR: 127.0.0.1:5000
+    volumes:
+      - ./sov-worm-storage:/var/lib/registry:rw
+      - ./sov-certs:/certs:ro
+    networks:
+      - sov-internal-net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  sov-internal-net:
+    internal: true

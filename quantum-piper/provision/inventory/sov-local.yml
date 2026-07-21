@@ -1,0 +1,22 @@
+all:
+  hosts:
+    sov-kernel-monster:
+      ansible_host: 127.0.0.1
+      ansible_connection: local
+      ansible_become: true
+      ansible_python_interpreter: "{{ lookup('env', 'PYTHON') | default('/usr/bin/python3', true) }}"
+  vars:
+    sov_root: "/opt/sov"
+    worm_mount_point: "{{ sov_root }}/worm/git-storage"
+    worm_loop_device: "/dev/loop99"
+    worm_disk_image: "{{ sov_root }}/worm/sov-git-worm.img"
+    worm_size_gib: 50
+    key_dir: "{{ sov_root }}/.sov/keys"
+    identities:
+      - { id: "architect",  name: "Architect_String",   role: "architect", constraint: "ASP_MAXIMAL"  }
+      - { id: "eng-01",     name: "Engineer_Alpha",     role: "engineer",  constraint: "ASP_STRICT"   }
+      - { id: "eng-02",     name: "Engineer_Bravo",     role: "engineer",  constraint: "ASP_STRICT"   }
+      - { id: "eng-03",     name: "Engineer_Charlie",   role: "engineer",  constraint: "ASP_STRICT"   }
+      - { id: "eng-04",     name: "Engineer_Delta",     role: "engineer",  constraint: "ASP_STRICT"   }
+      - { id: "eng-05",     name: "Engineer_Echo",      role: "engineer",  constraint: "ASP_STRICT"   }
+      - { id: "hauki-bot",  name: "Hauki_Fn_Ops_Bot",   role: "ci_bot",    constraint: "ASP_AUTOMATED" }

@@ -1,0 +1,124 @@
+---
+- name: SOV-KERNEL-MONSTER | Bootstrap Sovereign Infrastructure
+  hosts: sov-kernel-monster
+  gather_facts: true
+  vars_files:
+    - ../inventory/sov-local.yml
+
+  tasks:
+    # PHASE 1: WORM VOLUME
+    - name: Ensure Sovereign Root Directory
+      file:
+        path: "{{ sov_root }}"
+        state: directory
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Create Sparse WORM Disk Image ({{ worm_size_gib }}GiB)
+      command: "truncate -s {{ worm_size_gib }}G {{ worm_disk_image }}"
+      args:
+        creates: "{{ worm_disk_image }}"
+      register: disk_created
+
+    - name: Format WORM Volume (ext4 + metadata checksums)
+      command: "mkfs.ext4 -O metadata_csum,dir_index -L SOV_GIT_WORM {{ worm_disk_image }}"
+      when: disk_created.changed
+
+    - name: Ensure loop module loaded
+      modprobe:
+        name: loop
+        state: present
+
+    - name: Mount WORM Volume
+      mount:
+        path: "{{ worm_mount_point }}"
+        src: "{{ worm_loop_device }}"
+        fstype: ext4
+        opts: "rw,noatime,errors=remount-ro"
+        state: mounted
+
+    - name: Apply immutable flag to mount point
+      command: "chattr +i {{ worm_mount_point }}"
+      changed_when: false
+      failed_when: false
+
+    # PHASE 2: ED25519 KEY GENERATION
+    - name: Create Sovereign Key Directory (0700)
+      file:
+        path: "{{ key_dir }}"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_user_id }}"
+
+    - name: Generate Ed25519 Keypairs
+      community.crypto.openssh_keypair:
+        path: "{{ key_dir }}/{{ item.id }}"
+        type: ed25519
+        comment: "sov-{{ item.role }}-{{ item.id }}@sov-kernel-monster"
+        force: false
+      loop: "{{ identities }}"
+      no_log: true
+
+    - name: Set private key permissions (0400)
+      file:
+        path: "{{ key_dir }}/{{ item.id }}"
+        mode: '0400'
+      loop: "{{ identities }}"
+
+    - name: Write consolidated authorized_keys.sov
+      copy:
+        content: "{{ identities | map(attribute='id') | map('regex_replace', '^(.*)$', key_dir + '/\\1.pub') | map('lookup', 'file') | join('\n') }}"
+        dest: "{{ key_dir }}/authorized_keys.sov"
+        mode: '0440'
+
+    # PHASE 3: PROLOG RULES
+    - name: Deploy Prolog verification logic
+      copy:
+        src: "../../.sov/prolog/"
+        dest: "{{ sov_root }}/.sov/prolog/"
+        mode: '0500'
+
+    # PHASE 4: GIT HOOKS
+    - name: Deploy server-side hooks
+      copy:
+        src: "../../infra/hooks/"
+        dest: "{{ worm_mount_point }}/gitea/hooks/"
+        mode: '0500'
+        owner: "1000"
+        group: "1000"
+
+    # PHASE 5: TRUST DEED IMMUTABILITY
+    - name: Copy Trust Deed to WORM root
+      copy:
+        src: "../../TRUST_DEED.xml"
+        dest: "{{ worm_mount_point }}/TRUST_DEED.xml"
+        mode: '0400'
+        owner: "1000"
+
+    - name: Apply immutable flag to Trust Deed
+      command: "chattr +i {{ worm_mount_point }}/TRUST_DEED.xml"
+
+    # PHASE 6: ATTESTATION REPORT
+    - name: Generate provisioning attestation report
+      copy:
+        content: |
+          SOV-KERNEL-MONSTER PROVISIONING ATTESTATION
+          Timestamp: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          WORM Volume: {{ worm_disk_image }} ({{ worm_size_gib }}GiB)
+          Mount: {{ worm_mount_point }}
+          Identities:
+          {% for i in identities %}
+          - {{ i.id }} ({{ i.role }}) [{{ i.constraint }}]
+          {% endfor %}
+          Trust Deed: {{ worm_mount_point }}/TRUST_DEED.xml [IMMUTABLE]
+        dest: "{{ sov_root }}/.sov/attestation_{{ ansible_date_time.iso8601_basic }}.log"
+        mode: '0400'
+
+  post_tasks:
+    - name: Display sovereign key fingerprints
+      debug:
+        msg: "{{ item.id }}: {{ lookup('pipe', 'ssh-keygen -lf ' + key_dir + '/' + item.id + '.pub') }}"
+      loop: "{{ identities }}"
+      tags: [audit]
