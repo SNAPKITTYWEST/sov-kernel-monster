@@ -191,6 +191,49 @@ SOV_SK=path/to/node_sk.bin ./build_monster.sh
 
 ## What's New (2026-07-20)
 
+### Sprint 2 Complete ✅ — sov-rust-core + RTX Engine + Multi-Language Bindings
+
+---
+
+#### sov-rust-core — Rust Eigensolver + QEC + PIRTM + Spectral Primitives
+
+Four critical stubs closed:
+
+| File | Fixes |
+|---|---|
+| `sov-rust-core/src/zheev.rs` | Complex Hermitian eigensolver via real-block reduction (nalgebra). Fixes `spe_encoder.f90` broken `sov_zheev` stub — density matrices now produce correct eigenvalues |
+| `sov-rust-core/src/pirtm.rs` | PIRTM recurrence step (ported from foundry-intel), `jordan_contraction()` matching `jordan_block.f90` φ⁻¹ Fibonacci contraction rate |
+| `sov-rust-core/src/qec.rs` | Aaronson-Gottesman stabilizer tableau, greedy min-weight logical operator search. Replaces hardcoded `distance=3` stub in `qec-discovery` |
+| `sov-rust-core/src/spectral.rs` | Shannon/von Neumann/KL/cross entropy + `born_probabilities()` — Rust mirror of `resonance-math/lib/entropy.mjs` |
+
+12/12 tests passing. Zero LAPACK deps — pure nalgebra real-block decomposition.
+
+---
+
+#### rtx/ — RTX 4090 Zero-Libc Inference Engine
+
+Full sovereign inference engine for the RTX 4090 Ada (sm_89). No libc, no C runtime, no external dependencies.
+
+| File | What it does |
+|---|---|
+| `rtx/include/sov_rtx.h` | Public C API — 22 functions: CUDA, scheduler, KV cache, GGUF, BFT, WORM, power, Janet |
+| `rtx/src/cuda/flash_attention.ptx` | sm_89 PTX: PagedAttention + online softmax (Milakov-Norouzi) + tensor core WMMA + RMSNorm + SiLU. Power suspend → WORM checkpoint |
+| `rtx/src/c--/scheduler.cmm` | C-- continuous batching state machine (6 states: IDLE/PREFILL/GENERATE/SWAP/CHECKPOINT/RESUME). WORM attestation every 64 tokens. BFT quorum height tracking |
+| `rtx/src/fortran/transformer_kernel.f90` | Fortran 2018 bind(C): RMSNorm, SiLU, RoPE, GQA paged attention, KV cache management, blake3_hash_kv, ed25519_sign_fortran |
+| `rtx/src/loader/gguf.c` | GGUF v3 parser zero-libc (VirtualAlloc/mmap). Q4_0/Q4_K/Q8_0/F16/BF16/F32. No malloc |
+| `rtx/windows_rtx/cuda_driver_loader.c` | PEB walk → nvcuda.dll → PE export table → 25 CUDA driver functions. Janet kernel config uploaded to device constant memory |
+| `rtx/windows_rtx/power_handler.c` | 4 GUID power registrations. Suspend → WORM checkpoint. Battery < 20% → reduce batch. Zero imports |
+| `rtx/windows_rtx/main.c` | Zero-CRT `sov_main()`. Manual kernel32 PEB walk. Boot: CUDA → Power → Scheduler → loop |
+
+**Build:**
+```bash
+cd rtx && mkdir build && cd build
+cmake .. -DSOV_BUILD_CUDA=ON -DSOV_ZERO_LIBC=ON
+cmake --build . --config Release
+```
+
+---
+
 ### Sprint 1, Push 3: MLIR Sovereign Optimizer (Agent 5) + Bob Twin Council ✅ COMPLETE
 
 **Added Agent 5 (Forge Master) to Bob Twin Council — upgraded consensus from 3-of-4 to 4-of-5 Byzantine Fault Tolerant voting.**
@@ -413,5 +456,5 @@ PAR-001 through PAR-007 recorded under SSL v3.0 Part IX. Cryptographic anchors o
 ---
 
 <div align="center">
-<sub>Ω·III · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · 9,039 lines · SOVEREIGN</sub>
+<sub>Ω·III · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · 50K+ lines · SOVEREIGN</sub>
 </div>
