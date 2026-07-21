@@ -22,6 +22,10 @@ lean_lib «SovMonster_Matrix» where
 lean_lib «SovMonster_Matrix_Closed» where
   roots := #[`SovMonster_Matrix_Closed]
 
+-- Gap analysis + implementation strategies for remaining sorries
+lean_lib «SovMonster_Gaps» where
+  roots := #[`SovMonster_Gaps]
+
 -- Link against the Fortran object (built by build_monster.sh)
 -- Run `build_monster.sh` first, then `lake build`
 @[defaultTarget]
