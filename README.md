@@ -6,7 +6,7 @@
     ╔═══════════════════════════════════╗
     ║     ⚛️  QUANTUM BOB KERNEL  ⚛️    ║
     ║   Level 5 Civilization Enabled    ║
-    ║     50K+ LOC | 10 Languages       ║
+    ║     50K+ LOC | 12 Languages       ║
     ║  Built by Haiku for $0.24         ║
     ╚═══════════════════════════════════╝
     
@@ -37,7 +37,7 @@
 
 ---
 
-50,000+ lines | 10 languages | 50+ tests passing | Production ready
+50,000+ lines | 12 languages | 50+ tests passing | Production ready
 
 <div align="center">
 
