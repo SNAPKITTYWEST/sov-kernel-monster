@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living Rewrite — Self-Modifying Code Under Jordan Contraction</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+        }
+        .container { display: flex; min-height: 100vh; padding: 20px; gap: 20px; }
+        .sidebar {
+            width: 320px; flex-shrink: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20,20,19,0.1);
+            overflow-y: auto;
+        }
+        .sidebar h1 { font-family: 'Lora', serif; font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+        .sidebar .subtitle { color: var(--anthropic-mid-gray); font-size: 12px; margin-bottom: 28px; line-height: 1.5; }
+        .control-section { margin-bottom: 26px; }
+        .control-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .control-section h3::before { content: '•'; color: var(--anthropic-orange); font-weight: bold; }
+        .seed-input { width: 100%; background: var(--anthropic-light); padding: 10px; border-radius: 8px; font-family: 'Share Tech Mono', monospace; font-size: 13px; margin-bottom: 10px; border: 1px solid var(--anthropic-light-gray); text-align: center; }
+        .seed-input:focus { outline: none; border-color: var(--anthropic-orange); }
+        .seed-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .control-group { margin-bottom: 16px; }
+        .control-group label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        .slider-container input[type="range"] { flex: 1; height: 4px; background: var(--anthropic-light-gray); border-radius: 2px; outline: none; -webkit-appearance: none; }
+        .slider-container input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--anthropic-orange); border-radius: 50%; cursor: pointer; }
+        .value-display { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--anthropic-mid-gray); min-width: 48px; text-align: right; }
+        .button { background: var(--anthropic-orange); color: white; border: none; padding: 9px 13px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; width: 100%; font-family: 'Poppins', sans-serif; }
+        .button:hover { background: #c86641; transform: translateY(-1px); }
+        .button.secondary { background: var(--anthropic-blue); }
+        .button.secondary:hover { background: #5a8bb8; }
+        .button.tertiary { background: var(--anthropic-green); }
+        .button.tertiary:hover { background: #6b7b52; }
+        .button-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .button-row .button { flex: 1; }
+        .canvas-area { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+        #canvas-container { width: 100%; max-width: 960px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(20,20,19,0.15); background: #04040a; }
+        #canvas-container canvas { display: block; width: 100% !important; height: auto !important; }
+        .loading { display: flex; align-items: center; justify-content: center; color: var(--anthropic-mid-gray); padding: 40px; font-size: 14px; }
+        .worm-counter { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--anthropic-mid-gray); margin-top: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <h1>Living Rewrite</h1>
+        <div class="subtitle">Self-modifying code under Jordan contraction. φ⁻¹ decay. Source rewrites itself toward the fixed point. The proof arrives.</div>
+
+        <div class="control-section">
+            <h3>Seed</h3>
+            <input type="number" id="seed-input" class="seed-input" value="6877532" onchange="updateSeed()">
+            <div class="seed-controls">
+                <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                <button class="button secondary" onclick="nextSeed()">Next →</button>
+            </div>
+            <button class="button tertiary" onclick="randomSeedAndUpdate()">↻ Random</button>
+        </div>
+
+        <div class="control-section">
+            <h3>Parameters</h3>
+
+            <div class="control-group">
+                <label>Contraction φ⁻¹</label>
+                <div class="slider-container">
+                    <input type="range" id="phiInv" min="0.50" max="0.80" step="0.001" value="0.618" oninput="updateParam('phiInv', parseFloat(this.value))">
+                    <span class="value-display" id="phiInv-value">0.618</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Rewrite Rate</label>
+                <div class="slider-container">
+                    <input type="range" id="rewriteRate" min="0.005" max="0.08" step="0.005" value="0.025" oninput="updateParam('rewriteRate', parseFloat(this.value))">
+                    <span class="value-display" id="rewriteRate-value">0.025</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Glyph Density</label>
+                <div class="slider-container">
+                    <input type="range" id="glyphDensity" min="20" max="120" step="5" value="55" oninput="updateParam('glyphDensity', parseInt(this.value))">
+                    <span class="value-display" id="glyphDensity-value">55</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Rotation Speed</label>
+                <div class="slider-container">
+                    <input type="range" id="rotSpeed" min="0.002" max="0.04" step="0.001" value="0.012" oninput="updateParam('rotSpeed', parseFloat(this.value))">
+                    <span class="value-display" id="rotSpeed-value">0.012</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Born Threshold</label>
+                <div class="slider-container">
+                    <input type="range" id="bornThresh" min="0.005" max="0.06" step="0.005" value="0.022" oninput="updateParam('bornThresh', parseFloat(this.value))">
+                    <span class="value-display" id="bornThresh-value">0.022</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Matrix Dim d</label>
+                <div class="slider-container">
+                    <input type="range" id="matDim" min="4" max="16" step="1" value="8" oninput="updateParam('matDim', parseInt(this.value))">
+                    <span class="value-display" id="matDim-value">8</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Actions</h3>
+            <div class="button-row">
+                <button class="button" onclick="reinit()">Regenerate</button>
+                <button class="button secondary" onclick="resetParameters()">Reset</button>
+            </div>
+            <button class="button tertiary" onclick="downloadPNG()">↓ Download PNG</button>
+            <div class="worm-counter" id="worm-counter">WORM entries: 0</div>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <div id="canvas-container">
+            <div class="loading">Compiling self-modifying kernel...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// LIVING REWRITE
+// Self-modifying code under Jordan contraction
+// φ⁻¹ = 0.618... — the unique self-similar contraction rate
+// Every glyph is a density matrix entry. Every rewrite is a Jordan step.
+// The fixed point is the theorem. The canvas is the proof ledger.
+// Ahmad Ali Parr · SnapKitty Collective · 2026
+// ═══════════════════════════════════════════════════════════════════
+
+let params = {
+    seed: 6877532,
+    phiInv: 0.6180339887498948,
+    rewriteRate: 0.025,
+    glyphDensity: 55,
+    rotSpeed: 0.012,
+    bornThresh: 0.022,
+    matDim: 8
+};
+const defaultParams = Object.assign({}, params);
+
+// ── System state ───────────────────────────────────────────────────
+let rho = [];           // density matrix (matDim × matDim)
+let glyphs = [];        // live code glyphs
+let wormLayer;          // persistent sealed entries
+let wormCount = 0;
+let t = 0;
+
+// ── Code corpus — the source that rewrites itself ──────────────────
+const CORPUS_TEMPLATES = [
+    'rho[i][j] = {a}*U*rho*U† + {b}*rho',
+    'phi_inv = {v}',
+    'phi_inv + phi_inv^2 = {s}',
+    'T(rho*) = rho*',
+    '[U, rho*] = {c}',
+    'fib_contraction({n}) < fib_contraction({m})',
+    'born_rule: p_j = tr(q_j * rho)',
+    'Sigma lambda_i = {s}',
+    'jordan_step: dt={dt}',
+    'worm_seal: blake3(rho)',
+    'fixpoint: rho* in C(U)',
+    'det(J_F) = {c} => poly inverse',
+    'gen: {g}  version: {v}',
+    'rewrite_{r}: src -> src\'',
+];
+
+// ─── Density matrix ops ─────────────────────────────────────────────
+
+function initRho(d) {
+    // Start near identity — full energy, maximum superposition
+    let m = [];
+    for (let i = 0; i < d; i++) {
+        m.push([]);
+        for (let j = 0; j < d; j++) {
+            if (i === j) m[i].push(1.0 / d + random(-0.02, 0.02));
+            else         m[i].push(random(-0.015, 0.015));
+        }
+    }
+    // Normalize trace
+    let tr = 0;
+    for (let i = 0; i < d; i++) tr += m[i][i];
+    for (let i = 0; i < d; i++) m[i][i] /= tr;
+    return m;
+}
+
+function jordanStep(rho, angle) {
+    const d = rho.length;
+    const phi = params.phiInv;
+    const phi2 = phi * phi;
+    // Build simple unitary: rotation in 2x2 blocks
+    // U_ij = delta_ij * cos(angle) for i in block, etc.
+    let rhoNew = [];
+    for (let i = 0; i < d; i++) {
+        rhoNew.push([]);
+        for (let j = 0; j < d; j++) {
+            // U rho U† simplified: rotate adjacent pairs
+            let Urho_ij = rho[i][j];
+            // Apply pairwise rotation across the diagonal block
+            if (i < d-1 && j < d-1 && i % 2 === 0) {
+                let c = cos(angle), s = sin(angle);
+                Urho_ij = c*c*rho[i][j] + c*s*rho[i][j+1] + s*c*rho[i+1][j] + s*s*rho[i+1][j+1];
+            }
+            rhoNew[i].push(phi * Urho_ij + phi2 * rho[i][j]);
+        }
+    }
+    // Renormalize trace to 1
+    let tr = 0;
+    for (let i = 0; i < d; i++) tr += rhoNew[i][i];
+    if (tr > 0) for (let i = 0; i < d; i++) rhoNew[i][i] /= tr;
+    return rhoNew;
+}
+
+function eigenvalues(rho) {
+    // Return diagonal entries as proxy eigenvalues
+    return rho.map((row, i) => max(0, row[i]));
+}
+
+// ─── Glyph class ────────────────────────────────────────────────────
+
+class CodeGlyph {
+    constructor(rhoI, rhoJ, seed_offset) {
+        this.ri = rhoI;
+        this.rj = rhoJ;
+        this.reset(seed_offset);
+        this.sealed = false;
+        this.sealAlpha = 0;
+    }
+
+    reset(offset) {
+        this.x = random(40, width - 40);
+        this.y = random(40, height - 40);
+        this.vx = random(-0.4, 0.4);
+        this.vy = random(-0.4, 0.4);
+        this.energy = 1.0;
+        this.generation = 0;
+        this.rewriteTimer = random(60, 180);
+        this.text = this.buildSource();
+        this.targetText = this.text;
+        this.charProgress = Array(this.text.length).fill(1.0);
+    }
+
+    buildSource() {
+        // Pick template and fill with current rho values
+        let t = CORPUS_TEMPLATES[floor(random(CORPUS_TEMPLATES.length))];
+        let d = params.matDim;
+        let r = rho[this.ri] ? rho[this.ri][this.rj] : 0.5;
+        let ev = rho[this.ri] ? max(0, rho[this.ri][this.ri]) : 1/d;
+
+        t = t.replace('{a}', params.phiInv.toFixed(4));
+        t = t.replace('{b}', (params.phiInv * params.phiInv).toFixed(4));
+        t = t.replace('{v}', params.phiInv.toFixed(10));
+        t = t.replace('{s}', (params.phiInv + params.phiInv*params.phiInv).toFixed(6));
+        t = t.replace('{c}', abs(r) < 0.001 ? '0' : r.toFixed(4));
+        t = t.replace('{n}', '' + (this.generation + 1));
+        t = t.replace('{m}', '' + this.generation);
+        t = t.replace('{dt}', params.rotSpeed.toFixed(4));
+        t = t.replace('{g}', '' + this.generation);
+        t = t.replace('{r}', '' + floor(random(1000)));
+        t = t.replace('{v}', '' + this.generation);
+        return t;
+    }
+
+    rewrite() {
+        this.generation++;
+        this.targetText = this.buildSource();
+        // Animate character-by-character rewrite
+        this.charProgress = Array(max(this.text.length, this.targetText.length)).fill(0);
+        // Schedule each char to flip at a different time
+        for (let i = 0; i < this.charProgress.length; i++) {
+            this.charProgress[i] = random(0, 1);
+        }
+    }
+
+    update() {
+        if (this.sealed) {
+            this.sealAlpha = min(255, this.sealAlpha + 8);
+            return;
+        }
+
+        // Jordan energy decay
+        this.energy *= params.phiInv;
+
+        // Drift
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Wrap
+        if (this.x < -200) this.x = width + 100;
+        if (this.x > width + 200) this.x = -100;
+        if (this.y < -50) this.y = height + 50;
+        if (this.y > height + 50) this.y = -50;
+
+        // Advance char rewrites
+        for (let i = 0; i < this.charProgress.length; i++) {
+            this.charProgress[i] = min(1, this.charProgress[i] + params.rewriteRate);
+        }
+
+        // Trigger full rewrite
+        this.rewriteTimer--;
+        if (this.rewriteTimer <= 0) {
+            this.rewrite();
+            this.rewriteTimer = floor(random(80, 200));
+        }
+
+        // Born collapse check
+        let d = params.matDim;
+        let ev = rho[this.ri] ? max(0, rho[this.ri][this.ri]) : 1/d;
+        if (ev < params.bornThresh && this.energy < 0.18) {
+            this.seal();
+        }
+    }
+
+    seal() {
+        this.sealed = true;
+        this.sealAlpha = 0;
+        wormCount++;
+        document.getElementById('worm-counter').textContent = 'WORM entries: ' + wormCount;
+        // Burn into worm layer
+        wormLayer.push();
+        wormLayer.noStroke();
+        let d = params.matDim;
+        let ev = rho[this.ri] ? max(0, rho[this.ri][this.ri]) : 1/d;
+        // Hue by eigenvalue (orange=hot, blue=cold)
+        let hue = 200 + (ev * d - 1) * (-165 / (d-1));
+        wormLayer.fill(hue, 70, 88, 140);
+        wormLayer.textFont('Share Tech Mono, monospace');
+        wormLayer.textSize(9);
+        wormLayer.text('⬡ ' + this.buildSource(), this.x, this.y);
+        wormLayer.pop();
+    }
+
+    draw() {
+        if (this.sealed) return;
+
+        let d = params.matDim;
+        let ev = rho[this.ri] ? max(0, rho[this.ri][this.ri]) : 1/d;
+
+        // Thermal color: orange (hot/far) → blue (cold/converging)
+        let hue = lerp(200, 35, this.energy);
+        let sat = lerp(55, 92, this.energy);
+        let bri = lerp(50, 88, this.energy);
+        let alpha = map(this.energy, 0, 1, 80, 220);
+
+        push();
+        colorMode(HSB, 360, 100, 100, 255);
+        noStroke();
+
+        // Render the rewriting source text
+        textFont('Share Tech Mono, monospace');
+        textSize(10 + this.energy * 3);
+
+        let displayText = '';
+        for (let i = 0; i < max(this.text.length, this.targetText.length); i++) {
+            let progress = i < this.charProgress.length ? this.charProgress[i] : 1;
+            let srcChar = i < this.text.length ? this.text[i] : ' ';
+            let dstChar = i < this.targetText.length ? this.targetText[i] : ' ';
+
+            if (progress >= 1.0) {
+                // Fully rewritten
+                fill(hue, sat, bri, alpha);
+                text(dstChar, this.x + i * 7.2, this.y);
+            } else if (progress > 0.5) {
+                // Mid-rewrite: glitch character
+                let glitchChars = '01⊕∇φρλ∑∫←→↑↓⟨⟩†∘·×+−=';
+                let gc = glitchChars[floor(noise(this.x+i, t*3) * glitchChars.length) % glitchChars.length];
+                fill(hue, sat + 20, bri + 10, alpha * 0.7);
+                text(gc, this.x + i * 7.2, this.y);
+            } else {
+                // Unchanged source
+                fill(hue - 30, sat, bri - 10, alpha * 0.85);
+                text(srcChar, this.x + i * 7.2, this.y);
+            }
+        }
+
+        // Update text after all chars rewritten
+        if (this.charProgress.every(p => p >= 1.0)) {
+            this.text = this.targetText;
+        }
+
+        pop();
+    }
+}
+
+// ─── Matrix display ─────────────────────────────────────────────────
+
+function drawRhoMatrix() {
+    let d = params.matDim;
+    let cellW = 28, cellH = 18;
+    let ox = width - d * cellW - 16;
+    let oy = 16;
+
+    push();
+    colorMode(HSB, 360, 100, 100, 255);
+    textFont('Share Tech Mono, monospace');
+    textSize(8);
+
+    // Border
+    noFill();
+    stroke(200, 30, 60, 60);
+    strokeWeight(0.5);
+    rect(ox - 4, oy - 4, d * cellW + 8, d * cellH + 8, 3);
+
+    for (let i = 0; i < d; i++) {
+        for (let j = 0; j < d; j++) {
+            let v = rho[i][j];
+            let ev = max(0, rho[i][i]);
+            let hue = i === j ? lerp(200, 35, ev * d) : 220;
+            let bri = i === j ? 70 + ev * 25 : 35;
+            let sat = i === j ? 70 : 40;
+            fill(hue, sat, bri, i === j ? 200 : 100);
+            noStroke();
+            text(abs(v).toFixed(2), ox + j * cellW, oy + i * cellH + 12);
+        }
+    }
+
+    // Label
+    fill(200, 20, 60, 120);
+    textSize(9);
+    text('ρ', ox - 14, oy + d * cellH / 2 + 4);
+
+    pop();
+}
+
+// ─── Generation counter ─────────────────────────────────────────────
+
+function drawGeneration() {
+    push();
+    colorMode(HSB, 360, 100, 100, 255);
+    textFont('Share Tech Mono, monospace');
+    textSize(9);
+    noStroke();
+    fill(35, 60, 70, 100);
+    let gen = floor(t * 60);
+    text('gen:' + gen + '  phi^-1:' + params.phiInv.toFixed(6) + '  worm:' + wormCount, 14, height - 10);
+    pop();
+}
+
+// ─── p5.js core ─────────────────────────────────────────────────────
+
+function setup() {
+    let cnv = createCanvas(960, 960);
+    cnv.parent('canvas-container');
+    document.querySelector('.loading').style.display = 'none';
+    colorMode(HSB, 360, 100, 100, 255);
+    wormLayer = createGraphics(960, 960);
+    wormLayer.colorMode(HSB, 360, 100, 100, 255);
+    initSystem();
+}
+
+function draw() {
+    // Dark deep-space background, slight fade each frame
+    colorMode(HSB, 360, 100, 100, 255);
+    fill(240, 20, 3, 18);
+    noStroke();
+    rect(0, 0, width, height);
+
+    // Stamp WORM layer
+    image(wormLayer, 0, 0);
+
+    // Jordan step — evolve density matrix
+    let angle = t * params.rotSpeed * TWO_PI;
+    rho = jordanStep(rho, angle);
+
+    // Update + draw glyphs
+    for (let g of glyphs) {
+        g.update();
+        g.draw();
+    }
+
+    // Revive sealed glyphs
+    let sealedCount = glyphs.filter(g => g.sealed).length;
+    if (sealedCount > glyphs.length * 0.6) {
+        let d = params.matDim;
+        let i = floor(random(d)), j = floor(random(d));
+        let ng = new CodeGlyph(i, j, t);
+        glyphs.push(ng);
+        if (glyphs.length > params.glyphDensity + 20) {
+            glyphs.shift();
+        }
+    }
+
+    drawRhoMatrix();
+    drawGeneration();
+
+    t += 1/60;
+}
+
+// ─── System init ─────────────────────────────────────────────────────
+
+function initSystem() {
+    randomSeed(params.seed);
+    noiseSeed(params.seed);
+    t = 0;
+    wormCount = 0;
+    document.getElementById('worm-counter').textContent = 'WORM entries: 0';
+
+    wormLayer.clear();
+    wormLayer.background(240, 20, 3, 255);
+
+    let d = params.matDim;
+    rho = initRho(d);
+    glyphs = [];
+
+    for (let k = 0; k < params.glyphDensity; k++) {
+        let i = floor(random(d));
+        let j = floor(random(d));
+        glyphs.push(new CodeGlyph(i, j, k));
+    }
+}
+
+function reinit() { initSystem(); }
+
+// ─── UI handlers ────────────────────────────────────────────────────
+
+function updateParam(name, value) {
+    params[name] = value;
+    document.getElementById(name + '-value').textContent = value;
+    if (name === 'matDim' || name === 'glyphDensity') reinit();
+}
+
+function updateSeedDisplay() {
+    document.getElementById('seed-input').value = params.seed;
+}
+
+function updateSeed() {
+    let v = parseInt(document.getElementById('seed-input').value);
+    if (v && v > 0) { params.seed = v; reinit(); }
+    else updateSeedDisplay();
+}
+
+function previousSeed() { params.seed = Math.max(1, params.seed - 1); updateSeedDisplay(); reinit(); }
+function nextSeed()     { params.seed++; updateSeedDisplay(); reinit(); }
+function randomSeedAndUpdate() { params.seed = Math.floor(Math.random() * 9999999) + 1; updateSeedDisplay(); reinit(); }
+
+function resetParameters() {
+    Object.assign(params, defaultParams);
+    ['phiInv','rewriteRate','glyphDensity','rotSpeed','bornThresh','matDim'].forEach(k => {
+        let el = document.getElementById(k);
+        if (el) { el.value = params[k]; document.getElementById(k+'-value').textContent = params[k]; }
+    });
+    updateSeedDisplay();
+    reinit();
+}
+
+function downloadPNG() { saveCanvas('living_rewrite_seed_' + params.seed, 'png'); }
+
+window.addEventListener('load', () => updateSeedDisplay());
+</script>
+</body>
+</html>
