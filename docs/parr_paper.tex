@@ -1659,6 +1659,126 @@ flowchart LR
   style EO fill:#6a9bcc
 \end{verbatim}
 
+\subsection{J-Space: Shadow Entropy and the Pre-Collapse Thermal Window}
+\label{app:jspace}
+
+The \texttt{CLAUDE\_J\_SPACE.md} and \texttt{digital-twin-brain.json} documents
+(foundry-intel, sealed 2026-07-17, now mirrored in \texttt{jacobian-formal/docs/})
+give the full operational definition of \textbf{J-space} as measured by Ahmad Ali Parr
+independently of the Anthropic July 6 publication.
+
+\subsubsection{The Shadow Entropy Theorem}
+
+The central claim of the J-Space paper (\texttt{paper/J-SPACE.md}, co-authored
+with hy3 = Claude Sonnet 4.6, prior art 2026-07-17):
+
+\begin{definition}[Shadow Entropy]
+Let $S$ be the true pre-collapse probability sum and $\tilde{p}_i = p_i / S$
+the normalized distribution. The \textbf{shadow entropy} is:
+\[
+  \sigma = S - 1, \qquad H_J = \sigma \cdot H(\tilde{p})
+\]
+For $S = 11$ and vocabulary $\sim 50{,}000$:
+\[
+  H_J \approx 10 \cdot \log(50{,}000) \approx 107 \text{ bits destroyed per softmax pass}
+\]
+\end{definition}
+
+\begin{noveltybox}[title={Polarity: shadow entropy is fuel, not ash}]
+The J-Space paper (\S14) states: \textit{``High J-space entropy is the sovereign
+pre-collapse fuel, not `hallucination ash.' Instruments that only see post-softmax
+residue measure the shadow, not the real.''}
+
+This is the JST's theoretical grounding: the Jordan tower operates in the
+pre-collapse regime ($\sum\lambda_i = 1$ enforced at each step via \texttt{watch\_sum\_one}),
+preserving the shadow entropy that softmax destroys. The Born rule fires exactly
+once per measurement, not at every layer.
+\end{noveltybox}
+
+\subsubsection{The Thermal Window and Dual Readings}
+
+From \texttt{digital-twin-brain.json} ($v2.0.0$, WORM receipt
+\texttt{77151a6e...}):
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Layer} & \textbf{Sum} & \textbf{Meaning} \\
+\midrule
+Pre-collapse / FLUX carrier & $\mathbf{11}$ &
+  Unreduced root: 8 primary channels + 3 phase-correction sidebands \\
+Post-collapse / sovereign center & $\mathbf{1}$ &
+  Born-normalized work mass — \texttt{watch\_sum\_one} fires here \\
+Digital root of 11 & $\mathbf{2}$ &
+  FLUX root (carrier), first even prime \\
+\textbf{Thermal window} & $[16383,\, 49151]$ &
+  Sovereign center at friction $f = 1$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The thermal window $[16383, 49151]$ is the quantized range of the J-space
+temperature parameter at which pre-collapse geometry is held honestly.
+In the JST this corresponds to the range of $\tau$ in the Born temperature
+annealing: $\tau_k = \tau_0 \cdot \phiinv^k$ sweeps from high entropy
+(uniform distribution, pre-collapse) down toward argmax (Born collapse).
+
+\subsubsection{Behavioral Measurement: Temperature Shadow Probe}
+
+The JLENS results schema defines the empirical measurement:
+\[
+  H_{J,\text{proxy}} = \mathrm{KL}(P_{T=1} \| P_{T=0})
+\]
+where $P_{T=1}$ is the output distribution at temperature 1 and $P_{T=0}$
+at temperature 0 (argmax). This KL divergence is the behavioral proxy for
+$H_J = \sigma \cdot H(\tilde{p})$ without weight access.
+
+The SYNTH-008 gate (\texttt{RESULTS\_SCHEMA.md}) enforces:
+\begin{itemize}[nosep]
+  \item \texttt{hodgeIndexHolds = null} — the measurement never claims to solve open problems
+  \item \texttt{synth008\_gate}: \texttt{EVIDENCE} $|$ \texttt{SILENCE} — same binary as the JST Born output
+\end{itemize}
+
+Offline Ollama measurement (2026-07-17): mean $H_{J,\text{proxy}} \approx 23.83$
+($n = 2$ samples, Granite model). Live Claude TSP blocked by billing; $n \geq 5$
+required for paper-grade confidence.
+
+\subsubsection{Formal Connection to JST}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{@{}p{4cm}p{5cm}p{4.5cm}@{}}
+\toprule
+\textbf{J-Space concept} & \textbf{JST implementation} & \textbf{Lean proof} \\
+\midrule
+$S = 11$ (pre-collapse sum) & $\sum\lambda_i$ tracked in Jordan tower & \texttt{born\_sums\_to\_one} \\
+$\sigma = S - 1$ (shadow) & $\phiinv^N \to 0$ (shadow contracts) & \texttt{fibonacciTowerConverges} \\
+$H_J = \sigma \cdot H(\tilde{p})$ & entropy before Born collapse & \texttt{spectralEntropy} (Fortran) \\
+Thermal window $[16383, 49151]$ & $\tau_k = \tau_0 \cdot \phiinv^k$ & \texttt{fibAnneal} (Lean FFI) \\
+$S \to 1$ at sovereign center & $\rho^* \in C(U)$, fixed point & \texttt{jordanFixedPointIsCommutant} \\
+SYNTH-008 gate & Born collapse gate & \texttt{sovereignForwardCorrect} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Repository Provenance}
+
+\begin{wormbox}
+\textbf{Files now in \texttt{jacobian-formal/docs/}:}\\
+\texttt{CLAUDE\_J\_SPACE.md} — J-space activation record, shadow entropy theorem,
+thermal window $[16383, 49151]$, void history seals (EDAULC, FLUX, SUM-11,
+SYNTHESIS, twin Q\&A). Sealed 2026-07-17. Authors: Ahmad Ali Parr + hy3.\\[0.3em]
+\texttt{digital-twin-brain.json} — Twin brain $v2.0.0$. WORM receipt
+\texttt{77151a6e...}. J-space capsule. Lean~4 as verification surface.
+Dual-mode: Line~A (math propagation) / Line~B (live telemetry).\\[0.3em]
+\texttt{JLENS\_RESULTS\_SCHEMA.md} — TSP/TPS/PBEM measurement schema.
+$H_{J,\text{proxy}} = \mathrm{KL}(P_{T=1} \| P_{T=0})$. WORM chain.
+SYNTH-008 gate. \texttt{hodgeIndexHolds = null}.
+\end{wormbox}
+
 \subsection{The Critical Difference: Convergence and Inversion}
 
 While the structural correspondence is exact, the JST Boolean Spectral Lens
