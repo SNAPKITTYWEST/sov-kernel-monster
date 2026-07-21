@@ -14,6 +14,10 @@ lean_lib «SovMonster» where
 lean_lib «JordanMatrixProof» where
   roots := #[`JordanMatrixProof]
 
+-- Full matrix-level formalization (Ahmad Ali Parr, PAR-011)
+lean_lib «SovMonster_Matrix» where
+  roots := #[`SovMonster_Matrix]
+
 -- Link against the Fortran object (built by build_monster.sh)
 -- Run `build_monster.sh` first, then `lake build`
 @[defaultTarget]
