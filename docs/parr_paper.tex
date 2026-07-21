@@ -182,29 +182,35 @@
 
   % Algorithmic art placeholder — the Sovereign Convergence visualization
   % (rendered externally from sovereign_convergence.html, seed 6877532)
+  % Golden angle spiral — 8 attractor nodes at i * 137.508 degrees
   \begin{tikzpicture}[scale=0.9]
-    % Simulate golden angle spiral attractor field
-    \foreach \i in {0,...,7}{
-      \pgfmathsetmacro{\angle}{137.508 * \i}
-      \pgfmathsetmacro{\r}{1.8 * sqrt(\i + 0.5) / sqrt(8)}
-      \pgfmathsetmacro{\hue}{mod(\i * 137.508, 360)}
-      % Attractor glow
-      \filldraw[color=SovOrange!\the\numexpr int(\r * 100)\relax!white, opacity=0.5]
-        ({cos(\angle) * \r * 3}, {sin(\angle) * \r * 3}) circle (0.18);
-    }
-    % Convergence trails (stylized)
-    \foreach \i in {0,...,40}{
-      \pgfmathsetmacro{\ax}{rand * 3}
-      \pgfmathsetmacro{\ay}{rand * 3}
-      \pgfmathsetmacro{\bx}{\ax * 0.618}
-      \pgfmathsetmacro{\by}{\ay * 0.618}
-      \draw[SovBlue!30, opacity=0.3, very thin]
-        (\ax, \ay) to[bend right=10] (\bx, \by);
-    }
-    % Central convergence node
-    \filldraw[SovGold, opacity=0.8] (0,0) circle (0.08);
-    \draw[SovGold!60, thick] (0,0) circle (0.25);
-    \draw[SovGold!30] (0,0) circle (0.5);
+    % Attractor 0: 0.00 deg
+    \filldraw[SovOrange!70!white, opacity=0.55] ({cos(0)*0.55},{sin(0)*0.55}) circle (0.16);
+    % Attractor 1: 137.51 deg
+    \filldraw[SovOrange!80!white, opacity=0.55] ({cos(137.5)*0.85},{sin(137.5)*0.85}) circle (0.18);
+    % Attractor 2: 275.02 deg
+    \filldraw[SovOrange!60!white, opacity=0.50] ({cos(275)*1.05},{sin(275)*1.05}) circle (0.17);
+    % Attractor 3: 52.52 deg
+    \filldraw[SovOrange!75!white, opacity=0.52] ({cos(52.5)*1.20},{sin(52.5)*1.20}) circle (0.16);
+    % Attractor 4: 190.02 deg
+    \filldraw[SovBlue!60!white, opacity=0.50] ({cos(190)*1.33},{sin(190)*1.33}) circle (0.15);
+    % Attractor 5: 327.52 deg
+    \filldraw[SovBlue!70!white, opacity=0.52] ({cos(327.5)*1.45},{sin(327.5)*1.45}) circle (0.16);
+    % Attractor 6: 105.02 deg
+    \filldraw[SovGold!80!white, opacity=0.55] ({cos(105)*1.56},{sin(105)*1.56}) circle (0.15);
+    % Attractor 7: 242.52 deg
+    \filldraw[SovGold!70!white, opacity=0.50] ({cos(242.5)*1.65},{sin(242.5)*1.65}) circle (0.14);
+    % Convergence trails (static approximation)
+    \draw[SovBlue!25, opacity=0.25, very thin] (0.55,0) to[bend right=12] (0,0);
+    \draw[SovBlue!25, opacity=0.20, very thin] (-0.65,0.55) to[bend left=10] (0,0);
+    \draw[SovBlue!25, opacity=0.20, very thin] (0.18,-1.05) to[bend right=8] (0,0);
+    \draw[SovBlue!20, opacity=0.18, very thin] (-1.20,0.38) to[bend left=10] (-0.65,0.55);
+    \draw[SovBlue!20, opacity=0.18, very thin] (0.55,0) to[bend right=6] (0.18,-1.05);
+    % Central fixed point
+    \filldraw[SovGold, opacity=0.9] (0,0) circle (0.07);
+    \draw[SovGold!70, thick] (0,0) circle (0.22);
+    \draw[SovGold!35] (0,0) circle (0.45);
+    \draw[SovGold!18] (0,0) circle (0.72);
   \end{tikzpicture}
 
   \vspace{1.0cm}
