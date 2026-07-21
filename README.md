@@ -20,6 +20,7 @@ Zero external dependencies. Zero libc. Formally verified.
 [![AVR](https://img.shields.io/badge/AVR-Self_Evolving_Kernels-ff6d00?style=for-the-badge)](#adaptive-verified-runtime)
 [![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf)
 [![Prior_Art](https://img.shields.io/badge/Prior_Art-PAR--001--019-d4af37?style=for-the-badge)](#prior-art)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-quantum--swarm-ff9d00?style=for-the-badge&logo=huggingface)](https://huggingface.co/Snapkitty/quantum-swarm)
 
 </div>
 
@@ -294,6 +295,24 @@ Each agent owns one semantic domain:
 
 No agent wastes tokens on domains it doesn't own. Integration surface is
 mathematically formal: WORM sealing, Blake3 attestation, Ed25519 verification.
+
+### Quantum Swarm — HuggingFace
+
+The swarm engine is published at **[Snapkitty/quantum-swarm](https://huggingface.co/Snapkitty/quantum-swarm)** on HuggingFace.
+
+A single 32-byte vacuum entropy fetch seeds N independent agents (1–300) via HKDF expansion. Agents run in parallel with φ-weighted routing across named branches (BOB · METATRON · EDAULC · and others), then undergo **Born-collapse normalization** — the same Born rule that governs the JST measurement head — to consolidate N parallel outputs into one sovereign answer.
+
+| Property | Value |
+|---|---|
+| Agents | 1–300 concurrent |
+| Entropy source | ANU QRNG → 32-byte vacuum seed |
+| Routing weight | φ⁻¹ (golden ratio — same as JST contraction rate) |
+| Collapse method | Born rule normalization |
+| Runtime (8 branches) | ~25s on RTX 3080 |
+| License | Sovereign Source License v2 |
+| DOI | [10.5281/zenodo.21351461](https://doi.org/10.5281/zenodo.21351461) |
+
+The quantum swarm is the live deployment of the JST philosophy: many superposed states, one measurement, one sovereign answer.
 
 ---
 
