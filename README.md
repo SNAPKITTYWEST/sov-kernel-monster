@@ -44,7 +44,6 @@
 ![Sprint](badges/sprint.svg)
 ![LOC](badges/loc.svg)
 ![Tests](badges/tests.svg)
-![Cost](badges/cost.svg)
 ![Model](badges/model.svg)
 
 </div>
