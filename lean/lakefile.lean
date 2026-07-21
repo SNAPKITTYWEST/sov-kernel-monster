@@ -18,6 +18,10 @@ lean_lib «JordanMatrixProof» where
 lean_lib «SovMonster_Matrix» where
   roots := #[`SovMonster_Matrix]
 
+-- Closed formalization — Ahmad's systematic sorry audit
+lean_lib «SovMonster_Matrix_Closed» where
+  roots := #[`SovMonster_Matrix_Closed]
+
 -- Link against the Fortran object (built by build_monster.sh)
 -- Run `build_monster.sh` first, then `lake build`
 @[defaultTarget]
