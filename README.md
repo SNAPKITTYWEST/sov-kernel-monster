@@ -18,7 +18,7 @@ Zero external dependencies. Zero libc. Formally verified.
 [![Verified](https://img.shields.io/badge/Lean_4-7_Zero_Sorry-00ff88?style=for-the-badge)](#formal-verification)
 [![Attestation](https://img.shields.io/badge/Attestation-Blake3_Ed25519-00ff88?style=for-the-badge)](#worm-attestation)
 [![AVR](https://img.shields.io/badge/AVR-Self_Evolving_Kernels-ff6d00?style=for-the-badge)](#adaptive-verified-runtime)
-[![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](docs/parr_paper.pdf)
+[![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf)
 [![Prior_Art](https://img.shields.io/badge/Prior_Art-PAR--001--019-d4af37?style=for-the-badge)](#prior-art)
 
 </div>
@@ -325,7 +325,7 @@ SOV_SK=path/to/node_sk.bin ./build_monster.sh
 
 ## The Parr Papers
 
-43-page paper available at [`docs/parr_paper.pdf`](docs/parr_paper.pdf) and
+43-page paper available at [`docs/parr_paper.pdf`](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf) and
 [snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/).
 
 Covers: Jordan Spectral Transformer · LiquidLean · Jacobian Attack ·
