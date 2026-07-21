@@ -2073,4 +2073,160 @@ The Jacobian Lens.
 
 \end{thebibliography}
 
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Mathlib Gap Analysis and Implementation Strategy}
+\label{app:mathlib_gaps}
+% ─────────────────────────────────────────────────────────────────────────────
+
+This appendix documents the precise Mathlib gaps that remain after
+\texttt{SovMonster\_Matrix\_Closed.lean} and specifies the exact PRs and
+implementation strategies needed for full closure.
+All items are implemented as \texttt{sorry}-stubs with documented proof strategies
+in \texttt{lean/SovMonster\_Gaps.lean}.
+
+\subsection{Gap 1: Matrix Square Root — Cyclic Trace Property}
+
+For $A \in M_n(\mathbb{C})$ positive semidefinite with spectral decomposition
+$A = U\Sigma U^*$, the unique PSD square root is
+$A^{1/2} = U\Sigma^{1/2}U^*$ where $\Sigma^{1/2} = \mathrm{diag}(\sqrt{\sigma_1},\ldots,\sqrt{\sigma_n})$.
+
+\textbf{Mathlib status:} \texttt{Matrix.sqrt} exists for PSD Hermitian matrices.
+\texttt{Matrix.sqrt\_sq} and \texttt{Matrix.posSemidef\_sqrt} are available.
+
+\textbf{Gap:} Direct access to Fréchet derivatives of the matrix square root
+(needed for quantum gradient computations) is absent.
+The cyclic trace identity $\mathrm{tr}(\sqrt{\sqrt{\rho}\,\sigma\sqrt{\rho}}) = \mathrm{tr}(\sqrt{\sqrt{\sigma}\,\rho\sqrt{\sigma}})$
+(Uhlmann symmetry) requires a PR:
+\begin{center}
+\texttt{Matrix.trace\_sqrt\_congruence} $\;\Longrightarrow\;$
+$\mathrm{tr}(\sqrt{ABA}) = \mathrm{tr}(\sqrt{BAB})$ for PSD $A, B$.
+\end{center}
+
+\textbf{Workaround:} Construct $A^{1/2}$ via Denman--Beavers iteration or
+Dunford--Schur contour integrals when working constructively.
+
+\subsection{Gap 2: Completely Positive Maps — Choi's Theorem}
+
+A linear map $\Phi: M_n(\mathbb{C}) \to M_m(\mathbb{C})$ is \textbf{completely positive} (CP)
+iff for every $k \geq 1$ the map $\Phi \otimes \mathrm{id}_k$ is positive.
+By Choi's theorem, $\Phi$ is CP iff its Choi matrix
+\[
+  C_\Phi = (\Phi \otimes \mathrm{id}_n)(|\Omega\rangle\langle\Omega|) \in M_{mn}(\mathbb{C})
+\]
+is positive semidefinite, where $|\Omega\rangle = \sum_i |i\rangle \otimes |i\rangle$.
+
+\textbf{Mathlib status:} \texttt{Matrix.kronecker}, \texttt{Matrix.PosSemidef} available.
+\textbf{Gap:} No bundled \texttt{IsCompletelyPositive} predicate with Choi equivalence.
+
+\textbf{PR target:} \texttt{Matrix.CP\_iff\_choi\_pos\_semidef}
+\[
+  \Phi \text{ CP} \;\Longleftrightarrow\; C_\Phi \text{ PSD}
+\]
+\textbf{Strategy:} Express $C_\Phi$ via \texttt{Matrix.kronecker} and
+Kraus decomposition $\Phi(\rho) = \sum_k K_k \rho K_k^\dagger$.
+The fibonacci channel $\Phi(\rho) = U\rho U^\dagger$ is CP with single Kraus operator $K = U$.
+
+\subsection{Gap 3: Quantum Perron-Frobenius — Contraction on Subspace}
+
+For a primitive CP map $\Phi$ with spectral radius $\rho(\Phi) = 1$ (trace-preserving),
+all eigenvalues $\lambda \neq 1$ satisfy $|\lambda| < 1$. The contraction rate on the
+subspace orthogonal to the fixed state $\rho^*$ is $c = \max\{|\lambda| : \lambda \neq 1\}$.
+
+\textbf{Mathlib status:} Perron-Frobenius for nonneg matrices/vectors exists.
+\textbf{Gap:} No Perron-Frobenius for superoperators on $M_n(\mathbb{C})$.
+
+\textbf{Strategy:} Express $\Phi$ as an $n^2 \times n^2$ matrix via
+\texttt{LinearMap.toMatrix} with \texttt{Matrix.kronecker}, then invoke
+existing spectral radius bounds.
+
+\textbf{PR target:} \texttt{CPMap.spectral\_theorem}
+
+\subsection{Gap 4: SIC-POVM and SPE Round-Trip}
+
+A SIC-POVM in dimension $d$: $d^2$ rank-1 projectors $\Pi_i = |\psi_i\rangle\langle\psi_i|/d$ satisfying:
+\begin{itemize}[nosep]
+  \item Completeness: $\sum_{i=1}^{d^2} \Pi_i = I$
+  \item Equiangularity: $\mathrm{tr}(\Pi_i \Pi_j) = \frac{1}{d(d+1)}$ for $i \neq j$
+\end{itemize}
+
+\textbf{Mathlib status:} No SIC-POVM construction (Zauner's conjecture, proved for many $d$).
+
+\textbf{Resolution:} Replace SIC-POVM with an abstract \texttt{TightFrame} type
+carrying only the completeness axiom $\sum_i \psi_i\psi_i^\dagger = I$.
+The SPE round-trip holds for \emph{any} tight frame:
+\[
+  \sum_i \mathrm{tr}(\psi_i^\dagger x) \cdot \psi_i = \left(\sum_i \psi_i\psi_i^\dagger\right) x = Ix = x
+\]
+\textbf{Remaining sorry:} One reindex step requires
+\texttt{Matrix.sum\_smul\_eq\_mul} (trace inner product exchange).
+
+\subsection{Gap 5: Quantum Fidelity $F(\rho,\rho) = 1$}
+
+$F(\rho,\sigma) = \mathrm{tr}\!\left(\sqrt{\sqrt{\rho}\,\sigma\sqrt{\rho}}\right)$.
+For $\sigma = \rho$: $F(\rho,\rho) = \mathrm{tr}(\sqrt{\rho^2}) = \mathrm{tr}(\rho) = 1$
+(using $\rho \geq 0$ and $\sqrt{\rho^2} = \rho$ for PSD matrices).
+
+\textbf{Gap:} \texttt{Matrix.sqrt\_pow} for PSD matrices not in current Mathlib.
+
+\textbf{PR target:} \texttt{Matrix.sqrt\_sq\_eq\_self} for PSD $\rho$:
+$\sqrt{\rho^2} = \rho$.
+
+\subsection{Gap 6: Hot-Swap Versioning Policy (CLOSED)}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Change type} & \textbf{Version bump} & \textbf{Action} \\
+\midrule
+Interface signature modification & Major $v \to v+1$ & Invalidate prior handles \\
+Numerical algorithm swap & Minor & Backward compatible \\
+Performance / logging & Patch & Zero-downtime \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Formalized as \texttt{SemanticVersion}, \texttt{VersionBump}, \texttt{version\_increases\_on\_swap}
+in \texttt{lean/SovMonster\_Gaps.lean} — \textbf{zero sorry}.
+
+\subsection{Gap 7: Linear Map $\leftrightarrow$ Matrix Bridge (CLOSED)}
+
+Use \texttt{Matrix.toLin} and \texttt{LinearMap.toMatrix} explicitly with finite-basis proofs
+(\texttt{Basis.Fintype}).
+For positivity: use \texttt{Matrix.PosSemidef} bundled proofs, not raw inequalities;
+leverage \texttt{Matrix.pos\_semidef\_iff\_eq\_conj} for congruence transformations
+$\sqrt{\rho}\,\sigma\sqrt{\rho}$.
+Formalized as \texttt{congruence\_lin}, \texttt{congruence\_preserves\_psd} — \textbf{zero sorry}.
+
+\subsection{Complete Sorry Audit}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Theorem} & \textbf{File} & \textbf{Status} & \textbf{PR needed} \\
+\midrule
+\texttt{jordan\_fixed\_point\_commutes} & \texttt{\_Closed} & \checkmark\ zero sorry & --- \\
+\texttt{jordan\_preserves\_trace} & \texttt{\_Closed} & \checkmark\ zero sorry & --- \\
+\texttt{phi\_pow\_strictly\_decreasing} & \texttt{\_Closed} & \checkmark\ zero sorry & --- \\
+\texttt{softmax\_sums\_to\_one} & \texttt{\_Closed} & \checkmark\ zero sorry & --- \\
+\texttt{worm\_grows / history} & \texttt{\_Closed} & \checkmark\ zero sorry & --- \\
+\texttt{version\_increases\_on\_swap} & \texttt{\_Gaps} & \checkmark\ zero sorry & --- \\
+\texttt{congruence\_preserves\_psd} & \texttt{\_Gaps} & \checkmark\ zero sorry & --- \\
+\texttt{fibonacci\_channel\_is\_cp} & \texttt{\_Gaps} & sorry & \texttt{CP\_iff\_choi\_pos\_semidef} \\
+\texttt{cp\_map\_contraction} & \texttt{\_Gaps} & sorry & \texttt{CPMap.spectral\_theorem} \\
+\texttt{spe\_roundtrip} (1 step) & \texttt{\_Gaps} & sorry & \texttt{Matrix.sum\_smul\_eq\_mul} \\
+\texttt{fidelity\_self\_eq\_one} & \texttt{\_Gaps} & sorry & \texttt{Matrix.sqrt\_sq\_eq\_self} \\
+\texttt{sqrt\_congruence\_trace} & \texttt{\_Gaps} & sorry & \texttt{trace\_sqrt\_congruence} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent\textbf{7 zero-sorry}, \textbf{5 documented sorries} with precise PR targets.
+The core theorem \texttt{jordan\_fixed\_point\_commutes} ($[U, \rho^*] = 0$) is
+zero-sorry at matrix level. All remaining sorries are Mathlib engineering,
+not mathematical gaps.
+
 \end{document}
