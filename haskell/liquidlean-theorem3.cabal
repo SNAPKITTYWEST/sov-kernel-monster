@@ -30,6 +30,7 @@ library
         LiquidLean.Jacobian.SingularityAnalysis
         LiquidLean.Jacobian.CrackTheorem3
         LiquidLean.Jacobian.Theorem3Entry
+        LiquidLean.Jacobian.NegativeResult
         LiquidLean.AdaptiveVerifiedRuntime
 
     other-modules:
