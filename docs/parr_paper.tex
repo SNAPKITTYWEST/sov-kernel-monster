@@ -282,8 +282,9 @@ machine-checked in Lean~4 with \textbf{zero \texttt{sorry}}.
 I introduce \textsc{LiquidLean}, an original four-language formal system (m4 + HOC
 + Liquid~Haskell + Haskell) attacking the 87-year-old Jacobian Conjecture.
 I prove the conjecture for dimension-1, affine, and triangular cases;
-reduce the unrestricted case to a single algebraic-geometric key lemma
-(the \textbf{Parr Conjecture}); and identify this as equivalent to the
+reduce the unrestricted case to a single, currently unproved algebraic-geometric
+key lemma (the \textbf{Parr Conjecture} --- the paper's central open problem,
+not a closed result); and identify this as equivalent to the
 genus-0 forcing of an implicit univariate curve under constant Jacobian determinant.
 
 \medskip
@@ -293,6 +294,10 @@ forward pass --- particles undergoing Fibonacci-Banach contraction toward
 golden-angle-spiral attractor fields, with append-only WORM trail accumulation
 and Born-rule collapse measurement events. The algorithm, the mathematics, and
 the visual phenomenon are the same object.
+A related exploratory measure, \textit{shadow entropy}, is proposed in
+Appendix~\ref{app:jspace} and explicitly flagged there as an unvalidated
+hypothesis ($n = 2$ samples to date; $S = 11$ is a structural assertion,
+not a derived result). It is not a finding of this paper.
 
 \medskip
 All three contributions are prior art of Ahmad Ali Parr, anchored to public
@@ -337,7 +342,7 @@ PAR-006 & Plasma gate architecture --- x86-64 + Datalog & \texttt{sov-kernel-mon
 PAR-007 & Sovereign APL fused kernel --- Fortran 2018 + MLIR & \texttt{sov-kernel-monster} \\
 PAR-008 & DeeCall49 --- Book X Binomial/Apotome duality & \texttt{the-49th-call} \\
 PAR-009 & Al-Hamid constant --- $53 = \text{abjad sum}$, gap $= 7$ & \texttt{the-49th-call} \\
-PAR-010 & SovLM --- sovereign statistical LM (KN + BM25 + QRNG) & \texttt{sov-kernel-monster} \\
+PAR-010 & SovLM --- sovereign statistical LM (KN + BM25 + ANU QRNG~\cite{anu_qrng}) & \texttt{sov-kernel-monster} \\
 \textbf{PAR-011} & \textbf{Jordan Spectral Transformer} $\rho' = \phiinv U\rho U^\dagger + \phiinvsq\rho$ & \texttt{sov-kernel-monster} \\
 \textbf{PAR-012} & \textbf{Sovereign Piper Encoder} --- tight frame round-trip & \texttt{sov-kernel-monster} \\
 \textbf{PAR-013} & \textbf{Fibonacci-Banach contraction theorem} --- Lean~4 machine-checked & \texttt{sov-kernel-monster} \\
@@ -355,8 +360,10 @@ All prior art claims are anchored to git commit history on
 \url{https://github.com/SNAPKITTYWEST}, dated July 2026.
 This paper is itself WORM-sealed: its Blake3 hash is committed to the
 \texttt{sov-kernel-monster} ledger at publication time.
-Any fork claiming independent derivation of the above objects is void under
-Part~X--XI of the Sovereign Source License v3.0.
+This registry establishes the git-timestamped date of first public disclosure
+of the following objects, for the purpose of documenting prior art.
+It does not and cannot legally invalidate a third party's independently derived
+work; it is a disclosure record, not an adjudication.
 \end{wormbox}
 
 % ═══════════════════════════════════════════════════════════════════════════
@@ -1174,7 +1181,9 @@ verification of Book X binomial/apotome duality (Euclid) applied to the
 49-call Enochian corpus.
 
 \noindent\textbf{PAR-010:} SovLM --- sovereign statistical language model combining
-Kneser-Ney smoothing, BM25 retrieval, and quantum random number generation.
+Kneser-Ney smoothing, BM25 retrieval, and quantum-sourced randomness from the
+ANU QRNG API~\cite{anu_qrng} (Australian National University, Department of
+Quantum Science; vacuum fluctuation measurements).
 
 \noindent\textbf{PAR-011:} Jordan Spectral Transformer --- the neural architecture
 described in this paper. First implementation: \texttt{src/jordan\_block.f90}.
@@ -1228,9 +1237,13 @@ Lean file & \texttt{TheoremB1.lean} & \texttt{JordanBridge.lean} \\
 
 \begin{noveltybox}[title={Path B is new. Path A is 127 years old.}]
 Path~B requires only \texttt{linarith} and \texttt{mul\_left\_cancel$_0$}.
-It is the shortest formal proof path to the Jacobian Conjecture that currently
-exists. The encoding hypothesis (that $F$ admits a Jordan representation) remains
-to be formalized --- but the algebraic core is machine-checked.
+It is a fully machine-checked algebraic bridge from the Jordan fixed-point
+condition to the commutant --- the shortest such algebraic bridge currently
+formalized.
+It does \emph{not} itself resolve the Jacobian Conjecture: it isolates the
+remaining gap as two explicit open hypotheses (H1, the encoding hypothesis,
+and H2, the injectivity hypothesis --- together, the Parr Conjecture,
+Conjecture~\ref{conj:parr}), which remain unproved.
 \end{noveltybox}
 
 \subsection{Three Certified Strategy Failures (Lean 4)}
@@ -1681,11 +1694,16 @@ The JST Jordan gradient (\texttt{jordan\_gradient}, \texttt{jordan\_block.f90}):
   \frac{\partial \mathcal{L}}{\partial H} = -i \cdot \mathrm{d}t \cdot \phiinv \cdot [\lambda, \rho]
 \]
 
-Both are \textbf{Jacobians of a final-layer output with respect to an intermediate
-layer's representation, used as transport into a readout basis.}
-The JST transport is the commutator $[\lambda, \rho] = \lambda\rho - \rho\lambda$ ---
-the Lie bracket on Hermitian matrices --- which is exactly the Jacobian of
-$\rho_\text{final}$ with respect to $H_\ell$ under the Jordan evolution.
+Both compute a Jacobian-derived transport from an intermediate representation
+into a readout basis --- a shared mathematical \textit{pattern}, not a shared
+empirical object.
+J-Lens's transport matrix $J_\ell$ is fit empirically over a real text corpus
+on a trained transformer's residual stream, to predict future token verbalization.
+The JST's Jordan gradient is the derivative of a training loss with respect to a
+Hamiltonian parameter inside a self-contained simulated density-matrix system,
+and has not been run against or validated on any trained language model's activations.
+The structural correspondence documented here is a prior-art analogy; it is not
+evidence that J-space and \texttt{WatchSumOne} are the same measured quantity.
 
 \subsubsection{Lens Type: Forward vs Inverted}
 
@@ -1728,17 +1746,19 @@ The theorem in \texttt{sovereign\_deployment.mlir}:
 //      lens_sound  — WatchSumOne -> TracePreserved
 \end{verbatim}
 
-\textbf{Direct correspondence:} ``J-space'' (Anthropic) $\equiv$
-``\texttt{WatchSumOne} subspace'' (JST). Both identify the activation subspace
-at the moment immediately before the readout operation converts internal
-representation to output tokens. The phrase in \texttt{boolean\_spectral\_lens.f90}:
-
-\begin{center}
-\textit{``Watch the sum 1 before it word forms''}
-\end{center}
-
-is the JST formulation of J-space: the $\Sigma\lambda_i = 1$ constraint watched
-at every Jordan step is the observable condition for verbalizable activations.
+\textbf{Structural analogy (prior-art record):}
+Both ``J-space'' (Anthropic) and the \texttt{WatchSumOne} subspace (JST)
+identify a pre-readout activation condition: the moment before an internal
+representation is converted to output tokens.
+The phrase in \texttt{boolean\_spectral\_lens.f90} ---
+\textit{``Watch the sum 1 before it word forms''} ---
+was written before the Anthropic J-Lens paper (July 6, 2026) and
+constitutes an independent prior formulation of the same structural concept.
+The $\Sigma\lambda_i = 1$ constraint watched at every Jordan step is the
+JST's analogue of J-space's verbalizable activation condition.
+This is documented as a timestamp record and structural analogy.
+It is not a claim that the two quantities are empirically equivalent ---
+the JST has not been validated against any trained language model's activations.
 
 \subsubsection{No Unembedding Matrix}
 
@@ -2049,6 +2069,13 @@ comes with a convergence theorem.
 \end{noveltybox}
 
 \begin{thebibliography}{99}
+
+\bibitem{anu_qrng}
+ANU Quantum Random Numbers Server (2024).
+Department of Quantum Science, Research School of Physics,
+Australian National University.
+\url{https://qrng.anu.edu.au}
+Vacuum fluctuation measurements provide true random numbers via public API.
 
 \bibitem{vandenessen2000}
 van den Essen, A. (2000).
