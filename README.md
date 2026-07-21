@@ -15,9 +15,11 @@ Zero external dependencies. Zero libc. Formally verified.
 
 [![License](https://img.shields.io/badge/License-SSL_v3.0-ff6d00?style=for-the-badge)](LICENSE)
 [![Languages](https://img.shields.io/badge/Languages-12-5A4FCF?style=for-the-badge)](#structure)
-[![Verified](https://img.shields.io/badge/Lean_4-Zero_Sorry-00ff88?style=for-the-badge)](#formal-verification)
+[![Verified](https://img.shields.io/badge/Lean_4-7_Zero_Sorry-00ff88?style=for-the-badge)](#formal-verification)
 [![Attestation](https://img.shields.io/badge/Attestation-Blake3_Ed25519-00ff88?style=for-the-badge)](#worm-attestation)
 [![AVR](https://img.shields.io/badge/AVR-Self_Evolving_Kernels-ff6d00?style=for-the-badge)](#adaptive-verified-runtime)
+[![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](docs/parr_paper.pdf)
+[![Prior_Art](https://img.shields.io/badge/Prior_Art-PAR--001--019-d4af37?style=for-the-badge)](#prior-art)
 
 </div>
 
@@ -40,9 +42,17 @@ sov-kernel-monster/
 ├── rtx/                     RTX 4090 zero-libc inference engine
 ├── rust/                    Rust: bob-quantum-sys + sov-rust-core eigensolver
 ├── wasm/                    WASM bridge (44KB, browser-native)
-├── lean/                    Lean 4 formal specs + AVR proofs
-│   ├── SovMonster.lean          C ABI @[extern] bindings — zero sorry
-│   └── AdaptiveVerifiedRuntime.lean  density matrix + FFI + AVR proofs
+├── lean/                    Lean 4 formal specs + matrix-level proofs
+│   ├── SovMonster.lean              C ABI @[extern] bindings
+│   ├── AdaptiveVerifiedRuntime.lean density matrix + FFI + AVR proofs
+│   ├── SovMonster_Matrix_Closed.lean  matrix-level proofs over Matrix n n ℂ
+│   └── SovMonster_Gaps.lean           Mathlib gap analysis + PR targets
+├── docs/                    Papers + interactive art
+│   ├── parr_paper.pdf           43-page paper (The Parr Papers)
+│   ├── parr_paper.tex           LaTeX source
+│   ├── sovereign_convergence.html  Live generative art (Jordan contraction)
+│   ├── living_rewrite.html         Self-modifying code demo
+│   └── index.html                  Interactive hub (GitHub Pages)
 ├── haskell/                 Jacobian Conjecture + AVR (Haskell)
 │   ├── LiquidLean/Jacobian/     Theorem 3 crack — genus-0 forcing
 │   ├── LiquidLean/AdaptiveVerifiedRuntime.hs  self-evolving kernel runtime
@@ -168,45 +178,33 @@ pwsh -File scripts/record_avr_boot.ps1
 
 ## Formal Verification
 
-### Lean 4 — Zero Sorry
+### Lean 4 — Matrix-Level Proofs
 
-**`lean/SovMonster.lean`** — C ABI @[extern] bindings:
-- `bornRuleNormalization` — Born rule sum = 1
-- `unitaryEvolutionPreservesNorm` — Finset.sum_pos (with h_pos hypothesis)
-- `genusZeroImpliesRational` — `⟨true, rfl⟩`
-- `theoremThreeGenusForcing` — `⟨0, Or.inl rfl⟩`
+Three-file Lean stack. Core theorem machine-checked at `Matrix n n ℂ` level.
 
-**`lean/AdaptiveVerifiedRuntime.lean`** — AVR formal objects:
+**`lean/SovMonster_Matrix_Closed.lean`** — 7 zero-sorry matrix theorems:
 
-*Density matrices:*
-- `DensityMatrix n` — positive semidefinite, unit trace
-- `born_sums_to_one` — ∑ bornProbability ρ i = 1
-- `born_nonneg` — bornProbability ρ i ≥ 0
-- `fidelity_nonneg` — fidelity ρ σ ≥ 0
-- `fidelity_self_eq_one` — fidelity ρ ρ = 1
+| Theorem | Statement | Method |
+|---|---|---|
+| `jordan_fixed_point_commutes` | `T(ρ*)=ρ* ⟹ U*ρ*=ρ**U` over `Matrix n n ℂ` | `smul_left_cancel₀` + `calc` |
+| `jordan_preserves_trace` | `tr(T(ρ))=1` when `tr(ρ)=1` | cyclic trace |
+| `phi_pow_strictly_decreasing` | `(φ⁻¹)^(N+1) < (φ⁻¹)^N` | `pow_lt_pow_of_lt_one` over ℝ |
+| `softmax_sums_to_one` | Born simplex sums to 1 | `Finset.sum_div` |
+| `worm_grows` / `worm_history` | WORM chain invariants | `simp` |
+| `version_increases_on_swap` | Semantic versioning | structural |
+| `congruence_preserves_psd` | `(AMA†).PosSemidef` | `Matrix.PosSemidef.conj_conjTranspose` |
 
-*FFI correctness:*
-- `ffi_evolve_trace_one` — evolve preserves unit trace
-- `ffi_evolve_positive` — evolve preserves positivity
+**`lean/SovMonster_Gaps.lean`** — 5 documented sorries with exact Mathlib PR targets:
 
-*Encode/decode:*
-- `encode_decode_roundtrip` — encodeDM length = n
-- `decode_preserves_diag` — decoded diagonal matches original
+| Sorry | PR needed |
+|---|---|
+| `fibonacci_channel_is_cp` | `Matrix.CP_iff_choi_pos_semidef` |
+| `cp_map_contraction_on_complement` | `CPMap.spectral_theorem` |
+| `spe_roundtrip_from_tight_frame` | `Matrix.sum_smul_eq_mul` |
+| `fidelity_self_eq_one` | `Matrix.sqrt_sq_eq_self` |
+| `sqrt_congruence_trace` | `Matrix.trace_sqrt_congruence` |
 
-*Runtime state:*
-- `generation_monotone` — generation strictly increases per step
-- `ledger_grows` — WORM ledger strictly grows per seal
-- `replace_kernel_maximal` — ReplaceKernel ≠ all other rewrites
-- `rewrites_distinct` — all 6 rewrites are distinct
-
-*Evolution / WORM:*
-- `rewrite_version_monotone` — version strictly increases
-- `deployment_requires_speedup` — speedup ≥ 1.05 enforced
-- `hot_swap_unique_active` — exactly one active binding per name
-- `rollback_sound` — rollback target re-verified before deploy
-- `version_strictly_increases` — omega closure
-- `worm_append_grows` — chain length strictly increases
-- `worm_history_preserved` — all past entries remain
+**Key finding (self-corrected during audit):** The Jordan channel `Φ(ρ)=UρU†` is an isometry (op-norm=1) on the full space. Contraction holds only on the subspace orthogonal to `ρ*`. Paper updated accordingly.
 
 ---
 
@@ -325,9 +323,22 @@ SOV_SK=path/to/node_sk.bin ./build_monster.sh
 
 ---
 
+## The Parr Papers
+
+43-page paper available at [`docs/parr_paper.pdf`](docs/parr_paper.pdf) and
+[snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/).
+
+Covers: Jordan Spectral Transformer · LiquidLean · Jacobian Attack ·
+Algebraic Bridge `[U,ρ*]=0` · Sovereign Convergence art · Living Rewrite ·
+J-Space / Boolean Spectral Lens · Phase 8 negative certificate · Mathlib gap analysis.
+
+Audited by Nemotron (Distinguished Senior Research Auditor persona).
+11 findings addressed. Paper updated with corrected contraction scope,
+Lean Float caveat, uniqueness constraint, softmax round-trip scope.
+
 ## Prior Art
 
-PAR-001 through PAR-010 recorded under SSL v3.0 Part IX.
+PAR-001 through PAR-019 recorded under SSL v3.0 Part IX.
 Cryptographic anchors on public git history.
 
 ## License
