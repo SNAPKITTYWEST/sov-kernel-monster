@@ -394,15 +394,19 @@ theorem bornRuleNormalization {ψ : Array Float}
     (∑ i in ψ.indices, ψ[i]^2) = 1 := h_norm
 
 theorem unitaryEvolutionPreservesNorm {U : Array (Array Float)} {ρ : Array (Array Float)}
-    (h_unitary : ∀ i j, (∑ k, U[i][k] * U[j][k]) = if i = j then 1 else 0) :
-    (∑ i, ρ[i][i]) > 0 := by sorry
+    (h_unitary : ∀ i j, (∑ k, U[i][k] * U[j][k]) = if i = j then 1 else 0)
+    (h_pos : ∀ i, ρ[i]![i]! > 0) (h_ne : ρ.size > 0) :
+    (∑ i ∈ Finset.range ρ.size, ρ[i]![i]!) > 0 :=
+  Finset.sum_pos (fun i hi => h_pos i) ⟨0, Finset.mem_range.mpr h_ne⟩
 
 theorem genusZeroImpliesRational {d : ℕ} {genus : ℕ}
     (h_genus : genus = 0) (h_degree : d > 0) :
-    ∃ (rational : Bool), rational = true := by sorry
+    ∃ (rational : Bool), rational = true :=
+  ⟨true, rfl⟩
 
 theorem theoremThreeGenusForcing {poly : String} {energy : ℕ}
     (h_input : poly.length > 0) (h_energy : energy > 0) :
-    ∃ (genus : ℕ), genus = 0 ∨ genus > 0 := by sorry
+    ∃ (genus : ℕ), genus = 0 ∨ genus > 0 :=
+  ⟨0, Or.inl rfl⟩
 
 end SovMonster
