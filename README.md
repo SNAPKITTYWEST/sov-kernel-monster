@@ -41,12 +41,12 @@
 
 <div align="center">
 
-[![Sprint](https://img.shields.io/badge/Sprint-3_of_3-27ae60?style=flat-square)]()
-[![Code](https://img.shields.io/badge/LoC-50K%2B-c0392b?style=flat-square)]()
-[![Languages](https://img.shields.io/badge/Languages-10-3498db?style=flat-square)]()
-[![Tests](https://img.shields.io/badge/Tests-50%2B_PASS-27ae60?style=flat-square)]()
-[![Cost](https://img.shields.io/badge/Cost-$0.24-00ff00?style=flat-square)]()
-[![Model](https://img.shields.io/badge/Model-Haiku_FN_OPS-ff00ff?style=flat-square)]()
+![Sprint](badges/sprint.svg)
+![LOC](badges/loc.svg)
+![Languages](badges/languages.svg)
+![Tests](badges/tests.svg)
+![Cost](badges/cost.svg)
+![Model](badges/model.svg)
 
 </div>
 
