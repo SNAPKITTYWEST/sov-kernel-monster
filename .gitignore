@@ -29,3 +29,35 @@ Makefile
 # OS
 .DS_Store
 *.exe
+
+# LaTeX build artifacts (keep .tex and .pdf, not intermediate files)
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.synctex.gz
+docs/*.fls
+docs/*.fdb_latexmk
+docs/*.bbl
+docs/*.blg
+docs/*.lof
+docs/*.lot
+docs/*.nav
+docs/*.snm
+docs/*.vrb
+docs/image.code.tex
+
+# Lean build cache
+lean/.lake/
+.lake/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Loose root-level artifacts
+out.rs
+out.lean
+out.f90
+out.txt
+mh_payload.json
