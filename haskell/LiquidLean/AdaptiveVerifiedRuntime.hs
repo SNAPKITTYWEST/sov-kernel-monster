@@ -560,6 +560,142 @@ selectStrategy learner available = do
   pure $ if null available then "" else fst best
 
 -- =====================================================================
+-- PHASE 8b: RUNTIME STATE + REWRITE ALGEBRA (Ahmad's formalization)
+-- =====================================================================
+
+-- | Complete runtime state — everything the evolution loop needs
+data RuntimeState = RuntimeState
+  { rsKernel      :: Kernel           -- current active kernel
+  , rsInvariants  :: ProofContext      -- proven invariant set
+  , rsOptimizer   :: MLIRPipeline     -- available passes
+  , rsReceipts    :: WORMLedger       -- immutable audit trail
+  , rsGeneration  :: Natural          -- monotone generation counter
+  } deriving (Show)
+
+-- | Proof context: invariants with their Lean proofs
+data ProofContext = ProofContext
+  { pcInvariants  :: Map InvariantId Invariant
+  , pcProofs      :: Map InvariantId LeanProof
+  , pcComplete    :: Bool             -- True iff all invariants proven
+  } deriving (Show)
+
+-- | MLIR pipeline: ordered sequence of passes
+data MLIRPipeline = MLIRPipeline
+  { mpPasses      :: [MLIRPass]
+  , mpTarget      :: Text             -- x86_64 | arm64-sve2 | ptx-sm89
+  , mpOptLevel    :: Int              -- 0..3
+  } deriving (Show)
+
+-- | WORM ledger: append-only receipt chain
+data WORMLedger = WORMLedger
+  { wlReceipts    :: [WORMReceipt]
+  , wlHeight      :: Natural
+  } deriving (Show)
+
+data WORMReceipt = WORMReceipt
+  { wrGeneration  :: Natural
+  , wrKernelId    :: KernelId
+  , wrVersion     :: Word64
+  , wrBlake3      :: Text             -- blake3(kernel artifact)
+  , wrEd25519     :: Text             -- ed25519 sig over blake3
+  , wrRewrite     :: Text             -- which Rewrite was applied
+  , wrInvProofs   :: [InvariantId]    -- invariants proven for this version
+  } deriving (Show)
+
+type Natural = Word64
+
+emptyLedger :: WORMLedger
+emptyLedger = WORMLedger [] 0
+
+appendReceipt :: WORMLedger -> WORMReceipt -> WORMLedger
+appendReceipt ledger receipt = WORMLedger
+  { wlReceipts = wlReceipts ledger ++ [receipt]
+  , wlHeight   = wlHeight ledger + 1 }
+
+-- | Rewrite algebra — six primitive kernel transformations
+data Rewrite
+  = Inline        -- inline hot call sites
+  | Fuse          -- fuse adjacent loop nests (polyhedral)
+  | Specialize    -- specialize on runtime-constant arguments
+  | Vectorize     -- SIMD vectorization (SVE2/AVX-512/PTX)
+  | Parallelize   -- OpenMP/OpenACC parallelization
+  | ReplaceKernel -- full kernel replacement (nuclear option)
+  deriving (Show, Eq, Ord, Enum, Bounded)
+
+-- | Rewrite semantics: each Rewrite maps to an MLIR pass pipeline
+rewriteToPasses :: Rewrite -> [MLIRPass]
+rewriteToPasses Inline      = [Canonicalize, CSE]
+rewriteToPasses Fuse        = [QuantumGateFusion, Canonicalize]
+rewriteToPasses Specialize  = [Canonicalize, CSE]
+rewriteToPasses Vectorize   = [QuantumGateFusion, PulseScheduling]
+rewriteToPasses Parallelize = [PulseScheduling]
+rewriteToPasses ReplaceKernel = [Canonicalize, CSE, QuantumGateFusion, PulseScheduling]
+
+-- | Apply a Rewrite to a RuntimeState, producing a candidate next state
+applyRewrite :: RuntimeState -> Rewrite -> IO (Either String RuntimeState)
+applyRewrite state rw = do
+  let passes   = rewriteToPasses rw
+      pipeline = (rsOptimizer state) { mpPasses = passes }
+  -- Apply each pass in sequence
+  result <- foldl applyPass (pure (Right (rsKernel state))) passes
+  case result of
+    Left err  -> pure (Left err)
+    Right k'  -> pure $ Right state
+      { rsKernel     = k'
+      , rsOptimizer  = pipeline
+      , rsGeneration = rsGeneration state + 1
+      }
+  where
+    applyPass acc pass = do
+      r <- acc
+      case r of
+        Left err -> pure (Left err)
+        Right k  -> rewriteMLIRPass pass k
+
+-- | Verify a RuntimeState: check all invariants, seal to ledger
+verifyAndSeal :: LeanVerifier -> RuntimeState -> IO (Either String RuntimeState)
+verifyAndSeal verifier state = do
+  let invList = Map.elems (pcInvariants (rsInvariants state))
+  results <- verifyKernel verifier (rsKernel state) invList
+  let allProven = all isProven (Map.elems results)
+  if not allProven
+    then pure (Left "invariant verification failed")
+    else do
+      let proofs   = Map.fromList [(k, p) | (k, VR_Proven p) <- Map.toList results]
+          newCtx   = (rsInvariants state)
+            { pcProofs   = proofs
+            , pcComplete = True }
+          receipt  = WORMReceipt
+            { wrGeneration = rsGeneration state
+            , wrKernelId   = kId (rsKernel state)
+            , wrVersion    = kVersion (rsKernel state)
+            , wrBlake3     = "blake3-mock-" <> kId (rsKernel state)
+            , wrEd25519    = "ed25519-mock"
+            , wrRewrite    = "verified"
+            , wrInvProofs  = Map.keys proofs }
+          newLedger = appendReceipt (rsReceipts state) receipt
+      pure $ Right state
+        { rsInvariants = newCtx
+        , rsReceipts   = newLedger }
+
+-- | Full evolution step: rewrite → verify → seal
+evolveStep :: LeanVerifier -> EvolutionPolicy -> RuntimeState -> Rewrite -> IO (Either String RuntimeState)
+evolveStep verifier policy state rw = do
+  candidate <- applyRewrite state rw
+  case candidate of
+    Left err -> pure (Left err)
+    Right s' -> do
+      verified <- verifyAndSeal verifier s'
+      case verified of
+        Left err -> pure (Left err)
+        Right s'' -> do
+          let speedup = fromIntegral (ppCycles (kmPerformance (kMetadata (rsKernel state))))
+                      / fromIntegral (max 1 (ppCycles (kmPerformance (kMetadata (rsKernel s'')))))
+          if speedup < epMinSpeedup policy
+            then pure (Left $ "insufficient speedup: " <> show speedup)
+            else pure (Right s'')
+
+-- =====================================================================
 -- PHASE 9: BOOTSTRAP
 -- =====================================================================
 
