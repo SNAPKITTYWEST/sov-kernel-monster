@@ -28,11 +28,15 @@ Formally verified. Zero external dependencies. Zero libc on bare metal.
 
 ---
 
-## BOB Meets BOB
+## BOB Meets BOB — In Quantum Space
 
-![BOB MEETS BOB — In Quantum Space](docs/BOB_MEETS_BOB.svg)
+**[→ Open Interactive Demo](https://snapkittywest.github.io/sov-kernel-monster/bob_meets_bob.html)**
 
-*SNAPKITTY Bob (quantum software) meets IBM Bob (hardware) at the Bifrost FFI Bridge.*  
+> SNAPKITTY Bob (purple quantum particles) × IBM Bob (blue circuit traces).  
+> φ⁻¹ Jordan contraction pulls both agents toward the Bifrost FFI Bridge.  
+> Born collapse fires at the handshake point. WORM trails accumulate forever.  
+> Tune φ⁻¹, turbulence, Born threshold. Every seed is a different convergence.
+
 *See [`qataaum/BOB.md`](qataaum/BOB.md) for the full handshake story.*
 
 ---
@@ -84,7 +88,7 @@ sov-kernel-monster/
 │   ├── parr_paper.pdf         43-page paper — all results, Nemotron-audited
 │   ├── sovereign_convergence.html  Live Jordan contraction art
 │   ├── living_rewrite.html        Self-modifying code demo
-│   ├── BOB_MEETS_BOB.svg          Quantum handshake centrepiece
+│   ├── bob_meets_bob.html             Interactive BOB×BOB Bifrost art (p5.js)
 │   └── index.html                 Interactive hub
 └── LICENSE                Sovereign Source License v3.0
 ```
