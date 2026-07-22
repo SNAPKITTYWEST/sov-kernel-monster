@@ -1,0 +1,61 @@
+Functional Source License, Version 1.1, Apache 2.0 Future License
+
+Copyright (c) 2026 Ahmad Ali Parr
+Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643
+SNAPKITTYWEST — Sovereign Quantum Computing Platform
+
+---
+
+## Terms and Conditions
+
+**Use Grant.** Licensor hereby grants you the right to make use of the
+Software, including for non-production use, subject to the Limitations below.
+
+**Limitations.** This grant does not include the right to:
+
+1. Provide the Software to third parties as a hosted or managed service,
+   where the service provides users with access to any substantial set of
+   the features or functionality of the Software;
+
+2. Move, change, disable, or circumvent the license key functionality in
+   the Software, or modify any part of the Software to remove, disable,
+   or circumvent the license key or licensing functionality;
+
+3. Move, change, disable, or circumvent the license key or licensing
+   protection functionality in the Software;
+
+4. Provide the Software to third parties as software-as-a-service in a
+   manner that competes with the Licensor's products.
+
+**Change Date:** 2030-07-22 (four years from first publication date)
+
+**Change License:** Apache License, Version 2.0
+
+On the Change Date, or the fourth anniversary of the first publicly
+available distribution of a specific version of the Software, whichever
+comes first, the Licensor grants you the rights under the Change License,
+and the rights granted in the paragraph above terminate.
+
+**Intellectual Property.** The Licensor retains all right, title, and
+interest in and to the Software and all intellectual property rights therein.
+
+**Warranty Disclaimer.** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
+OF ANY KIND, EXPRESS OR IMPLIED.
+
+**Liability Limitation.** IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THIS LICENSE OR THE USE
+OF THE SOFTWARE.
+
+---
+
+## Prior Art Registry
+
+Mathematical objects PAR-001 through PAR-020 are additionally protected
+under the Sovereign Source License v3.0 Part IX (Prior Art Preservation).
+These prior art records carry timestamped prior art status that cannot be
+extinguished by any license transition. See LICENSE for full SSL v3.0 terms.
+
+---
+
+SPDX-License-Identifier: FSL-1.1-Apache-2.0
+https://fsl.software
