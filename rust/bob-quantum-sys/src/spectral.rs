@@ -320,6 +320,106 @@ pub fn spectral_invariant_delta(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// QMHES PRIME-ENCODED STATE LAYER (PIRTM)
+// Recursively builds |ψ⟩ = ⊗ₚ |ψₚ⟩^{kₚ} where kₚ = p-adic valuation
+// of coupling strength at prime p. Depth controlled by φ-decay.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Frobenius norm of a matrix
+fn frobenius_norm(m: &Matrix) -> f64 {
+    m.data.iter().map(|x| x.norm_sqr()).sum::<f64>().sqrt()
+}
+
+/// Matrix power via repeated squaring (O(log n) multiplications)
+fn matrix_power(m: &Matrix, exp: usize) -> Matrix {
+    if exp == 0 {
+        return Matrix::identity(m.rows);
+    }
+    if exp == 1 {
+        return m.clone();
+    }
+    if exp % 2 == 0 {
+        let half = matrix_power(m, exp / 2);
+        half.matmul(&half)
+    } else {
+        let rest = matrix_power(m, exp - 1);
+        m.matmul(&rest)
+    }
+}
+
+/// Kronecker/tensor product: A ⊗ B
+fn tensor_product(a: &Matrix, b: &Matrix) -> Matrix {
+    let (m, n) = (a.rows, a.cols);
+    let (p, q) = (b.rows, b.cols);
+    let mut c = Matrix::zeros(m * p, n * q);
+    for i in 0..m {
+        for j in 0..n {
+            let a_ij = a.get(i, j);
+            for k in 0..p {
+                for l in 0..q {
+                    c.set(i * p + k, j * q + l, a_ij * b.get(k, l));
+                }
+            }
+        }
+    }
+    c
+}
+
+/// QMHES Prime-Encoded State: |ψ⟩ = ⊗ₚ |ψₚ⟩^{kₚ}
+/// Recursively builds quantum state from prime-decomposed Hamiltonian subspaces.
+/// Depth parameter controls recursion (bounded by φ-decay from training_adjoint).
+pub fn prime_encoded_state(
+    hamiltonian: &Matrix,
+    depth: usize,
+) -> Matrix {
+    // BASE CASE: depth=0 → return identity (trivial encoding)
+    if depth == 0 {
+        return Matrix::identity(hamiltonian.rows);
+    }
+
+    // RECURSIVE STEP: Decompose by prime, encode subspace, tensor product
+    let mut state = Matrix::identity(1);
+    for &p in PRIMES.iter().take(5) {
+        // Project Hamiltonian onto p-adic subspace
+        let h_p = project_to_prime_subspace(hamiltonian, p);
+
+        // Compute recursive encoding depth: kₚ = vₚ(‖Hₚ‖)
+        let norm_h_p = frobenius_norm(&h_p);
+        let k_p = p_adic_valuation(norm_h_p, p).max(0) as usize;
+
+        // Build prime-substate: |ψₚ⟩ = (Opₚ)^{kₚ} |0⟩
+        // Opₚ = exp(-i·dt·Hₚ) via Padé-13
+        let op_p = pade13_exp(&h_p, 1.0 / (depth as f64));
+        let prime_state = matrix_power(&op_p, k_p.min(4)); // cap power to avoid blowup
+
+        // Tensor product: |ψ⟩ ← |ψ⟩ ⊗ |ψₚ⟩
+        // Only tensor if dimensions stay manageable (≤ 64×64 for L1 cache fit)
+        if state.rows * prime_state.rows <= 64 {
+            state = tensor_product(&state, &prime_state);
+        }
+    }
+    state
+}
+
+/// Compute Maximum Multiplicity Principle (MMP) bound:
+/// System stable iff ∏ₚ (1 + vₚ(‖ρₚ‖)) ≤ φ⁻ᴺ
+pub fn mmp_multiplicity(hamiltonian: &Matrix) -> f64 {
+    let mut current_multiplicity: f64 = 1.0;
+    for &p in PRIMES.iter() {
+        let h_p = project_to_prime_subspace(hamiltonian, p);
+        let norm_h_p = frobenius_norm(&h_p);
+        let v_p = p_adic_valuation(norm_h_p, p).max(0) as f64;
+        current_multiplicity *= 1.0 + v_p;
+    }
+    current_multiplicity
+}
+
+/// Compute MMP stability bound: φ⁻ᴺ where N = system dimension
+pub fn mmp_bound(n: usize) -> f64 {
+    PHI_INV.powi(n as i32)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // C ABI EXPORTS — Called from jordan_block.f90 via iso_c_binding
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -365,6 +465,48 @@ pub extern "C" fn zmos_operator_product(
     out_slice.copy_from_slice(&result.data);
 }
 
+/// FFI: Compute QMHES prime-encoded state and return its Frobenius norm
+/// Used by jordan_block.f90 for MMP gate verification
+#[no_mangle]
+pub extern "C" fn qmhes_prime_encoded_norm(
+    h_ptr: *const Complex<f64>,
+    n: i64,
+    depth: i64,
+) -> f64 {
+    let n = n as usize;
+    let slice = unsafe { std::slice::from_raw_parts(h_ptr, n * n) };
+    let h = Matrix {
+        data: slice.to_vec(),
+        rows: n,
+        cols: n,
+    };
+    let state = prime_encoded_state(&h, depth as usize);
+    frobenius_norm(&state)
+}
+
+/// FFI: Compute QMHES MMP multiplicity for given density matrix
+/// Returns: ∏ₚ (1 + vₚ(‖ρₚ‖)) — system multiplicity
+#[no_mangle]
+pub extern "C" fn qmhes_mmp_multiplicity(
+    h_ptr: *const Complex<f64>,
+    n: i64,
+) -> f64 {
+    let n = n as usize;
+    let slice = unsafe { std::slice::from_raw_parts(h_ptr, n * n) };
+    let h = Matrix {
+        data: slice.to_vec(),
+        rows: n,
+        cols: n,
+    };
+    mmp_multiplicity(&h)
+}
+
+/// FFI: Compute QMHES MMP bound φ⁻ᴺ for system dimension N
+#[no_mangle]
+pub extern "C" fn qmhes_mmp_bound(n: i64) -> f64 {
+    mmp_bound(n as usize)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -396,5 +538,58 @@ mod tests {
         assert!((result.get(0, 0) - Complex::new(1.0, 0.0)).norm() < 1e-10);
         assert!((result.get(1, 1) - Complex::new(1.0, 0.0)).norm() < 1e-10);
         assert!((result.get(0, 1)).norm() < 1e-10);
+    }
+
+    #[test]
+    fn test_prime_encoded_state_depth_zero() {
+        let h = Matrix::identity(2);
+        let state = prime_encoded_state(&h, 0);
+        // depth=0 returns identity
+        assert_eq!(state.rows, 2);
+        assert!((state.get(0, 0) - Complex::new(1.0, 0.0)).norm() < 1e-10);
+    }
+
+    #[test]
+    fn test_prime_encoded_state_depth_one() {
+        let h = Matrix::identity(2);
+        let state = prime_encoded_state(&h, 1);
+        // Should produce a valid matrix with finite entries
+        for val in &state.data {
+            assert!(val.norm().is_finite());
+        }
+    }
+
+    #[test]
+    fn test_mmp_multiplicity_identity() {
+        let h = Matrix::identity(2);
+        let mult = mmp_multiplicity(&h);
+        assert!(mult >= 1.0);
+        assert!(mult.is_finite());
+    }
+
+    #[test]
+    fn test_mmp_bound_decreases() {
+        // φ⁻ᴺ decreases as N increases
+        let b2 = mmp_bound(2);
+        let b4 = mmp_bound(4);
+        assert!(b4 < b2);
+    }
+
+    #[test]
+    fn test_tensor_product_dimensions() {
+        let a = Matrix::identity(2);
+        let b = Matrix::identity(3);
+        let c = tensor_product(&a, &b);
+        assert_eq!(c.rows, 6);
+        assert_eq!(c.cols, 6);
+    }
+
+    #[test]
+    fn test_matrix_power_identity() {
+        let m = Matrix::identity(3);
+        let p = matrix_power(&m, 5);
+        // I^5 = I
+        assert!((p.get(0, 0) - Complex::new(1.0, 0.0)).norm() < 1e-10);
+        assert!((p.get(1, 0)).norm() < 1e-10);
     }
 }

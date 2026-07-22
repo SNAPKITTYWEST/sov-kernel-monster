@@ -212,6 +212,46 @@ contains
       end if
     end block
 
+    ! ═══════════════════════════════════════════════════════════════
+    ! QMHES MAXIMUM MULTIPLICITY PRINCIPLE (MMP): Dynamic Stability Bound
+    ! System stable iff ∏ₚ (1 + vₚ(‖ρₚ‖)) ≤ φ⁻ᴺ
+    ! Fail-closed: hard halt on MMP violation (no state corruption)
+    ! ═══════════════════════════════════════════════════════════════
+    block
+      real(dp) :: current_multiplicity, multiplicity_bound
+
+      interface
+        real(c_double) function qmhes_mmp_multiplicity(h_ptr, n_dim) &
+            bind(C, name="qmhes_mmp_multiplicity")
+          import :: c_ptr, c_int64_t, c_double
+          type(c_ptr), value :: h_ptr
+          integer(c_int64_t), value :: n_dim
+        end function
+        real(c_double) function qmhes_mmp_bound(n_dim) &
+            bind(C, name="qmhes_mmp_bound")
+          import :: c_int64_t, c_double
+          integer(c_int64_t), value :: n_dim
+        end function
+      end interface
+
+      ! Compute current system multiplicity via Rust spectral.rs
+      current_multiplicity = qmhes_mmp_multiplicity(c_loc(out_rho), n)
+
+      ! MMP bound = φ⁻ᴺ where N = system dimension
+      multiplicity_bound = qmhes_mmp_bound(n)
+
+      ! WORM-attest MMP check
+      call sov_bifrost_sign_scalar("QMHES_MMP_CHECK", current_multiplicity, sk_ptr)
+
+      ! Fail-closed gate: halt if MMP violated (spectral instability)
+      if (current_multiplicity > multiplicity_bound) then
+        call sov_bifrost_sign_scalar("QMHES_MMP_VIOLATION", current_multiplicity, sk_ptr)
+        out_rho = rho
+        deallocate(U, evolved)
+        return
+      end if
+    end block
+
     call sov_blake3_hash_matrix(out_rho, int(n), hash_ptr)
     call sov_bifrost_sign(hash_ptr, int(32, c_size_t), sk_ptr, sig_ptr)
 
