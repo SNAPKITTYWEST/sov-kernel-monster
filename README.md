@@ -55,6 +55,28 @@ See LICENSE and https://fsl.software for full terms.
 
 ---
 
+## SPRINT 4: KNOWLEDGE SYNTHESIS ENGINE ✅
+
+**SovMetaAgent — Sovereign Knowledge Lens**
+
+The complete knowledge synthesis engine for agents. Query → Resequence (MLIR) → Synthesize (Born rule) → Seal (WORM) → Agent.
+
+- **Entry Point:** `SovMetaSearch(query, include_answers)` → sealed JSON + WORM receipt
+- **Knowledge Search:** Cosine similarity (768-dim embeddings, GPU-fused)
+- **Synthesis:** Born rule aggregation `tr(q_j·ρ)` native
+- **Attestation:** Blake3 (32B) + Ed25519 (64B) per output
+- **Zero External Deps:** Only uses existing Bob primitives
+- **Verified:** 4 zero-sorry Lean 4 theorems
+
+**Deliverables:**
+- sovereign-pli/SovMetaAgent.pli (356 lines, non-recursive)
+- src/sov_knowledge.f90 (445 lines, 3 helper functions)
+- lean/SovMonster_MetaAgent.lean (211 lines, 4 theorems)
+- SOVMETAAGENT_INTEGRATION.md (485 lines, full spec)
+- tests/test_sovmetaagent.f90 (330 lines, 5 tests)
+
+---
+
 ## What This Is
 
 This repository is a **complete sovereign quantum computing platform** — two systems that have been integrated into one:
@@ -128,82 +150,73 @@ They meet at the **Bifrost FFI Bridge** — 5 new kernel syscalls and `/dev/quan
 
 ```
 sov-kernel-monster/
-│
-├── src/                    ── QUANTUM EXECUTION ENGINE (Fortran 2018, 21 modules)
-│   ├── jordan_block.f90       Jordan Spectral Transformer: ρ'=φ⁻¹·UρU†+φ⁻²·ρ
-│   ├── spe_encoder.f90        Sovereign Piper Encoder — tight frame tokenizer
-│   ├── measurement_head.f90   Born rule output: p_j=tr(q_j·ρ), no softmax
-│   ├── sov_monster_kernel.f90 Blake3+Ed25519+APL ZGEMM fused (1,506 lines)
-│   ├── bob_circuit.f90        QFT · Grover · Shor · QPE · Bell · Teleportation
-│   ├── bob_hamiltonian.f90    Ising H · Padé-13 matrix exponential
-│   ├── bob_worm.f90           Blake3 WORM chain (full Fortran 2018 impl)
-│   ├── training_adjoint.f90   ∂L/∂H = −i·dt·φ⁻¹·[λ,ρ] reverse-mode AD
-│   ├── boolean_spectral_lens.f90  WatchSumOne gate (predates Anthropic J-Lens)
-│   └── ... (21 modules total, 10,450 lines)
-│
-├── qataaum/                ── QUANTUM ASSEMBLY RUNTIME (Rust, 33,734 lines)
-│   ├── compiler/
-│   │   ├── parser/           OpenQASM 2.0 · OpenQASM 3.0 · MetaQASM-4
-│   │   ├── semantic/         Type checking · symbol resolution
-│   │   ├── ir/               9-level IR: SourceAST→TypedAST→CFG→SSA→Gate→Topo→Schedule→Pulse→Exec
-│   │   ├── passes/           15 optimisation passes (gate cancellation, rotation folding...)
-│   │   └── routing/          SABRE qubit router (arXiv:1809.02573)
-│   ├── simulator/
-│   │   ├── statevector/      State-vector simulator
-│   │   └── densitymatrix/    Density-matrix simulator (same ρ as JST)
-│   ├── runtime/
-│   │   ├── shadow-rpg-q/     Job queue · journal · WORM receipts
-│   │   └── ibmi-ffi/         IBM i FFI bridge (RPG · COBOL · CL)
-│   ├── verification/
-│   │   ├── lean4/            31 theorems · 0 sorry (Preservation · Semantics · Syntax)
-│   │   └── liquid-haskell/   Refinement types for circuit/qubit/pulse
-│   ├── INTEGRATION_PLAN.md   ← Bob's full integration spec (kernel modules, syscalls, devices)
-│   ├── PRODUCTION_HARDENING_HANDOFF.md
-│   └── BOB.md
-│
-├── lean/                   ── FORMAL VERIFICATION (Lean 4)
-│   ├── SovMonster_Matrix_Closed.lean  [U,ρ*]=0 proved over Matrix n n ℂ · ZERO SORRY
-│   ├── SovMonster_Gaps.lean           5 remaining sorries + exact Mathlib PR targets
-│   ├── JordanBridge.lean              Algebraic bridge to Jacobian Conjecture
-│   └── AdaptiveVerifiedRuntime.lean   AVR safety theorems
-│
-├── haskell/                ── JACOBIAN CONJECTURE + AVR (Haskell)
-│   └── LiquidLean/
-│       ├── Jacobian/          Genus-0 forcing · NegativeResult · Phase 8 certificate
-│       └── AdaptiveVerifiedRuntime.hs  Self-evolving kernel runtime
-│
-├── mlir/                   ── MLIR PIPELINE
-│   ├── jst_fusion_pipeline.mlir   JST fused into single polyhedral nest (one GPU kernel)
-│   └── bob_twin_reasoning.mlir    5-agent BFT consensus
-│
-├── rtx/                    ── RTX 4090 ZERO-LIBC INFERENCE ENGINE
-│   ├── src/cuda/flash_attention.ptx   sm_89 PTX · PagedAttention · WMMA
-│   ├── src/c--/scheduler.cmm          C-- 6-state continuous batching
-│   └── src/loader/gguf.c              GGUF v3 zero-malloc parser
-│
-├── rust/                   ── EIGENSOLVER (sov-rust-core)
-│   └── src/  spectral.rs · zheev.rs · qec.rs · pirtm.rs
-│
-├── sovereign-pli/          ── PL/I + COBOL + INTERCAL NON-RECURSIVE LAYER
-│   ├── sov_kernel.pli         φ-decay Thermal Monad · actor queue · Fortran ABI
-│   ├── sov_record_gate.cbl    COBOL record gate · cryptographic field assignment
-│   └── intercal_invert.i      INTERCAL COME FROM · S-expression ASTs · Born gate
-│
-├── quantum-piper/          ── SOVEREIGN INFRASTRUCTURE
-│   ├── infra/                 Docker stack · Gitea · sov-registry · sov-attest.sh
-│   └── provision/             Ansible: WORM volume · 7×Ed25519 keys
-│
-├── docs/                   ── GITHUB PAGES HUB
-│   ├── index.html               Interactive hub
-│   ├── parr_paper.pdf           43-page paper (The Parr Papers, Nemotron-audited)
-│   ├── bob_meets_bob.html       Interactive Bifrost Bridge art (p5.js)
-│   ├── bob_meets_bob_bridge.png The handshake image
-│   ├── sovereign_convergence.html  Jordan contraction generative art
-│   └── living_rewrite.html      Self-modifying code demo
-│
-├── Makefile
-├── build_monster.sh         8-step sovereign pipeline
-└── LICENSE                  Sovereign Source License v3.0
+├── src/                     Fortran 2018 — 9,484 lines, 22 modules
+│   ├── bob_kinds.f90          55   ISO C binding types, constants
+│   ├── bob_errors.f90        115   13 error codes, thread-local state
+│   ├── bob_rng.f90           219   xoshiro256** PRNG
+│   ├── bob_state.f90         327   quantum state vector |ψ⟩
+│   ├── bob_gates.f90         481   Pauli X/Y/Z, H, T, S, CNOT, phase
+│   ├── bob_lattice.f90       508   Josephson vortex lattice (3D)
+│   ├── bob_measurement.f90   531   Born rule, state collapse
+│   ├── bob_hamiltonian.f90   550   Ising H, Padé matrix exponential
+│   ├── bob_integrator.f90    456   Trotter-2 time evolution
+│   ├── bob_metrics.f90       495   entropy, purity, coherence, fidelity
+│   ├── bob_goldilocks.f90    429   Goldilocks field p=2^64−2^32+1, NTT
+│   ├── bob_worm.f90          421   Blake3 WORM chain, full F2018 impl
+│   ├── bob_circuit.f90       376   QFT, Grover, Shor, QPE, Bell, teleport
+│   ├── bob_phdae.f90         400   Port-Hamiltonian DAE, power balance
+│   ├── bob_abi.f90           487   14 C ABI exports (bind(C))
+│   ├── sov_monster_kernel.f90 1506 Blake3 + Ed25519 + APL ZGEMM
+│   ├── sov_knowledge.f90     445   SovMetaAgent knowledge synthesis
+│   ├── boolean_spectral_lens.f90 296 Jordan algebra → Lisp world dump
+│   ├── measurement_head.f90   305 Born rule + Fibonacci temperature
+│   ├── jordan_block.f90       284 Jordan step, fixed-point, gradient
+│   ├── spe_encoder.f90        444 SPE frame encoder
+│   ├── training_adjoint.f90   354 Training adjoint
+│   ├── sov_control.cmm            C-- state machine loop
+│   └── start.S                    Bare entry, no libc, no crt0
+├── sovereign-pli/           PL/I Intent Router — 356 lines
+│   └── SovMetaAgent.pli            Non-recursive query orchestrator
+├── mlir/                    MLIR pipeline files
+│   ├── sov_pipeline.mlir          Polyhedral linalg fusion
+│   ├── jst_fusion_pipeline.mlir
+│   ├── jst_sovereign_pipeline.mlir
+│   ├── sovereign_deployment.mlir
+│   └── bob_twin_reasoning.mlir
+├── wasm/                    Rust WASM bridge — 599 lines
+│   ├── src/lib.rs                 Ports bob_*.f90 math for browser
+│   └── Cargo.toml
+├── lean/                    Lean 4 FFI specifications
+│   ├── SovMonster.lean            @[extern] C ABI bindings
+│   ├── SovMonster_MetaAgent.lean  Zero-sorry synthesis theorems
+│   └── lakefile.lean
+├── haskell/                 Jacobian Conjecture Crack (Phase 1) — 696 lines
+│   ├── LiquidLean/Jacobian/
+│   │   ├── Theorem3Kernel.hs              169  Core types, Polynomial ops
+│   │   ├── MoraLocal.hs                    82  Mora standard basis algorithm
+│   │   ├── SingularityAnalysis.hs          93  δ-invariant computation
+│   │   ├── CrackTheorem3.hs              101  Main orchestration
+│   │   └── Theorem3Entry.hs              150  Kernel entry point
+│   ├── INTEGRATION_GUIDE.md                   Full architecture + 5 known bugs
+│   ├── package.yaml                          Haskell build metadata
+│   ├── liquidlean-theorem3.cabal             Cabal package
+│   └── stack.yaml                            Stack resolver
+├── rust/                    Algebraic Core + Quantum Sys + Trajectory Export
+│   ├── algebraic-core/            JordanTensor + Bures geometry + SDE solver
+│   ├── bob-quantum-sys/           ZMOS + QMHES + SNDL (C ABI)
+│   └── trajectory-export/         Float32 binary export for WebGL
+├── frontend/                Three.js trajectory manifold renderer
+│   ├── index.html                 Cockpit UI with Bloch sphere
+│   └── src/                       TrajectoryRenderer + DemoGenerator
+├── tests/                   Fortran integration tests
+│   ├── test_theorem3_integration.f90
+│   └── test_sovmetaagent.f90      SovMetaAgent suite (5 tests)
+├── docs/
+│   └── universe.svg               Animated orbital diagram
+├── SOVMETAAGENT_INTEGRATION.md   Full arch + deployment
+├── Makefile                 make all | monster | wasm | debug
+├── build_monster.sh         Full LLVM pipeline (node key required)
+└── LICENSE                  SSL v3.0
 ```
 
 ---
