@@ -267,23 +267,82 @@ footer a{color:var(--orange);text-decoration:none}
 
 <!-- ═══════════════ LIVE ART ═══════════════ -->
 <div class="art-section">
-  <div style="max-width:1100px;margin:0 auto 48px">
+  <div style="max-width:1100px;margin:0 auto 40px">
     <div class="section-label">LIVE ALGORITHMS</div>
     <h2 style="color:var(--light)">The Art Is the Math</h2>
-    <p style="color:var(--gray);font-size:15px">Both algorithms run the actual Jordan contraction. Interact with seed and parameters.</p>
+    <p style="color:var(--gray);font-size:15px;margin-bottom:28px">Both algorithms run the actual Jordan contraction. Click to load interactively.</p>
+
+    <!-- Tab nav -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button onclick="loadArt('sovereign_convergence.html','SOVEREIGN CONVERGENCE — φ⁻¹ contraction · golden angle attractors · Born collapse')"
+        style="background:var(--orange);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer;transition:all .2s"
+        onmouseover="this.style.background='#c86641'" onmouseout="this.style.background='var(--orange)'">
+        ◎ Sovereign Convergence
+      </button>
+      <button onclick="loadArt('living_rewrite.html','LIVING REWRITE — self-modifying code · density matrix · fixed point = theorem')"
+        style="background:var(--blue);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer;transition:all .2s"
+        onmouseover="this.style.background='#5a8bb8'" onmouseout="this.style.background='var(--blue)'">
+        ⟳ Living Rewrite
+      </button>
+      <button onclick="closeArt()"
+        style="background:transparent;color:var(--gray);border:1px solid rgba(255,255,255,0.15);padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer"
+        id="close-art-btn" style="display:none">
+        ✕ Close
+      </button>
+    </div>
   </div>
 
-  <div class="art-grid">
-    <div class="art-frame">
-      <div class="art-label">SOVEREIGN CONVERGENCE — φ⁻¹ contraction · golden angle attractors · Born collapse</div>
-      <iframe src="sovereign_convergence.html" title="Sovereign Convergence" loading="lazy"></iframe>
+  <!-- Art panel — hidden until clicked -->
+  <div id="art-panel" style="max-width:1100px;margin:0 auto;display:none">
+    <div id="art-panel-label" style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--gray);padding:10px 0 8px;letter-spacing:1px"></div>
+    <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
+      <iframe id="art-iframe"
+        src=""
+        title="Art"
+        style="width:100%;height:800px;border:none;display:block;background:#04040a">
+      </iframe>
     </div>
-    <div class="art-frame">
-      <div class="art-label">LIVING REWRITE — self-modifying code · density matrix · fixed point = theorem</div>
-      <iframe src="living_rewrite.html" title="Living Rewrite" loading="lazy"></iframe>
+    <div style="margin-top:12px;display:flex;gap:12px">
+      <a id="art-open-link" href="#" target="_blank"
+        style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--orange);text-decoration:none">
+        ↗ Open in full tab
+      </a>
     </div>
   </div>
+
+  <!-- Fallback direct links if JS disabled -->
+  <noscript>
+    <div style="max-width:1100px;margin:24px auto 0;display:flex;gap:16px;flex-wrap:wrap">
+      <a href="sovereign_convergence.html" target="_blank"
+        style="color:var(--orange);font-family:Share Tech Mono,monospace;font-size:13px">↗ Sovereign Convergence</a>
+      <a href="living_rewrite.html" target="_blank"
+        style="color:var(--blue);font-family:Share Tech Mono,monospace;font-size:13px">↗ Living Rewrite</a>
+    </div>
+  </noscript>
 </div>
+
+<script>
+function loadArt(src, label) {
+  const panel = document.getElementById('art-panel');
+  const iframe = document.getElementById('art-iframe');
+  const lbl = document.getElementById('art-panel-label');
+  const link = document.getElementById('art-open-link');
+  const closeBtn = document.getElementById('close-art-btn');
+  iframe.src = src;
+  lbl.textContent = label;
+  link.href = src;
+  panel.style.display = 'block';
+  closeBtn.style.display = 'inline-block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function closeArt() {
+  const panel = document.getElementById('art-panel');
+  const iframe = document.getElementById('art-iframe');
+  iframe.src = '';
+  panel.style.display = 'none';
+  document.getElementById('close-art-btn').style.display = 'none';
+}
+</script>
 
 <!-- ═══════════════ PRIOR ART ═══════════════ -->
 <section>
