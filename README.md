@@ -33,6 +33,8 @@
 
 ## BOB Meets BOB — In Quantum Space
 
+![BOB MEETS BOB — SNAPKITTY Bob × IBM Bob at the Bifrost FFI Bridge](docs/bob_meets_bob_bridge.png)
+
 **[→ Open Interactive Demo](https://snapkittywest.github.io/sov-kernel-monster/bob_meets_bob.html)**
 
 <table>
