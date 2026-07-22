@@ -1,0 +1,63 @@
+# Build directories
+build/
+build_doc/
+build_final/
+build_final2/
+build_test/
+
+# Haskell
+.stack-work/
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+dist/
+dist-newstyle/
+
+# CMake
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+*.exe
+
+# LaTeX build artifacts (keep .tex and .pdf, not intermediate files)
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.synctex.gz
+docs/*.fls
+docs/*.fdb_latexmk
+docs/*.bbl
+docs/*.blg
+docs/*.lof
+docs/*.lot
+docs/*.nav
+docs/*.snm
+docs/*.vrb
+docs/image.code.tex
+
+# Lean build cache
+lean/.lake/
+.lake/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Loose root-level artifacts
+out.rs
+out.lean
+out.f90
+out.txt
+mh_payload.json

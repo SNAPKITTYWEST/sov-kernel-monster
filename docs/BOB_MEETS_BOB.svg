@@ -1,0 +1,352 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#0a0020"/>
+      <stop offset="60%" stop-color="#04000f"/>
+      <stop offset="100%" stop-color="#000008"/>
+    </radialGradient>
+    <radialGradient id="bridgeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#5b21b6" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#1e0050" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="leftGlow" cx="30%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="rightGlow" cx="70%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bridgeBeam" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#7c3aed" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#4c1d95" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="strongGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Grid pattern for floor -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#7c3aed" stroke-width="0.3" stroke-opacity="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="750" fill="url(#bgGrad)"/>
+  <rect width="1200" height="750" fill="url(#leftGlow)"/>
+  <rect width="1200" height="750" fill="url(#rightGlow)"/>
+
+  <!-- Star field -->
+  <g opacity="0.6">
+    <circle cx="80" cy="60" r="1" fill="#a78bfa"/>
+    <circle cx="180" cy="30" r="0.8" fill="#c4b5fd"/>
+    <circle cx="350" cy="80" r="1.2" fill="#a78bfa"/>
+    <circle cx="50" cy="200" r="0.7" fill="#c4b5fd"/>
+    <circle cx="140" cy="160" r="1" fill="#a78bfa"/>
+    <circle cx="900" cy="40" r="1" fill="#93c5fd"/>
+    <circle cx="1050" cy="90" r="0.8" fill="#60a5fa"/>
+    <circle cx="1120" cy="160" r="1.2" fill="#93c5fd"/>
+    <circle cx="980" cy="200" r="0.7" fill="#60a5fa"/>
+    <circle cx="1150" cy="50" r="1" fill="#93c5fd"/>
+    <circle cx="250" cy="120" r="0.6" fill="#a78bfa"/>
+    <circle cx="920" cy="130" r="0.6" fill="#60a5fa"/>
+  </g>
+
+  <!-- Quantum network nodes left -->
+  <g opacity="0.5" filter="url(#glow)">
+    <circle cx="80" cy="180" r="4" fill="none" stroke="#a78bfa" stroke-width="1"/>
+    <circle cx="150" cy="280" r="4" fill="none" stroke="#a78bfa" stroke-width="1"/>
+    <circle cx="60" cy="380" r="3" fill="none" stroke="#7c3aed" stroke-width="1"/>
+    <circle cx="200" cy="350" r="3" fill="none" stroke="#7c3aed" stroke-width="1"/>
+    <line x1="80" y1="180" x2="150" y2="280" stroke="#7c3aed" stroke-width="0.5" stroke-opacity="0.4"/>
+    <line x1="150" y1="280" x2="60" y2="380" stroke="#7c3aed" stroke-width="0.5" stroke-opacity="0.4"/>
+    <line x1="150" y1="280" x2="200" y2="350" stroke="#7c3aed" stroke-width="0.5" stroke-opacity="0.4"/>
+  </g>
+
+  <!-- Circuit traces right -->
+  <g opacity="0.35" stroke="#1d4ed8" stroke-width="1" fill="none">
+    <path d="M 1100 200 L 1100 240 L 1060 240 L 1060 280 L 1100 280 L 1100 320"/>
+    <path d="M 1140 260 L 1100 260"/>
+    <circle cx="1100" cy="240" r="3" fill="#1d4ed8"/>
+    <circle cx="1060" cy="280" r="3" fill="#1d4ed8"/>
+    <circle cx="1100" cy="320" r="3" fill="#1d4ed8"/>
+  </g>
+
+  <!-- Bridge beam — central pillar -->
+  <rect x="588" y="180" width="24" height="420" fill="url(#bridgeBeam)" filter="url(#softGlow)" rx="2"/>
+  <rect x="595" y="180" width="10" height="420" fill="#c4b5fd" opacity="0.3"/>
+
+  <!-- Floor grid perspective -->
+  <path d="M 200 620 L 600 500 L 1000 620 Z" fill="url(#floorGrad)" opacity="0.15"/>
+  <g stroke="#7c3aed" stroke-width="0.4" stroke-opacity="0.25">
+    <line x1="200" y1="620" x2="1000" y2="620"/>
+    <line x1="280" y1="590" x2="920" y2="590"/>
+    <line x1="360" y1="560" x2="840" y2="560"/>
+    <line x1="440" y1="530" x2="760" y2="530"/>
+    <line x1="520" y1="510" x2="680" y2="510"/>
+    <!-- Vertical lines -->
+    <line x1="300" y1="510" x2="200" y2="620"/>
+    <line x1="400" y1="510" x2="340" y2="620"/>
+    <line x1="500" y1="510" x2="480" y2="620"/>
+    <line x1="700" y1="510" x2="720" y2="620"/>
+    <line x1="800" y1="510" x2="860" y2="620"/>
+    <line x1="900" y1="510" x2="1000" y2="620"/>
+  </g>
+
+  <!-- SNAPKITTY BOB — cat silhouette -->
+  <g transform="translate(130, 200)">
+    <!-- Body -->
+    <ellipse cx="160" cy="320" rx="120" ry="160" fill="#1a0040" opacity="0.9"/>
+    <!-- Head -->
+    <ellipse cx="160" cy="170" rx="90" ry="85" fill="#1a0040" opacity="0.9"/>
+    <!-- Ears -->
+    <polygon points="95,110 75,60 125,100" fill="#220050"/>
+    <polygon points="225,110 245,60 195,100" fill="#220050"/>
+    <!-- Inner ears -->
+    <polygon points="100,108 85,72 118,102" fill="#7c3aed" opacity="0.5"/>
+    <polygon points="220,108 235,72 202,102" fill="#7c3aed" opacity="0.5"/>
+    <!-- Eyes -->
+    <ellipse cx="130" cy="170" rx="18" ry="15" fill="#000"/>
+    <ellipse cx="190" cy="170" rx="18" ry="15" fill="#000"/>
+    <ellipse cx="130" cy="170" rx="10" ry="13" fill="#7c3aed"/>
+    <ellipse cx="190" cy="170" rx="10" ry="13" fill="#7c3aed"/>
+    <circle cx="133" cy="167" r="3" fill="#c4b5fd"/>
+    <circle cx="193" cy="167" r="3" fill="#c4b5fd"/>
+    <!-- Snout -->
+    <ellipse cx="160" cy="200" rx="25" ry="15" fill="#2d0060" opacity="0.7"/>
+    <ellipse cx="160" cy="196" rx="6" ry="5" fill="#a78bfa"/>
+    <!-- Whiskers -->
+    <line x1="70" y1="200" x2="130" y2="205" stroke="#a78bfa" stroke-width="1.5" stroke-opacity="0.7"/>
+    <line x1="70" y1="210" x2="130" y2="210" stroke="#a78bfa" stroke-width="1.5" stroke-opacity="0.7"/>
+    <line x1="190" y1="205" x2="255" y2="200" stroke="#a78bfa" stroke-width="1.5" stroke-opacity="0.7"/>
+    <line x1="190" y1="210" x2="255" y2="210" stroke="#a78bfa" stroke-width="1.5" stroke-opacity="0.7"/>
+    <!-- Jacket / suit outline -->
+    <path d="M 60 340 Q 40 450 60 500 L 260 500 Q 280 450 260 340 Q 200 370 160 365 Q 120 370 60 340 Z" fill="#1a0040"/>
+    <path d="M 60 340 Q 100 360 130 355 L 140 480 L 110 500" fill="#110030"/>
+    <path d="M 260 340 Q 220 360 190 355 L 180 480 L 210 500" fill="#110030"/>
+    <!-- SNAPKITTY patch on arm -->
+    <rect x="70" y="380" width="70" height="40" rx="6" fill="#2d0060" stroke="#a78bfa" stroke-width="1"/>
+    <text x="105" y="395" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="7" font-weight="bold">SNAP</text>
+    <text x="105" y="407" text-anchor="middle" fill="#c4b5fd" font-family="monospace" font-size="7">KITTY</text>
+    <!-- BOB badge -->
+    <text x="160" y="430" text-anchor="middle" fill="#7c3aed" font-family="monospace" font-size="11" font-weight="bold" opacity="0.8">BOB</text>
+    <!-- Arm reaching right -->
+    <path d="M 260 340 Q 330 380 380 430 Q 390 440 395 455" fill="none" stroke="#1a0040" stroke-width="40"/>
+    <ellipse cx="395" cy="455" rx="22" ry="20" fill="#1a0040"/>
+    <!-- Glow outline -->
+    <path d="M 60 340 Q 40 450 60 500 L 260 500 Q 280 450 260 340 Q 200 320 160 320 Q 120 320 60 340 Z" fill="none" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+
+  <!-- IBM BOB — robot silhouette -->
+  <g transform="translate(640, 190)">
+    <!-- Helmet/Head -->
+    <rect x="100" y="60" width="180" height="160" rx="20" fill="#0a1628"/>
+    <rect x="110" y="70" width="160" height="140" rx="16" fill="#0d1f3c"/>
+    <!-- Visor -->
+    <rect x="120" y="90" width="140" height="80" rx="10" fill="#001a3a"/>
+    <rect x="125" y="95" width="130" height="70" rx="8" fill="#001535"/>
+    <!-- IBM text on visor -->
+    <text x="190" y="135" text-anchor="middle" fill="#3b82f6" font-family="monospace" font-size="22" font-weight="bold" filter="url(#glow)">IBM</text>
+    <!-- Helmet details -->
+    <rect x="115" y="185" width="30" height="8" rx="2" fill="#1d4ed8" opacity="0.6"/>
+    <rect x="235" y="185" width="30" height="8" rx="2" fill="#1d4ed8" opacity="0.6"/>
+    <!-- Antenna -->
+    <rect x="183" y="45" width="14" height="20" rx="3" fill="#1e3a5f"/>
+    <circle cx="190" cy="42" r="7" fill="#3b82f6" filter="url(#glow)"/>
+    <!-- Neck -->
+    <rect x="160" y="218" width="60" height="30" rx="4" fill="#0a1628"/>
+    <!-- Shoulders and body -->
+    <rect x="60" y="248" width="260" height="200" rx="15" fill="#0d1f3c"/>
+    <!-- Shoulder pads -->
+    <ellipse cx="80" cy="280" rx="30" ry="40" fill="#1e3a5f"/>
+    <ellipse cx="300" cy="280" rx="30" ry="40" fill="#1e3a5f"/>
+    <!-- IBM logo on chest -->
+    <rect x="135" y="270" width="110" height="60" rx="6" fill="#001535" stroke="#1d4ed8" stroke-width="1"/>
+    <text x="190" y="308" text-anchor="middle" fill="#3b82f6" font-family="monospace" font-size="20" font-weight="bold" filter="url(#glow)">IBM</text>
+    <!-- BOB label -->
+    <text x="190" y="340" text-anchor="middle" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="bold" opacity="0.8">BOB</text>
+    <!-- Chest details -->
+    <circle cx="155" cy="285" r="8" fill="#1d4ed8" opacity="0.5"/>
+    <circle cx="225" cy="285" r="8" fill="#1d4ed8" opacity="0.5"/>
+    <!-- Left arm reaching out -->
+    <path d="M 60 280 Q -20 340 -60 420 Q -70 440 -70 458" fill="none" stroke="#0d1f3c" stroke-width="40"/>
+    <ellipse cx="-70" cy="458" rx="22" ry="20" fill="#0a1628" stroke="#1d4ed8" stroke-width="1"/>
+    <!-- Body outline glow -->
+    <rect x="60" y="248" width="260" height="200" rx="15" fill="none" stroke="#1d4ed8" stroke-width="1" stroke-opacity="0.4"/>
+    <!-- Data ports on chest -->
+    <rect x="140" y="360" width="12" height="6" rx="1" fill="#3b82f6" opacity="0.4"/>
+    <rect x="158" y="360" width="12" height="6" rx="1" fill="#3b82f6" opacity="0.4"/>
+    <rect x="176" y="360" width="12" height="6" rx="1" fill="#3b82f6" opacity="0.4"/>
+    <rect x="194" y="360" width="12" height="6" rx="1" fill="#3b82f6" opacity="0.4"/>
+    <rect x="212" y="360" width="12" height="6" rx="1" fill="#3b82f6" opacity="0.4"/>
+    <rect x="230" y="360" width="12" height="6" rx="1" fill="#3b82f6" opacity="0.4"/>
+  </g>
+
+  <!-- Handshake glow at center -->
+  <circle cx="600" cy="460" r="40" fill="#7c3aed" opacity="0.3" filter="url(#strongGlow)"/>
+  <circle cx="600" cy="460" r="20" fill="#a78bfa" opacity="0.5" filter="url(#glow)"/>
+  <!-- Chain link icon -->
+  <g transform="translate(580, 440)" filter="url(#strongGlow)">
+    <path d="M 10 20 Q 0 20 0 10 Q 0 0 10 0 L 15 0 Q 25 0 25 10 Q 25 20 15 20 Z" fill="none" stroke="#c4b5fd" stroke-width="2.5"/>
+    <path d="M 15 20 Q 25 20 25 30 Q 25 40 15 40 L 10 40 Q 0 40 0 30 Q 0 20 10 20 Z" fill="none" stroke="#c4b5fd" stroke-width="2.5"/>
+    <rect x="8" y="18" width="14" height="4" fill="#0a0020"/>
+  </g>
+
+  <!-- TITLE -->
+  <text x="600" y="45" text-anchor="middle" fill="white" font-family="'Courier New', monospace" font-size="36" font-weight="bold" letter-spacing="4">BOB MEETS BOB</text>
+  <text x="600" y="75" text-anchor="middle" fill="#a78bfa" font-family="'Courier New', monospace" font-size="16" letter-spacing="6" filter="url(#glow)">IN QUANTUM SPACE</text>
+
+  <!-- Left header label -->
+  <text x="80" y="40" text-anchor="start" fill="#a78bfa" font-family="'Courier New', monospace" font-size="16" font-weight="bold">SNAPKITTY BOB</text>
+  <text x="80" y="58" text-anchor="start" fill="#7c3aed" font-family="'Courier New', monospace" font-size="10" letter-spacing="2">QUANTUM SOFTWARE BOB</text>
+
+  <!-- Right header label -->
+  <text x="1120" y="40" text-anchor="end" fill="#60a5fa" font-family="'Courier New', monospace" font-size="16" font-weight="bold">IBM BOB</text>
+  <text x="1120" y="58" text-anchor="end" fill="#1d4ed8" font-family="'Courier New', monospace" font-size="10" letter-spacing="2">HARDWARE BOB</text>
+
+  <!-- Left speech bubble -->
+  <rect x="20" y="100" width="240" height="110" rx="8" fill="#0d0025" stroke="#7c3aed" stroke-width="1.5"/>
+  <polygon points="200,208 220,220 215,208" fill="#0d0025" stroke="#7c3aed" stroke-width="1"/>
+  <text x="35" y="122" fill="#a78bfa" font-family="'Courier New', monospace" font-size="9" font-weight="bold">GREETINGS, BOB.</text>
+  <text x="35" y="140" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">I COME FROM THE</text>
+  <text x="35" y="154" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">QUANTUM LAYER WHERE</text>
+  <text x="35" y="168" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">INFORMATION IS POSSIBILITY</text>
+  <text x="35" y="182" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">AND TRUST IS PROTOCOL.</text>
+
+  <!-- Right speech bubble -->
+  <rect x="940" y="100" width="240" height="110" rx="8" fill="#000d1f" stroke="#1d4ed8" stroke-width="1.5"/>
+  <polygon points="1000,208 980,220 985,208" fill="#000d1f" stroke="#1d4ed8" stroke-width="1"/>
+  <text x="955" y="122" fill="#60a5fa" font-family="'Courier New', monospace" font-size="9" font-weight="bold">GREETINGS, BOB.</text>
+  <text x="955" y="140" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">I COME FROM THE</text>
+  <text x="955" y="154" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">HARDWARE LAYER WHERE</text>
+  <text x="955" y="168" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">INFORMATION IS PHYSICAL</text>
+  <text x="955" y="182" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">AND RELIABILITY IS DESIGN.</text>
+
+  <!-- Bridge center panel -->
+  <rect x="530" y="235" width="140" height="200" rx="6" fill="#0d0025" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.8"/>
+  <text x="600" y="258" text-anchor="middle" fill="white" font-family="'Courier New', monospace" font-size="10" font-weight="bold">THE HARDWARE FFI</text>
+  <text x="600" y="274" text-anchor="middle" fill="#a78bfa" font-family="'Courier New', monospace" font-size="13" font-weight="bold">BIFROST BRIDGE</text>
+  <text x="600" y="290" text-anchor="middle" fill="#7c3aed" font-family="'Courier New', monospace" font-size="8" letter-spacing="1">FOREIGN FUNCTION INTERFACE</text>
+  <line x1="540" y1="298" x2="660" y2="298" stroke="#7c3aed" stroke-width="0.5" stroke-opacity="0.5"/>
+  <text x="600" y="310" text-anchor="middle" fill="#5b21b6" font-family="'Courier New', monospace" font-size="7">THE BRIDGE BETWEEN POSSIBILITY &amp; PHYSICALITY</text>
+  <!-- Bridge items left -->
+  <text x="553" y="334" fill="#a78bfa" font-family="'Courier New', monospace" font-size="10" font-weight="bold">ABI</text>
+  <text x="553" y="354" fill="#a78bfa" font-family="'Courier New', monospace" font-size="10" font-weight="bold">CALL</text>
+  <text x="553" y="374" fill="#a78bfa" font-family="'Courier New', monospace" font-size="10" font-weight="bold">DATA</text>
+  <text x="553" y="394" fill="#a78bfa" font-family="'Courier New', monospace" font-size="10" font-weight="bold">LAYOUT</text>
+  <!-- Bridge items right -->
+  <text x="625" y="334" fill="#60a5fa" font-family="'Courier New', monospace" font-size="10" font-weight="bold">MEMORY</text>
+  <text x="625" y="354" fill="#60a5fa" font-family="'Courier New', monospace" font-size="10" font-weight="bold">SAFETY</text>
+  <text x="625" y="374" fill="#60a5fa" font-family="'Courier New', monospace" font-size="10" font-weight="bold">CONCURRENCY</text>
+  <text x="625" y="399" fill="#60a5fa" font-family="'Courier New', monospace" font-size="9" font-weight="bold">IO BOUNDARIES</text>
+
+  <!-- Quantum Space label -->
+  <text x="30" y="290" fill="#a78bfa" font-family="'Courier New', monospace" font-size="11" font-weight="bold">QUANTUM SPACE</text>
+  <text x="30" y="312" fill="#7c3aed" font-family="'Courier New', monospace" font-size="8">&gt; SUPERPOSITION</text>
+  <text x="30" y="326" fill="#7c3aed" font-family="'Courier New', monospace" font-size="8">&gt; ENTANGLEMENT</text>
+  <text x="30" y="340" fill="#7c3aed" font-family="'Courier New', monospace" font-size="8">&gt; PROBABILITY</text>
+  <text x="30" y="354" fill="#7c3aed" font-family="'Courier New', monospace" font-size="8">&gt; INFORMATION</text>
+  <text x="30" y="368" fill="#7c3aed" font-family="'Courier New', monospace" font-size="8">IS POTENTIAL</text>
+
+  <!-- Hardware Space label -->
+  <text x="1000" y="290" fill="#60a5fa" font-family="'Courier New', monospace" font-size="11" font-weight="bold">HARDWARE SPACE</text>
+  <text x="1000" y="312" fill="#1d4ed8" font-family="'Courier New', monospace" font-size="8">&gt; PHYSICAL QUBITS</text>
+  <text x="1000" y="326" fill="#1d4ed8" font-family="'Courier New', monospace" font-size="8">&gt; ELECTRONS</text>
+  <text x="1000" y="340" fill="#1d4ed8" font-family="'Courier New', monospace" font-size="8">&gt; CIRCUITS</text>
+  <text x="1000" y="354" fill="#1d4ed8" font-family="'Courier New', monospace" font-size="8">&gt; INFORMATION</text>
+  <text x="1000" y="368" fill="#1d4ed8" font-family="'Courier New', monospace" font-size="8">IS REAL</text>
+
+  <!-- SnapKitty Realm box -->
+  <rect x="20" y="530" width="220" height="150" rx="8" fill="#0d0025" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="35" y="552" fill="#a78bfa" font-family="'Courier New', monospace" font-size="11" font-weight="bold">SNAPKITTY REALM</text>
+  <!-- Cat icon -->
+  <g transform="translate(175, 550)">
+    <rect x="0" y="0" width="48" height="48" rx="6" fill="#1a0040" stroke="#7c3aed" stroke-width="1"/>
+    <ellipse cx="24" cy="28" rx="16" ry="14" fill="#2d0060"/>
+    <ellipse cx="24" cy="22" rx="14" ry="13" fill="#2d0060"/>
+    <polygon points="12,16 8,6 18,14" fill="#7c3aed"/>
+    <polygon points="36,16 40,6 30,14" fill="#7c3aed"/>
+    <circle cx="19" cy="22" r="4" fill="#7c3aed"/>
+    <circle cx="29" cy="22" r="4" fill="#7c3aed"/>
+    <ellipse cx="24" cy="30" rx="5" ry="3" fill="#a78bfa" opacity="0.6"/>
+  </g>
+  <text x="35" y="574" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">SOFTWARE</text>
+  <text x="35" y="590" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">PROTOCOLS</text>
+  <text x="35" y="606" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">ALGORITHMS</text>
+  <text x="35" y="622" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">APIS</text>
+  <text x="35" y="638" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">INTENT</text>
+  <text x="35" y="654" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="8">ABSTRACTION</text>
+  <!-- Arrow from SnapKitty to Shared -->
+  <path d="M 240 605 Q 360 590 430 570" stroke="#7c3aed" stroke-width="1.5" fill="none" marker-end="url(#arrowPurple)"/>
+
+  <!-- IBM Realm box -->
+  <rect x="960" y="530" width="220" height="150" rx="8" fill="#000d1f" stroke="#1d4ed8" stroke-width="1.5"/>
+  <text x="975" y="552" fill="#60a5fa" font-family="'Courier New', monospace" font-size="11" font-weight="bold">IBM REALM</text>
+  <!-- Chip icon -->
+  <g transform="translate(1130, 550)">
+    <rect x="0" y="0" width="38" height="38" rx="4" fill="#001535" stroke="#1d4ed8" stroke-width="1.5"/>
+    <rect x="8" y="8" width="22" height="22" rx="2" fill="#001a3a"/>
+    <line x1="0" y1="12" x2="8" y2="12" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="0" y1="19" x2="8" y2="19" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="0" y1="26" x2="8" y2="26" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="30" y1="12" x2="38" y2="12" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="30" y1="19" x2="38" y2="19" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="30" y1="26" x2="38" y2="26" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="12" y1="0" x2="12" y2="8" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="19" y1="0" x2="19" y2="8" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="26" y1="0" x2="26" y2="8" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="12" y1="30" x2="12" y2="38" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="19" y1="30" x2="19" y2="38" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="26" y1="30" x2="26" y2="38" stroke="#3b82f6" stroke-width="1.5"/>
+  </g>
+  <text x="975" y="574" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">HARDWARE</text>
+  <text x="975" y="590" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">MICROARCHITECTURE</text>
+  <text x="975" y="606" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">SYSTEMS</text>
+  <text x="975" y="622" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">FIRMWARE</text>
+  <text x="975" y="638" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">RELIABILITY</text>
+  <text x="975" y="654" fill="#93c5fd" font-family="'Courier New', monospace" font-size="8">PERFORMANCE</text>
+  <!-- Arrow from IBM to Shared -->
+  <path d="M 960 605 Q 840 590 770 570" stroke="#1d4ed8" stroke-width="1.5" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M 0 0 L 6 3 L 0 6 Z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto">
+      <path d="M 6 0 L 0 3 L 6 6 Z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+
+  <!-- Shared Protocol box -->
+  <rect x="430" y="520" width="340" height="120" rx="8" fill="#0d0020" stroke="#5b21b6" stroke-width="1.5"/>
+  <text x="600" y="542" text-anchor="middle" fill="#a78bfa" font-family="'Courier New', monospace" font-size="11" font-weight="bold">SHARED PROTOCOL</text>
+  <line x1="445" y1="550" x2="755" y2="550" stroke="#5b21b6" stroke-width="0.5" stroke-opacity="0.5"/>
+  <text x="600" y="567" text-anchor="middle" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="9">TRUST THROUGH INTERFACE</text>
+  <text x="600" y="582" text-anchor="middle" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="9">VERIFICATION THROUGH CONTRACT</text>
+  <text x="600" y="597" text-anchor="middle" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="9">EXECUTION THROUGH COOPERATION</text>
+  <text x="600" y="612" text-anchor="middle" fill="#c4b5fd" font-family="'Courier New', monospace" font-size="9">INNOVATION THROUGH UNION</text>
+
+  <!-- Footer tagline -->
+  <text x="600" y="715" text-anchor="middle" fill="white" font-family="'Courier New', monospace" font-size="14" font-weight="bold" letter-spacing="2">TWO BOBS. TWO REALMS. ONE BRIDGE.</text>
+  <text x="800" y="715" fill="#a78bfa" font-family="'Courier New', monospace" font-size="14" font-weight="bold" filter="url(#glow)"> INFINITE POSSIBILITIES.</text>
+
+  <!-- Ambient glow at bridge center -->
+  <circle cx="600" cy="380" r="80" fill="#7c3aed" opacity="0.06" filter="url(#softGlow)"/>
+  <circle cx="600" cy="380" r="30" fill="#a78bfa" opacity="0.08"/>
+
+</svg>

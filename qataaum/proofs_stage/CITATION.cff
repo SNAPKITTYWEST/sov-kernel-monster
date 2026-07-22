@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use this research, please cite it using the metadata below."
+type: software
+title: "SNAPKITTY-PROOFS: Sovereign AI Formal Verification and Research"
+abstract: >
+  Formal verification proofs and research papers for the SnapKitty Sovereign AI
+  stack. Includes Lean 4, Prolog, and Haskell proofs, plus arXiv preprints on
+  falsifiable assurance, semantic agreement, and context shedding in agentic systems.
+authors:
+  - family-names: "Meta"
+    given-names: "Ahmad"
+    affiliation: "SnapKitty Sovereign AI Research"
+repository-code: "https://github.com/SNAPKITTYWEST/SNAPKITTY-PROOFS"
+url: "https://github.com/SNAPKITTYWEST"
+license: "LicenseRef-Sovereign-Source-License-v1.0"
+version: "0.2.0"
+date-released: "2026-06-28"
+keywords:
+  - agentic AI
+  - falsifiable assurance
+  - WORM audit chain
+  - Trust Deed governance
+  - formal verification
+  - Lean 4
+  - enterprise compliance
+  - sovereign computing
+
+preferred-citation:
+  type: article
+  title: >
+    Falsifiable Assurance in Agentic AI Systems via
+    Append-Only Cryptographic Audit Chains
+  authors:
+    - family-names: "Meta"
+      given-names: "Ahmad"
+      affiliation: "SnapKitty Sovereign AI Research"
+  year: 2026
+  journal: "arXiv preprint"
+  url: "https://github.com/SNAPKITTYWEST/SNAPKITTY-PROOFS/blob/master/papers/worm-assurance/paper.pdf"
+  notes: "arXiv submission pending"

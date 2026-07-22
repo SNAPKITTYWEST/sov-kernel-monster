@@ -1,0 +1,31 @@
+#!/bin/bash
+# SOV-KERNEL-MONSTER: ASP Enforcer — runs inside sov-git-server on every push.
+set -euo pipefail
+
+while read old_rev new_rev ref_name; do
+    # 1. Verify all commits are Ed25519/GPG signed
+    git log --pretty="%H %G?" "${old_rev}..${new_rev}" | while read commit_hash sig_status; do
+        if [ "$sig_status" != "G" ] && [ "$sig_status" != "U" ]; then
+            echo "[ASP VIOLATION] Unsigned commit: $commit_hash" >&2
+            exit 1
+        fi
+    done
+
+    # 2. Prolog ASP constraint verification
+    swipl -q -f /data/gitea/custom/hooks/verify_asp.pl \
+        -g "verify_push('${new_rev}', '${ref_name}')" \
+        -t halt
+    if [ $? -ne 0 ]; then
+        echo "[ASP VIOLATION] Prolog verification failed. Push rejected." >&2
+        exit 1
+    fi
+
+    # 3. Intercol contract breaking-change check
+    if git diff --name-only "${old_rev}" "${new_rev}" 2>/dev/null | grep -q "^contracts/"; then
+        echo "[INTERCOL] Contract change detected — running breaking change analysis..." >&2
+        # buf breaking --against ".git#branch=main" --path contracts/
+        echo "[INTERCOL] Passed (stub — wire buf CLI for enforcement)." >&2
+    fi
+done
+
+exit 0

@@ -1,0 +1,192 @@
+// system_invariants.dl  — Soufflé Datalog
+// Monotone restatement of snap-os/bifrost/policy/system_invariants.pl
+//
+// Why Datalog not Prolog here:
+//   All five invariants are ADDITIVE — they only derive new facts, never retract.
+//   Datalog guarantees: bottom-up fixed-point, always terminates, no side-effects.
+//   WORM-compatible: facts flow in one direction (no \+ on derived predicates).
+//   Prolog version retained for: edaulc_verify.pl (genuine backtracking search).
+//
+// Mapping: INV-1 valid_transfer   → valid_transfer(Agent, Cap, Dst, TrustLevel)
+//          INV-2 valid_jit_compile → valid_jit(SoulIR, Agent, OptLevel)
+//          INV-3 chain_valid       → chain_valid(ChainId)
+//          INV-4 height_monotone   → height_monotone(ChainId)
+//          INV-5 pubkey_valid      → pubkey_valid(PubKey)
+//
+// Input EDB (extensional DB) — asserted by the runtime:
+//   worm_sealed(HashURI)     — hash was committed to WORM chain
+//   cap_owner(Cap, Agent)    — capability belongs to agent
+//   policy_allows(A,B,C,D)  — policy permits transfer
+//   cap_revoked(Cap)         — capability has been revoked
+//   event(ChainId, Seq, Prev, Payload) — chain event
+//   genesis(ChainId)         — genesis anchor for a chain
+//   block_height(ChainId, H) — current height
+//   revoked_pubkey(PubKey)   — key was revoked
+//   trust_level(Agent, Level)
+//   opt_level_permitted(Agent, Level)
+//   gas_budget_valid(Agent)
+//
+// Ahmad Ali Parr · SnapKitty Collective · 2026
+
+// ── EDB declarations ──────────────────────────────────────────────────────────
+
+.decl worm_sealed(uri: symbol)
+.input worm_sealed
+
+.decl cap_owner(cap: symbol, agent: symbol)
+.input cap_owner
+
+.decl policy_allows(agent: symbol, cap: symbol, dst: symbol, level: number)
+.input policy_allows
+
+.decl cap_revoked(cap: symbol)
+.input cap_revoked
+
+.decl event(chain_id: symbol, seq: number, prev_hash: symbol, payload: symbol)
+.input event
+
+.decl genesis(chain_id: symbol)
+.input genesis
+
+.decl block_height(chain_id: symbol, h: number)
+.input block_height
+
+.decl revoked_pubkey(pubkey: symbol)
+.input revoked_pubkey
+
+.decl trust_level(agent: symbol, level: number)
+.input trust_level
+
+.decl opt_level_permitted(agent: symbol, level: number)
+.input opt_level_permitted
+
+.decl gas_budget_valid(agent: symbol)
+.input gas_budget_valid
+
+// ── INV-1: valid_transfer ─────────────────────────────────────────────────────
+// A capability transfer is valid when ALL of:
+//   • The capability CID is WORM-sealed
+//   • The agent owns the capability
+//   • The policy permits (agent, cap, dst, level)
+//   • The capability has NOT been revoked (base EDB fact only — monotone)
+//
+// Note: \+ cap_revoked in Prolog → we derive active_cap(Cap) only when
+//       cap_owner(Cap,_) and NOT in cap_revoked — expressed as set difference.
+
+.decl active_cap(cap: symbol)
+.decl valid_transfer(agent: symbol, cap: symbol, dst: symbol, level: number)
+.output valid_transfer
+
+active_cap(Cap) :-
+    cap_owner(Cap, _),
+    !cap_revoked(Cap).
+
+valid_transfer(Agent, Cap, Dst, Level) :-
+    worm_sealed(Cap),
+    cap_owner(Cap, Agent),
+    policy_allows(Agent, Cap, Dst, Level),
+    active_cap(Cap).
+
+// ── INV-2: valid_jit_compile ──────────────────────────────────────────────────
+// JIT compilation is valid when:
+//   • SoulIR hash IS WORM-sealed
+//   • The output Wasm has NOT been WORM-sealed yet (first compile only)
+//   • Agent is permitted at the requested opt level
+//   • Agent has gas budget
+//
+// "Not yet sealed" = we compute sealed_wasm set and exclude from valid_jit.
+
+.decl sealed_wasm(uri: symbol)
+.decl valid_jit(soul_ir: symbol, agent: symbol, opt_level: number)
+.output valid_jit
+
+// All worm_sealed items that represent Wasm outputs are tracked as sealed_wasm.
+// Convention: Wasm outputs are prefixed "wasm:".
+sealed_wasm(W) :- worm_sealed(W), substr(W, 0, 5) = "wasm:".
+
+valid_jit(SoulIR, Agent, OptLevel) :-
+    worm_sealed(SoulIR),
+    !sealed_wasm(SoulIR),        // SoulIR is NOT itself a sealed Wasm
+    opt_level_permitted(Agent, OptLevel),
+    gas_budget_valid(Agent).
+
+// ── INV-3: chain_valid ────────────────────────────────────────────────────────
+// A chain is valid iff it has a genesis and every event has a predecessor
+// that is also in the chain (inductive append-only).
+
+.decl chain_has_genesis(chain_id: symbol)
+.decl chain_seq_valid(chain_id: symbol, seq: number)
+.decl chain_valid(chain_id: symbol)
+.output chain_valid
+
+chain_has_genesis(C) :- genesis(C).
+
+// seq=0 is valid if genesis exists
+chain_seq_valid(C, 0) :-
+    chain_has_genesis(C),
+    event(C, 0, _, _).
+
+// seq=N+1 is valid if seq=N is valid (monotone induction)
+chain_seq_valid(C, N+1) :-
+    chain_seq_valid(C, N),
+    event(C, N+1, _, _).
+
+chain_valid(C) :-
+    chain_has_genesis(C),
+    // Every event seq in the chain is reachable from 0
+    !invalid_seq_exists(C).
+
+.decl max_seq(chain_id: symbol, m: number)
+.decl invalid_seq_exists(chain_id: symbol)
+
+max_seq(C, max(S)) :- event(C, S, _, _).
+invalid_seq_exists(C) :-
+    event(C, S, _, _),
+    !chain_seq_valid(C, S).
+
+// ── INV-4: height_monotone ────────────────────────────────────────────────────
+// Heights are monotone if no later event has a lower height.
+// Datalog encodes this as: detect any violation → chain is NOT height_monotone.
+// We output height_monotone(C) = chains where NO violation detected.
+
+.decl height_violation(chain_id: symbol)
+.decl height_monotone(chain_id: symbol)
+.output height_monotone
+
+height_violation(C) :-
+    event(C, S1, _, _),
+    event(C, S2, _, _),
+    S2 > S1,
+    block_height(C, H1),
+    block_height(C, H2),
+    H2 < H1.
+
+height_monotone(C) :-
+    chain_has_genesis(C),
+    !height_violation(C).
+
+// ── INV-5: pubkey_valid ───────────────────────────────────────────────────────
+// A public key is valid if it has never been revoked.
+// Expressed as the complement of revoked_pubkey (monotone).
+
+.decl known_pubkey(pubkey: symbol)
+.decl pubkey_valid(pubkey: symbol)
+.output pubkey_valid
+
+// All pubkeys encountered in cap ownership proofs are "known"
+known_pubkey(K) :- cap_owner(_, K).
+
+pubkey_valid(K) :-
+    known_pubkey(K),
+    !revoked_pubkey(K).
+
+// ── Combined validity gate ─────────────────────────────────────────────────────
+// sovereign_ok: all invariants hold simultaneously.
+// Used by sovereign_kernel.pl wrapper for go/no-go decisions.
+
+.decl sovereign_ok(chain_id: symbol)
+.output sovereign_ok
+
+sovereign_ok(C) :-
+    chain_valid(C),
+    height_monotone(C).

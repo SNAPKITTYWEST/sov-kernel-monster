@@ -1,0 +1,52 @@
+{
+  "title": "SNAPKITTY-PROOFS: Sovereign AI Formal Verification, Lean 4 Proofs, and Research Papers",
+  "description": "Formal verification proofs (Lean 4, Prolog, Haskell) and research papers for the SnapKitty Sovereign AI stack. Includes: falsifiable assurance via WORM audit chains, semantic agreement metrics, context shedding in agentic workflows, and Trust Deed governance primitives.",
+  "creators": [
+    {
+      "name": "Meta, Ahmad",
+      "affiliation": "SnapKitty Sovereign AI Research"
+    }
+  ],
+  "keywords": [
+    "agentic AI",
+    "audit chains",
+    "cryptographic integrity",
+    "falsifiable assurance",
+    "WORM ledger",
+    "Trust Deed",
+    "enterprise compliance",
+    "SOX",
+    "GDPR",
+    "ISO 27001",
+    "Lean 4",
+    "formal verification",
+    "sovereign computing",
+    "large language models",
+    "multi-agent systems"
+  ],
+  "license": "other-open",
+  "upload_type": "software",
+  "access_right": "open",
+  "language": "eng",
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/SNAPKITTYWEST/SNAPKITTY-PROOFS",
+      "resource_type": "software"
+    },
+    {
+      "relation": "isRelatedTo",
+      "identifier": "https://github.com/SNAPKITTYWEST/snapkitty-gitlab",
+      "resource_type": "software"
+    },
+    {
+      "relation": "isRelatedTo",
+      "identifier": "https://github.com/SNAPKITTYWEST/abzu-sovereign-ide",
+      "resource_type": "software"
+    }
+  ],
+  "communities": [
+    { "identifier": "zenodo" }
+  ],
+  "notes": "Part of the SnapKitty Sovereign AI stack. Implementation repos at github.com/SNAPKITTYWEST. Contact: research@snapkitty.dev"
+}

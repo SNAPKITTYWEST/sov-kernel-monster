@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOB Meets BOB — Bifrost Bridge</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+        }
+        .container { display: flex; min-height: 100vh; padding: 20px; gap: 20px; }
+        .sidebar {
+            width: 300px; flex-shrink: 0;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            padding: 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20,20,19,0.1);
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .sidebar h1 { font-family: 'Lora', serif; font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+        .sidebar .subtitle { color: var(--anthropic-mid-gray); font-size: 12px; margin-bottom: 28px; line-height: 1.4; }
+        .control-section { margin-bottom: 28px; }
+        .control-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .control-section h3::before { content: '•'; color: var(--anthropic-orange); font-weight: bold; }
+        .seed-input { width: 100%; background: var(--anthropic-light); padding: 10px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; margin-bottom: 10px; border: 1px solid var(--anthropic-light-gray); text-align: center; }
+        .seed-input:focus { outline: none; border-color: var(--anthropic-orange); }
+        .seed-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .control-group { margin-bottom: 16px; }
+        .control-group label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        .slider-container input[type="range"] { flex: 1; height: 4px; background: var(--anthropic-light-gray); border-radius: 2px; outline: none; -webkit-appearance: none; }
+        .slider-container input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--anthropic-orange); border-radius: 50%; cursor: pointer; }
+        .value-display { font-family: 'Courier New', monospace; font-size: 11px; color: var(--anthropic-mid-gray); min-width: 44px; text-align: right; }
+        .button { background: var(--anthropic-orange); color: white; border: none; padding: 9px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all .2s; width: 100%; font-family: 'Poppins', sans-serif; }
+        .button:hover { background: #c86641; transform: translateY(-1px); }
+        .button.secondary { background: var(--anthropic-blue); }
+        .button.secondary:hover { background: #5a8bb8; }
+        .button.tertiary { background: var(--anthropic-green); }
+        .button.tertiary:hover { background: #6b7b52; }
+        .button-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .button-row .button { flex: 1; }
+        .canvas-area { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+        #canvas-container { width: 100%; max-width: 960px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(20,20,19,0.15); }
+        #canvas-container canvas { display: block; width: 100% !important; height: auto !important; }
+        .loading { display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--anthropic-mid-gray); padding: 40px; background: #04040a; }
+        .stat-row { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--anthropic-mid-gray); margin-top: 6px; line-height: 1.8; }
+        .stat-row span { color: var(--anthropic-dark); font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <h1>BOB Meets BOB</h1>
+        <div class="subtitle">Two sovereign agents converge at the Bifrost FFI Bridge. φ⁻¹ Jordan contraction. Born collapse at handshake.</div>
+
+        <div class="control-section">
+            <h3>Seed</h3>
+            <input type="number" id="seed-input" class="seed-input" value="6877532" onchange="updateSeed()">
+            <div class="seed-controls">
+                <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                <button class="button secondary" onclick="nextSeed()">Next →</button>
+            </div>
+            <button class="button tertiary" onclick="randomSeedAndUpdate()">↻ Random</button>
+        </div>
+
+        <div class="control-section">
+            <h3>Agents</h3>
+            <div class="control-group">
+                <label>Snapkitty Particles</label>
+                <div class="slider-container">
+                    <input type="range" id="leftCount" min="100" max="1200" step="50" value="600" oninput="updateParam('leftCount', parseInt(this.value))">
+                    <span class="value-display" id="leftCount-value">600</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>IBM Particles</label>
+                <div class="slider-container">
+                    <input type="range" id="rightCount" min="100" max="1200" step="50" value="600" oninput="updateParam('rightCount', parseInt(this.value))">
+                    <span class="value-display" id="rightCount-value">600</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Physics</h3>
+            <div class="control-group">
+                <label>φ⁻¹ Contraction</label>
+                <div class="slider-container">
+                    <input type="range" id="phiInv" min="0.50" max="0.80" step="0.005" value="0.618" oninput="updateParam('phiInv', parseFloat(this.value))">
+                    <span class="value-display" id="phiInv-value">0.618</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Turbulence</label>
+                <div class="slider-container">
+                    <input type="range" id="turbulence" min="0.001" max="0.015" step="0.001" value="0.005" oninput="updateParam('turbulence', parseFloat(this.value))">
+                    <span class="value-display" id="turbulence-value">0.005</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Born Threshold</label>
+                <div class="slider-container">
+                    <input type="range" id="bornThresh" min="0.01" max="0.12" step="0.005" value="0.04" oninput="updateParam('bornThresh', parseFloat(this.value))">
+                    <span class="value-display" id="bornThresh-value">0.04</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Bridge Width</label>
+                <div class="slider-container">
+                    <input type="range" id="bridgeWidth" min="10" max="120" step="5" value="40" oninput="updateParam('bridgeWidth', parseInt(this.value))">
+                    <span class="value-display" id="bridgeWidth-value">40</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Actions</h3>
+            <div class="button-row">
+                <button class="button" onclick="reinit()">Regenerate</button>
+                <button class="button secondary" onclick="resetParameters()">Reset</button>
+            </div>
+            <button class="button tertiary" onclick="saveCanvas('bob_meets_bob_' + params.seed, 'png')" style="margin-top:8px">↓ Download PNG</button>
+            <div class="stat-row" id="stats">
+                Born collapses: <span id="stat-collapses">0</span><br>
+                Frame: <span id="stat-frame">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <div id="canvas-container">
+            <div class="loading">Initialising Bifrost Bridge...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// BOB MEETS BOB — Bifrost Bridge
+// SNAPKITTY Bob (purple, left) × IBM Bob (blue, right)
+// φ⁻¹ Jordan contraction pulls both toward the bridge centerline
+// Born collapse fires when a particle crosses the bridge threshold
+// WORM trail accumulates as persistent append-only light
+// ═══════════════════════════════════════════════════════════════════
+
+let params = {
+    seed: 6877532,
+    leftCount: 600,
+    rightCount: 600,
+    phiInv: 0.6180339887498948,
+    turbulence: 0.005,
+    bornThresh: 0.04,
+    bridgeWidth: 40
+};
+const defaultParams = Object.assign({}, params);
+
+let leftParticles = [], rightParticles = [];
+let wormLayer;   // persistent WORM trail — append-only
+let collapseCount = 0;
+let t = 0;
+
+// ── Particle class ───────────────────────────────────────────────────
+
+class Particle {
+    constructor(side) {
+        this.side = side;  // 'left' | 'right'
+        this.reset();
+    }
+
+    reset() {
+        const W = 960, H = 960;
+        const cx = W / 2;
+
+        if (this.side === 'left') {
+            // Start in left half, scatter broadly
+            this.x = random(30, cx - 20);
+            this.y = random(30, H - 30);
+        } else {
+            // Start in right half
+            this.x = random(cx + 20, W - 30);
+            this.y = random(30, H - 30);
+        }
+
+        this.px = this.x;
+        this.py = this.y;
+        this.energy = 1.0;
+        this.collapsed = false;
+        this.collapseTimer = 0;
+        this.age = 0;
+        this.nx = random(1000);  // noise offset
+        this.ny = random(1000);
+    }
+
+    update() {
+        if (this.collapsed) {
+            this.collapseTimer--;
+            if (this.collapseTimer <= 0) this.reset();
+            return;
+        }
+
+        const W = 960, H = 960;
+        const cx = W / 2;
+        const phi = params.phiInv;
+        const phi2 = phi * phi;
+
+        // Turbulent noise vector
+        let nx = noise(this.x * params.turbulence + this.nx, this.y * params.turbulence + this.ny, t);
+        let ny = noise(this.x * params.turbulence + this.nx + 500, this.y * params.turbulence + this.ny + 500, t);
+        let noiseAngle = nx * TWO_PI * 2.5 + ny * PI;
+        let ux = cos(noiseAngle) * 2.0;
+        let uy = sin(noiseAngle) * 2.0;
+
+        // Jordan contraction toward bridge center
+        let gx = (cx - this.x);
+        let gy = (H / 2 - this.y) * 0.3;  // slight vertical centering
+        let gd = max(sqrt(gx * gx + gy * gy), 1);
+        gx = (gx / gd) * 2.2;
+        gy = (gy / gd) * 2.2;
+
+        // φ⁻¹·u + φ⁻²·g  (Jordan step)
+        this.px = this.x;
+        this.py = this.y;
+        this.x += phi * ux + phi2 * gx;
+        this.y += phi * uy + phi2 * gy;
+
+        // φ-decay energy
+        this.energy *= phi;
+        this.age++;
+
+        // Wrap vertically, bounce off left/right walls
+        if (this.y < 0) this.y = H;
+        if (this.y > H) this.y = 0;
+        if (this.side === 'left' && this.x < 10) { this.x = 10; this.px = this.x; }
+        if (this.side === 'right' && this.x > W - 10) { this.x = W - 10; this.px = this.x; }
+
+        // Born collapse: particle reaches bridge threshold AND energy decayed
+        let distToBridge = abs(this.x - cx);
+        let normDist = distToBridge / (W * 0.5);
+        if (normDist < params.bornThresh && this.energy < 0.22) {
+            this.collapsed = true;
+            this.collapseTimer = 14;
+            // Seal into WORM layer
+            this.sealToWorm();
+            collapseCount++;
+        }
+    }
+
+    sealToWorm() {
+        // Permanent flash burned into the ledger
+        wormLayer.push();
+        wormLayer.noStroke();
+        let col = this.side === 'left' ? color(160, 100, 220, 160) : color(80, 140, 220, 160);
+        wormLayer.fill(col);
+        wormLayer.ellipse(this.x, this.y, 3, 3);
+        // Corona
+        wormLayer.fill(255, 255, 255, 80);
+        wormLayer.ellipse(this.x, this.y, 7, 7);
+        wormLayer.pop();
+    }
+
+    draw() {
+        if (this.collapsed) {
+            // Expanding collapse flash
+            let prog = 1 - this.collapseTimer / 14;
+            let r = this.collapseTimer * 4;
+            noFill();
+            let col = this.side === 'left' ? color(200, 120, 255, (1-prog)*180) : color(100, 180, 255, (1-prog)*180);
+            stroke(col);
+            strokeWeight(lerp(2.5, 0.3, prog));
+            ellipse(this.x, this.y, r * 2, r * 2);
+            return;
+        }
+
+        // Thermal color: orange/purple = hot/far, blue/cyan = cold/converging
+        let hue, alpha;
+        if (this.side === 'left') {
+            // Purple (far) → violet (near)
+            hue = lerp(280, 210, 1 - this.energy);
+            let r = lerp(80, 160, this.energy);
+            let g = lerp(40, 60, this.energy);
+            let b = lerp(200, 255, this.energy);
+            alpha = lerp(60, 180, this.energy);
+            stroke(r, g, b, alpha);
+        } else {
+            // Blue (far) → cyan (near)
+            let r = lerp(30, 100, this.energy);
+            let g = lerp(100, 200, this.energy);
+            let b = lerp(220, 255, this.energy);
+            alpha = lerp(60, 180, this.energy);
+            stroke(r, g, b, alpha);
+        }
+
+        strokeWeight(lerp(0.5, 1.6, this.energy));
+        line(this.px, this.py, this.x, this.y);
+
+        // Write trail to WORM layer
+        wormLayer.stroke(red(color(
+            this.side === 'left' ? 120 : 60,
+            this.side === 'left' ? 50 : 140,
+            this.side === 'left' ? 200 : 230
+        )),
+        this.side === 'left' ? 50 : 140,
+        this.side === 'left' ? 200 : 230,
+        lerp(8, 25, this.energy));
+        wormLayer.strokeWeight(0.8);
+        wormLayer.line(this.px, this.py, this.x, this.y);
+    }
+}
+
+// ── p5 core ──────────────────────────────────────────────────────────
+
+function setup() {
+    let cnv = createCanvas(960, 960);
+    cnv.parent('canvas-container');
+    document.querySelector('.loading').style.display = 'none';
+    colorMode(RGB, 255, 255, 255, 255);
+    wormLayer = createGraphics(960, 960);
+    initSystem();
+}
+
+function draw() {
+    // Deep space background with subtle fade — lets WORM trails persist
+    background(4, 4, 10, 22);
+
+    // Stamp WORM layer
+    image(wormLayer, 0, 0);
+
+    // Bridge beam
+    drawBridge();
+
+    // Update + draw particles
+    for (let p of leftParticles)  { p.update(); p.draw(); }
+    for (let p of rightParticles) { p.update(); p.draw(); }
+
+    // Labels
+    drawLabels();
+
+    t += 0.0008;
+
+    // Stats
+    if (frameCount % 30 === 0) {
+        document.getElementById('stat-collapses').textContent = collapseCount;
+        document.getElementById('stat-frame').textContent = frameCount;
+    }
+}
+
+function drawBridge() {
+    const cx = width / 2;
+    const bw = params.bridgeWidth;
+
+    // Outer glow
+    noStroke();
+    for (let i = 4; i >= 0; i--) {
+        let alpha = map(i, 0, 4, 60, 5);
+        let w = bw + i * 28;
+        fill(130, 60, 220, alpha);
+        rect(cx - w/2, 0, w, height);
+    }
+
+    // Core beam
+    fill(160, 80, 255, 90);
+    rect(cx - bw/2, 0, bw, height);
+
+    // Bright center line
+    fill(220, 180, 255, 70);
+    rect(cx - 4, 0, 8, height);
+
+    // Bridge label
+    noStroke();
+    fill(200, 150, 255, 180);
+    textFont('monospace');
+    textSize(9);
+    textAlign(CENTER);
+    text('BIFROST', cx, 30);
+    text('FFI', cx, 44);
+    text('BRIDGE', cx, 58);
+}
+
+function drawLabels() {
+    noStroke();
+    textFont('monospace');
+    textAlign(LEFT);
+
+    // SNAPKITTY BOB — left label
+    fill(160, 80, 255, 200);
+    textSize(11);
+    text('SNAPKITTY BOB', 16, 28);
+    fill(120, 60, 200, 140);
+    textSize(8);
+    text('QUANTUM SOFTWARE', 16, 42);
+    text('φ⁻¹ JORDAN LAYER', 16, 54);
+
+    // IBM BOB — right label
+    textAlign(RIGHT);
+    fill(80, 160, 255, 200);
+    textSize(11);
+    text('IBM BOB', width - 16, 28);
+    fill(60, 130, 220, 140);
+    textSize(8);
+    text('HARDWARE RUNTIME', width - 16, 42);
+    text('QATAAUM COMPILER', width - 16, 54);
+
+    // Bottom footer
+    textAlign(CENTER);
+    fill(180, 120, 255, 100);
+    textSize(8);
+    text('TWO BOBS  ·  TWO REALMS  ·  ONE BRIDGE', width/2, height - 12);
+
+    // Phi label on bridge
+    fill(220, 180, 255, 120);
+    textSize(7);
+    text('φ⁻¹=' + params.phiInv.toFixed(4), width/2, height - 24);
+}
+
+// ── System init ──────────────────────────────────────────────────────
+
+function initSystem() {
+    randomSeed(params.seed);
+    noiseSeed(params.seed);
+    t = 0;
+    collapseCount = 0;
+    document.getElementById('stat-collapses').textContent = '0';
+
+    wormLayer.clear();
+    wormLayer.background(4, 4, 10, 255);
+
+    leftParticles = [];
+    rightParticles = [];
+
+    for (let i = 0; i < params.leftCount; i++)  leftParticles.push(new Particle('left'));
+    for (let i = 0; i < params.rightCount; i++) rightParticles.push(new Particle('right'));
+}
+
+function reinit() { initSystem(); }
+
+// ── UI handlers ──────────────────────────────────────────────────────
+
+function updateParam(name, val) {
+    params[name] = val;
+    document.getElementById(name + '-value').textContent = val;
+    if (name === 'leftCount' || name === 'rightCount') reinit();
+}
+
+function updateSeedDisplay() { document.getElementById('seed-input').value = params.seed; }
+function updateSeed() {
+    let v = parseInt(document.getElementById('seed-input').value);
+    if (v && v > 0) { params.seed = v; reinit(); } else updateSeedDisplay();
+}
+function previousSeed() { params.seed = Math.max(1, params.seed - 1); updateSeedDisplay(); reinit(); }
+function nextSeed()     { params.seed++; updateSeedDisplay(); reinit(); }
+function randomSeedAndUpdate() { params.seed = Math.floor(Math.random() * 9999999) + 1; updateSeedDisplay(); reinit(); }
+
+function resetParameters() {
+    Object.assign(params, defaultParams);
+    ['leftCount','rightCount','phiInv','turbulence','bornThresh','bridgeWidth'].forEach(k => {
+        let el = document.getElementById(k);
+        if (el) { el.value = params[k]; document.getElementById(k+'-value').textContent = params[k]; }
+    });
+    updateSeedDisplay();
+    reinit();
+}
+
+window.addEventListener('load', () => updateSeedDisplay());
+</script>
+</body>
+</html>

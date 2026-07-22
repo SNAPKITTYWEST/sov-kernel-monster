@@ -1,0 +1,17 @@
+[Unit]
+Description=Sovereign WORM Git Storage Loop Mount
+Documentation=man:systemd.mount(5)
+DefaultDependencies=no
+Conflicts=umount.target
+Before=local-fs.target umount.target
+After=systemd-fsck@dev-loop99.service
+
+[Mount]
+What=/opt/sov/worm/sov-git-worm.img
+Where=/opt/sov/worm/git-storage
+Type=ext4
+Options=loop,rw,noatime,errors=remount-ro
+TimeoutSec=30
+
+[Install]
+WantedBy=local-fs.target

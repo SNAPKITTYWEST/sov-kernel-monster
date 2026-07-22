@@ -1,0 +1,19 @@
+[package]
+name = "qataaum-parser"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OpenQASM 2/3 and MetaQASM-4 parser for QATAAUM"
+
+[dependencies]
+thiserror.workspace = true
+logos.workspace = true
+chumsky.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

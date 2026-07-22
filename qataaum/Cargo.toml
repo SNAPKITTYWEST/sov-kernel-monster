@@ -1,0 +1,70 @@
+# QATAAUM Quantum Assembly Runtime - Workspace Root
+# Clean-room quantum compiler and runtime
+# NOT affiliated with IBM - Independent implementation
+
+[workspace]
+resolver = "2"
+
+members = [
+    "compiler/parser",
+    "compiler/semantic",
+    "compiler/ir",
+    "compiler/passes",
+    "compiler/routing",
+    "simulator/statevector",
+    "simulator/densitymatrix",
+    "runtime/shadow-rpg-q",
+    "runtime/ibmi-ffi",
+    "tests",
+    "benchmarks",
+    # TODO: Add more crates as they are implemented
+    # "runtime/rust",
+    # "simulator/noise",
+    # "backends/local",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+authors = ["QATAAUM Project Contributors"]
+license = "Apache-2.0"
+repository = "https://github.com/your-org/qataaum"
+homepage = "https://github.com/your-org/qataaum"
+documentation = "https://docs.rs/qataaum"
+keywords = ["quantum", "compiler", "openqasm", "ibm-i", "formal-verification"]
+categories = ["compilers", "science"]
+
+[workspace.dependencies]
+# Core dependencies
+thiserror = "1.0"
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Parser dependencies
+logos = "0.13"
+chumsky = "0.9"
+
+# Numeric dependencies
+num-complex = "0.4"
+ndarray = "0.15"
+rayon = "1.7"
+rand = "0.8"
+
+# Testing dependencies
+proptest = "1.2"
+criterion = "0.5"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.test]
+opt-level = 1

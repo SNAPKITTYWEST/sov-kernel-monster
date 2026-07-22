@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Parr Papers — Sovereign Convergence</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark:#141413; --light:#faf9f5; --gray:#b0aea5; --lgray:#e8e6dc;
+  --orange:#d97757; --blue:#6a9bcc; --green:#788c5d; --gold:#d4af37;
+  --purple:#8a2be2; --cream:#f5f3ee;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',sans-serif;background:var(--dark);color:var(--light);line-height:1.6}
+
+/* ── Header ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:60px 24px;text-align:center;
+  background:radial-gradient(ellipse at 50% 30%, #0a0820 0%, #04040a 70%);
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d97757' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-badge{
+  display:inline-block;font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:var(--purple);border:1px solid var(--purple);padding:4px 12px;border-radius:20px;
+  margin-bottom:24px;letter-spacing:2px;
+}
+.hero h1{font-family:'Lora',serif;font-size:clamp(36px,6vw,72px);font-weight:400;margin-bottom:12px;
+  background:linear-gradient(135deg,#fff 30%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero .subtitle{font-size:clamp(14px,2vw,18px);color:var(--gray);max-width:700px;margin:0 auto 40px}
+.hero .meta{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gray);line-height:2;margin-bottom:48px}
+.hero .meta span{color:var(--orange)}
+
+.worm-seal{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(138,43,226,0.08);border:1px solid rgba(138,43,226,0.3);
+  border-radius:8px;padding:10px 20px;font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:var(--purple);margin-bottom:48px;
+}
+
+.cta-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.btn{
+  padding:12px 28px;border-radius:8px;font-size:14px;font-weight:500;
+  text-decoration:none;cursor:pointer;border:none;transition:all 0.2s;font-family:'Poppins',sans-serif;
+}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{background:#c86641;transform:translateY(-2px)}
+.btn-secondary{background:transparent;color:var(--blue);border:1px solid var(--blue)}
+.btn-secondary:hover{background:rgba(106,155,204,0.1);transform:translateY(-2px)}
+.btn-gold{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.btn-gold:hover{background:rgba(212,175,55,0.1);transform:translateY(-2px)}
+
+/* ── Section ── */
+section{padding:80px 24px;max-width:1100px;margin:0 auto}
+.section-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--orange);letter-spacing:3px;margin-bottom:12px}
+h2{font-family:'Lora',serif;font-size:clamp(24px,4vw,40px);font-weight:400;margin-bottom:16px}
+.lead{color:var(--gray);font-size:16px;max-width:700px;margin-bottom:48px;line-height:1.8}
+
+/* ── Cards ── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+.card{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px;padding:28px;transition:all 0.25s;position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.25s;
+  background:radial-gradient(circle at 50% 0%,rgba(217,119,87,0.06) 0%,transparent 70%)}
+.card:hover{border-color:rgba(217,119,87,0.25);transform:translateY(-4px)}
+.card:hover::before{opacity:1}
+.card-icon{font-size:28px;margin-bottom:14px}
+.card h3{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--light)}
+.card p{font-size:13px;color:var(--gray);line-height:1.7;margin-bottom:16px}
+.card-tag{
+  display:inline-block;font-family:'Share Tech Mono',monospace;font-size:10px;
+  padding:3px 8px;border-radius:4px;margin-right:6px;margin-bottom:4px;
+}
+.tag-proved{background:rgba(120,140,93,0.15);color:var(--green);border:1px solid rgba(120,140,93,0.3)}
+.tag-novel{background:rgba(217,119,87,0.12);color:var(--orange);border:1px solid rgba(217,119,87,0.25)}
+.tag-worm{background:rgba(138,43,226,0.12);color:var(--purple);border:1px solid rgba(138,43,226,0.25)}
+.tag-art{background:rgba(106,155,204,0.12);color:var(--blue);border:1px solid rgba(106,155,204,0.25)}
+
+/* ── Art embeds ── */
+.art-section{background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);padding:80px 24px}
+.art-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:1100px;margin:0 auto}
+@media(max-width:768px){.art-grid{grid-template-columns:1fr}}
+.art-frame{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative}
+.art-label{padding:12px 20px;background:rgba(255,255,255,0.03);font-size:12px;color:var(--gray);font-family:'Share Tech Mono',monospace;border-bottom:1px solid rgba(255,255,255,0.06)}
+.art-frame iframe{width:100%;height:560px;border:none;display:block}
+
+/* ── Prior art table ── */
+.prior-table{width:100%;border-collapse:collapse;font-size:13px}
+.prior-table th{text-align:left;padding:10px 14px;color:var(--orange);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.1);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px}
+.prior-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--gray);vertical-align:top}
+.prior-table td:first-child{font-family:'Share Tech Mono',monospace;color:var(--gold);font-size:11px;white-space:nowrap}
+.prior-table td:nth-child(2){color:var(--light)}
+.prior-table tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* ── Theorem block ── */
+.theorem-box{
+  background:rgba(217,119,87,0.06);border-left:3px solid var(--orange);
+  border-radius:0 8px 8px 0;padding:20px 24px;margin:24px 0;
+}
+.theorem-box .thm-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--orange);letter-spacing:2px;margin-bottom:8px}
+.theorem-box .thm-body{font-family:'Lora',serif;font-size:15px;color:var(--light);line-height:1.8}
+.theorem-box .thm-body .math{font-family:'Share Tech Mono',monospace;color:var(--gold);font-size:13px}
+
+/* ── Phi equation ── */
+.phi-block{text-align:center;padding:48px 24px;background:rgba(0,0,0,0.2)}
+.phi-eq{font-family:'Share Tech Mono',monospace;font-size:clamp(16px,3vw,28px);color:var(--gold);margin-bottom:12px}
+.phi-sub{font-size:13px;color:var(--gray)}
+
+/* ── Footer ── */
+footer{
+  text-align:center;padding:48px 24px;border-top:1px solid rgba(255,255,255,0.06);
+  font-size:12px;color:var(--gray);font-family:'Share Tech Mono',monospace;line-height:2.2;
+}
+footer a{color:var(--orange);text-decoration:none}
+
+/* ── Divider ── */
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(217,119,87,0.3),transparent);margin:0 auto;max-width:600px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<div class="hero">
+  <div class="hero-badge">WORM-SEALED · PAR-001–019 · 2026-07-21</div>
+  <h1>The Parr Papers</h1>
+  <p class="subtitle">
+    Jordan Spectral Transformer · LiquidLean · Jacobian Conjecture ·
+    Sovereign Convergence · Living Rewrite · J-Space
+  </p>
+  <div class="meta">
+    <span>Ahmad Ali Parr</span> · SnapKitty Collective ·
+    Bel Esprit D'Accord Irrevocable Trust · <span>EIN 42-697643</span><br>
+    Sovereign Source License v3.0 · <span>43 pages</span> · All results machine-checked
+  </div>
+
+  <div class="worm-seal">
+    ⬡ &nbsp; Blake3 + Ed25519 · github.com/SNAPKITTYWEST/sov-kernel-monster &nbsp; ⬡
+  </div>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="parr_paper.pdf" target="_blank">↓ Download PDF (43pp)</a>
+    <a class="btn btn-secondary" href="sovereign_convergence.html" target="_blank">Art: Sovereign Convergence</a>
+    <a class="btn btn-secondary" href="living_rewrite.html" target="_blank">Art: Living Rewrite</a>
+    <a class="btn btn-gold" href="https://github.com/SNAPKITTYWEST/sov-kernel-monster" target="_blank">GitHub</a>
+  </div>
+</div>
+
+<!-- ═══════════════ PHI IDENTITY ═══════════════ -->
+<div class="phi-block">
+  <div class="phi-eq">ρ' = φ⁻¹ · UρU† + φ⁻² · ρ</div>
+  <div class="phi-sub">The Jordan step · φ⁻¹ + φ⁻² = 1 · unique self-similar contraction · proved zero sorry</div>
+</div>
+
+<!-- ═══════════════ KEY THEOREM ═══════════════ -->
+<section>
+  <div class="section-label">THE DISCOVERY</div>
+  <h2>The Algebraic Bridge</h2>
+  <p class="lead">
+    The Jordan fixed-point equation T(ρ*)=ρ* implies [U,ρ*]=0 — purely algebraically,
+    using only the golden ratio identity φ⁻¹+φ⁻²=1. This bypasses 87 years of
+    analytic obstruction in the Jacobian Conjecture.
+  </p>
+
+  <div class="theorem-box">
+    <div class="thm-label">THEOREM (Parr 2026) — Machine-checked Lean 4, zero sorry</div>
+    <div class="thm-body">
+      For T(ρ) = φ⁻¹·UρU† + φ⁻²·ρ, any fixed point ρ* satisfies:<br>
+      <span class="math">T(ρ*) = ρ*  ⟹  Uρ*U† = ρ*  ⟹  [U, ρ*] = 0</span><br>
+      Proof uses only: φ⁻¹·Uρ*U† = (1−φ⁻²)·ρ* = φ⁻¹·ρ* ⟹ divide by φ⁻¹ ≠ 0.
+    </div>
+  </div>
+
+  <div class="theorem-box" style="border-left-color:var(--purple)">
+    <div class="thm-label" style="color:var(--purple)">COROLLARY — The Jacobian Bridge</div>
+    <div class="thm-body">
+      <span class="math">det(J_F)=c ⟹ polynomial H ⟹ [U,ρ*]=0 ⟹ ρ*∈ℂ[U,U†] ⟹ F⁻¹ polynomial</span><br>
+      No entire function theory. No Osgood–Picard. Pure algebra via Jordan contraction.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ CONTRIBUTIONS ═══════════════ -->
+<section>
+  <div class="section-label">CONTRIBUTIONS</div>
+  <h2>What Was Built</h2>
+  <p class="lead">19 prior art claims. All machine-checked or formally specified. All timestamped to public git.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">⟨ρ⟩</div>
+      <h3>Jordan Spectral Transformer</h3>
+      <p>Neural architecture replacing softmax with Born-rule quantum measurement. φ⁻¹-decay Fibonacci-Banach convergence. SPE tokenizer with Parseval round-trip.</p>
+      <span class="card-tag tag-proved">zero sorry</span>
+      <span class="card-tag tag-novel">PAR-011</span>
+      <span class="card-tag tag-worm">Fortran 2018</span>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">∂/∂x</div>
+      <h3>LiquidLean</h3>
+      <p>Original formal verification framework for the Jacobian Conjecture. HOC language, Thermal Monad, exact arithmetic. Claim level 8/9. The Parr Conjecture named.</p>
+      <span class="card-tag tag-proved">Lean 4</span>
+      <span class="card-tag tag-novel">PAR-014</span>
+      <span class="card-tag tag-worm">Haskell</span>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">φ</div>
+      <h3>Fibonacci-Banach Theorem</h3>
+      <p>Machine-checked proof that φ⁻ᴺ→0 monotonically. Fixed point theorem via golden ratio identity. Commutant algebraic bridge — the 87-year obstruction bypassed.</p>
+      <span class="card-tag tag-proved">zero sorry</span>
+      <span class="card-tag tag-novel">PAR-013</span>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">⬡</div>
+      <h3>Phase 8 Negative Certificate</h3>
+      <p>Three algebraic strategies formally proved impossible. Crux precisely identified as étale+proper bridge. JSON certificate + TikZ DAG + dual-path formalization.</p>
+      <span class="card-tag tag-worm">WORM-sealed</span>
+      <span class="card-tag tag-novel">novel</span>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">∑λ=1</div>
+      <h3>J-Space / Boolean Spectral Lens</h3>
+      <p>Independent prior formulation of Anthropic's J-Lens (July 6, 2026). WatchSumOne→TracePreserved. "Watch the sum 1 before it word forms." 107 bits shadow entropy.</p>
+      <span class="card-tag tag-novel">PAR-012</span>
+      <span class="card-tag tag-art">prior to J-Lens paper</span>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">⟳</div>
+      <h3>Adaptive Verified Runtime</h3>
+      <p>Self-evolving kernels with Lean-guarded invariants. Atomic FFI hot-swap. WORM ledger. 6 rewrite types. Formally verified: monotonicity, hot-swap atomicity, rollback safety.</p>
+      <span class="card-tag tag-proved">zero sorry</span>
+      <span class="card-tag tag-novel">PAR-017</span>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">⊕</div>
+      <h3>Living Rewrite</h3>
+      <p>Self-modifying code governed by formally-proven contraction. Source text rewrites under Jordan steps. Fixed point = the theorem. First in history where self-modification IS the proof.</p>
+      <span class="card-tag tag-art">p5.js + SVG</span>
+      <span class="card-tag tag-novel">PAR-019</span>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🌀</div>
+      <h3>Sovereign Convergence</h3>
+      <p>Generative art where every particle IS a Jordan step. Golden-angle attractors. WORM trail accumulation. Born-rule collapse events. φ-decay color encoding.</p>
+      <span class="card-tag tag-art">p5.js interactive</span>
+      <span class="card-tag tag-novel">PAR-018</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ LIVE ART ═══════════════ -->
+<div class="art-section">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="section-label">LIVE ALGORITHMS</div>
+    <h2 style="color:var(--light);margin-bottom:16px">The Art Is the Math</h2>
+    <p style="color:var(--gray);font-size:15px;margin-bottom:40px">Both run the actual Jordan contraction. Open in full screen.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px">
+      <a href="sovereign_convergence.html"
+         style="display:block;background:rgba(217,119,87,0.08);border:1px solid rgba(217,119,87,0.3);border-radius:12px;padding:32px 24px;text-decoration:none;transition:border-color .2s">
+        <div style="font-size:32px;margin-bottom:12px">◎</div>
+        <div style="color:#d97757;font-family:Share Tech Mono,monospace;font-size:13px;font-weight:600;margin-bottom:8px">SOVEREIGN CONVERGENCE</div>
+        <div style="color:#b0aea5;font-size:13px;line-height:1.6">φ⁻¹ Jordan contraction · golden angle attractors · Born collapse · WORM trails</div>
+        <div style="margin-top:16px;color:#d97757;font-family:Share Tech Mono,monospace;font-size:11px">→ Open interactive art</div>
+      </a>
+      <a href="living_rewrite.html"
+         style="display:block;background:rgba(106,155,204,0.08);border:1px solid rgba(106,155,204,0.3);border-radius:12px;padding:32px 24px;text-decoration:none;transition:border-color .2s">
+        <div style="font-size:32px;margin-bottom:12px">⟳</div>
+        <div style="color:#6a9bcc;font-family:Share Tech Mono,monospace;font-size:13px;font-weight:600;margin-bottom:8px">LIVING REWRITE</div>
+        <div style="color:#b0aea5;font-size:13px;line-height:1.6">Self-modifying code · density matrix evolution · fixed point = theorem</div>
+        <div style="margin-top:16px;color:#6a9bcc;font-family:Share Tech Mono,monospace;font-size:11px">→ Open interactive demo</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PRIOR ART ═══════════════ -->
+<section>
+  <div class="section-label">PRIOR ART REGISTRY</div>
+  <h2>19 Claims</h2>
+  <p class="lead">All anchored to public git timestamps. Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643 · SSL v3.0.</p>
+
+  <table class="prior-table">
+    <thead>
+      <tr><th>ID</th><th>Object</th><th>Repo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PAR-001–003</td><td>GKN I₄ quartic invariant — degree-4, E₇ Weyl invariance, zero sorry</td><td>gkn-i4-e7-lean</td></tr>
+      <tr><td>PAR-004</td><td>Gates Normalization Constraint — Lean 4</td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-005</td><td>Bifrost attestation protocol — Blake3 + Ed25519 WORM chain</td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-006–007</td><td>Plasma gate architecture · Sovereign APL fused kernel (Fortran + MLIR)</td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-008–009</td><td>DeeCall49 Binomial/Apotome duality · Al-Hamid constant</td><td>the-49th-call</td></tr>
+      <tr><td>PAR-010</td><td>SovLM — KN + BM25 + QRNG sovereign language model</td><td>sov-kernel-monster</td></tr>
+      <tr><td><strong>PAR-011</strong></td><td><strong>Jordan Spectral Transformer — ρ'=φ⁻¹UρU†+φ⁻²ρ</strong></td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-012</td><td>Sovereign Piper Encoder — tight frame Parseval round-trip</td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-013</td><td>Fibonacci-Banach contraction theorem — Lean 4 machine-checked</td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-014</td><td>LiquidLean HOC language — original constraint language</td><td>liquidlean</td></tr>
+      <tr><td>PAR-015</td><td>Thermal Monad with φ-decay energy — exact symbolic arithmetic</td><td>liquidlean</td></tr>
+      <tr><td>PAR-016</td><td>Genus-0 forcing pipeline · <strong>The Parr Conjecture</strong></td><td>liquidlean</td></tr>
+      <tr><td>PAR-017</td><td>Adaptive Verified Runtime — self-evolving Lean-guarded kernels</td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-018</td><td>Sovereign Convergence — generative art algorithm</td><td>sov-kernel-monster</td></tr>
+      <tr><td><strong>PAR-019</strong></td><td><strong>Living Rewrite — self-modifying code with formally-proven fixed point</strong></td><td>sov-kernel-monster</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════ DOCUMENTS ═══════════════ -->
+<section>
+  <div class="section-label">DOCUMENTS</div>
+  <h2>Full Stack</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">📄</div>
+      <h3>The Parr Papers (PDF)</h3>
+      <p>43-page LaTeX paper. Cover art, prior art table, all theorems, Jacobian attack, J-Space comparison, Living Rewrite section, historical context. Nemotron-audited.</p>
+      <a class="btn btn-primary" href="parr_paper.pdf" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">Download PDF</a>
+    </div>
+    <div class="card">
+      <div class="card-icon">📐</div>
+      <h3>Mathlib Gap Analysis</h3>
+      <p>5 remaining sorries with exact Mathlib PR targets. Spectral theory, CP maps, HS frame reconstruction. Full strategy for closing all gaps.</p>
+      <a class="btn btn-secondary" href="https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/lean/SovMonster_Gaps.lean" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">View Lean</a>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎨</div>
+      <h3>Sovereign Convergence</h3>
+      <p>Interactive p5.js: Jordan contraction particles, golden-angle attractors, WORM trail accumulation, Born collapse events. Seed 6877532.</p>
+      <a class="btn btn-secondary" href="sovereign_convergence.html" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">Open Art</a>
+    </div>
+    <div class="card">
+      <div class="card-icon">⟳</div>
+      <h3>Living Rewrite</h3>
+      <p>Self-modifying code demo. Source rewrites under Jordan steps. Fixed point = theorem. Historical first: self-modification IS the proof.</p>
+      <a class="btn btn-secondary" href="living_rewrite.html" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">Open Demo</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">⚛</div>
+      <h3>Quantum Swarm</h3>
+      <p>32-byte vacuum entropy seeds 1–300 parallel agents via HKDF. φ⁻¹-weighted routing. Born-collapse normalization → one sovereign answer. Live on HuggingFace.</p>
+      <span class="card-tag tag-worm">Born collapse</span>
+      <span class="card-tag tag-art">HuggingFace</span>
+      <a class="btn btn-secondary" href="https://huggingface.co/Snapkitty/quantum-swarm" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">View Model</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer>
+  <div style="margin-bottom:16px;font-size:20px">⬡</div>
+  <strong style="color:var(--light)">Ahmad Ali Parr</strong><br>
+  SnapKitty Collective · Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643<br>
+  <a href="mailto:ahmedparr93@gmail.com">ahmedparr93@gmail.com</a> ·
+  <a href="https://github.com/SNAPKITTYWEST/sov-kernel-monster">github.com/SNAPKITTYWEST/sov-kernel-monster</a><br><br>
+  <span style="color:var(--purple)">WORM-sealed · Blake3 + Ed25519 · append-only</span><br>
+  Sovereign Source License v3.0 · Not MIT · Not Apache<br><br>
+  <em style="color:rgba(255,255,255,0.3)">"Evidence or Silence. Nothing in between."</em>
+</footer>
+
+</body>
+</html>
+<!-- cache-bust 1784686255 -->

@@ -1,0 +1,11 @@
+[package]
+name = "qataaum-routing"
+version = "0.1.0"
+edition = "2021"
+authors = ["QATAAUM Project"]
+license = "Apache-2.0"
+description = "SABRE-inspired routing engine for QATAAUM quantum compiler"
+
+[dependencies]
+
+[dev-dependencies]
