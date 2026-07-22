@@ -252,6 +252,53 @@ contains
       end if
     end block
 
+    ! ═══════════════════════════════════════════════════════════════
+    ! SNDL KEY FRESHNESS GATE: Prevent replay attacks (Store Now defense)
+    ! Key bound to WORM chain → harvested data useless without future WORM state
+    ! Any interception alters [U,ρ*]=0 → key corruption → WORM mismatch
+    ! ═══════════════════════════════════════════════════════════════
+    block
+      integer(i8) :: freshness_hash(32), latest_worm_hash(32)
+      logical :: is_fresh
+      integer(c_int64_t) :: fh_idx
+
+      interface
+        subroutine sndl_freshness_hash(rho_ptr, n_dim, out_ptr) &
+            bind(C, name="sndl_freshness_hash")
+          import :: c_ptr, c_int64_t
+          type(c_ptr), value :: rho_ptr
+          integer(c_int64_t), value :: n_dim
+          type(c_ptr), value :: out_ptr
+        end subroutine
+      end interface
+
+      ! Generate key freshness hash from current density matrix (post-JST)
+      call sndl_freshness_hash(c_loc(out_rho), n, c_loc(freshness_hash))
+
+      ! Fetch latest SNDL key entry from WORM chain
+      call worm_get_latest_hash("SNDL_KEY_FRESHNESS", latest_worm_hash)
+
+      ! Check for replay: freshness hash must differ from last attested
+      is_fresh = .false.
+      do fh_idx = 1, 32
+        if (freshness_hash(fh_idx) /= latest_worm_hash(fh_idx)) then
+          is_fresh = .true.
+          exit
+        end if
+      end do
+
+      ! WORM-attest freshness check
+      call sov_bifrost_sign_bytes("SNDL_KEY_FRESHNESS", freshness_hash, 32, sk_ptr)
+
+      ! Fail-closed gate: halt if key is stale (replay attempt)
+      if (.not. is_fresh) then
+        call sov_bifrost_sign_bytes("SNDL_REPLAY_ATTACK", freshness_hash, 32, sk_ptr)
+        out_rho = rho
+        deallocate(U, evolved)
+        return
+      end if
+    end block
+
     call sov_blake3_hash_matrix(out_rho, int(n), hash_ptr)
     call sov_bifrost_sign(hash_ptr, int(32, c_size_t), sk_ptr, sig_ptr)
 
