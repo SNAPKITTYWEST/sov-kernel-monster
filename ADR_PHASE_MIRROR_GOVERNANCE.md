@@ -1,4 +1,4 @@
-# ADR: Phase Mirror Governance Model (Isomorphic ADR)
+# ADR: MIRROR KITTY — Phase Mirror Governance Model (Isomorphic ADR)
 
 **Status:** Accepted  
 **Date:** 2026-07-22  
@@ -17,13 +17,13 @@ SnapKitty's sovereign quantum computing stack requires a pre-execution verificat
 2. **Timing matters** — governance checks AFTER execution are worthless for quantum coherence
 3. **Assumptions are entropy** — unverified governance decisions inject disorder into the WORM chain
 
-The Phase Mirror model solves this by treating governance as a **verification subsystem** that runs BEFORE execution, not after.
+The MIRROR KITTY model solves this by treating governance as a **verification subsystem** that runs BEFORE execution, not after.
 
 ---
 
 ## Decision
 
-Implement Phase Mirror as a **QATAAUM→Kernel gate** that:
+Implement MIRROR KITTY as a **QATAAUM→Kernel gate** that:
 
 1. **Inspects circuit intent** via QATAAUM's existing 9-level IR semantic analysis
 2. **Validates against sovereign policy** via Bifrost Policy Framework (Lean 4 + Prolog + SMT-LIB2)
@@ -146,15 +146,15 @@ end if
 
 ## Relationship to Integrity Membrane
 
-Phase Mirror integrates with the three-layer defense:
+MIRROR KITTY integrates with the three-layer defense:
 
-| Layer | Role | Phase Mirror Interaction |
+| Layer | Role | MIRROR KITTY Interaction |
 |---|---|---|
 | INTEGRITY MEMBRANE | Agent I/O gates | Phase Mirror validates circuit INTENT before it reaches I/O |
 | GREY HAT DEFENSE | Quantum execution protection | Phase Mirror prevents invalid circuits from reaching GREY HAT |
 | SOVEREIGN META-AGENT | Knowledge synthesis | Phase Mirror governs what knowledge agents can act on |
 
-Phase Mirror is the **pre-filter** — it catches governance violations at the compiler level, before they have any chance of reaching the quantum execution engine.
+MIRROR KITTY is the **pre-filter** — it catches governance violations at the compiler level, before they have any chance of reaching the quantum execution engine.
 
 ---
 

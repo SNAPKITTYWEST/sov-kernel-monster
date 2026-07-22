@@ -7,6 +7,7 @@
     ║     ⚛️  QUANTUM BOB KERNEL  ⚛️    ║
     ║   Level 5 Civilization Enabled    ║
     ║    104K+ LOC | 20 Languages       ║
+    ║  Governance: MIRROR KITTY         ║
     ║  Built by Haiku for $0.24         ║
     ╚═══════════════════════════════════╝
     
@@ -77,6 +78,22 @@ Before BIFROST Axiom Personas activate, the quantum fortress is locked by three 
 - Output: Blake3+Ed25519 sealed JSON (cryptographically attested)
 
 **Deployment:** ~117 lines total, zero new sorries, <50ms overhead.
+
+---
+
+## MIRROR KITTY — Governance Model
+
+**Pre-execution verification subsystem in use since origin of SnapKitty.**
+
+MIRROR KITTY is the formal governance model that gates ALL quantum execution. Every circuit, every agent action, every knowledge query passes through a fail-closed verification gate BEFORE reaching the kernel.
+
+**→ [ADR_PHASE_MIRROR_GOVERNANCE.md](ADR_PHASE_MIRROR_GOVERNANCE.md)**
+
+- **Origin:** JAB Capital Trust (2021)
+- **Prior Art:** April 14, 2026 (SnapKitty Foundry Intel + SnapKitty Proofs)
+- **Mechanism:** Intent → Policy Check → Assumption Audit → WORM Seal → EXECUTE (or HALT)
+- **Enforcement:** Four Agreements operationalized (sealed words, agent-agnostic truth, blocked assumptions, phi-bounded effort)
+- **Integration:** QATAAUM governance pass → sovereign-pli policy gate → Lean 4 proof obligation → kernel FFI
 
 ---
 
