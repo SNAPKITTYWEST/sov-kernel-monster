@@ -57,10 +57,6 @@ pub struct CfgBuilder {
     qregs: HashMap<String, usize>,
     /// Map from classical register names to their sizes
     cregs: HashMap<String, usize>,
-    /// Base BitId offset for each classical register (for condition bit resolution)
-    creg_bit_base: HashMap<String, usize>,
-    /// Next available classical bit index
-    next_bit_id: usize,
 }
 
 impl CfgBuilder {
@@ -75,8 +71,6 @@ impl CfgBuilder {
             next_block_id: 1,
             qregs: HashMap::new(),
             cregs: HashMap::new(),
-            creg_bit_base: HashMap::new(),
-            next_bit_id: 0,
         }
     }
 
@@ -88,12 +82,6 @@ impl CfgBuilder {
         }
 
         for creg in &program.cregs {
-            self.creg_bit_base.insert(creg.name.clone(), self.next_bit_id);
-            for offset in 0..creg.size {
-                let bit = crate::types::BitId(self.next_bit_id + offset);
-                self.cfg.bits.insert(bit);
-            }
-            self.next_bit_id += creg.size;
             self.cregs.insert(creg.name.clone(), creg.size);
         }
 
@@ -189,14 +177,10 @@ impl CfgBuilder {
             return Err(CfgBuildError::UndefinedRegister(register.to_string()));
         }
 
-        // Resolve condition bit: use bit 0 of the named classical register.
-        // The creg_bit_base map tracks the absolute BitId offset for each creg,
-        // allocated during program initialisation. Comparing against `value`
-        // is a multi-bit operation; for single-bit conditionals (the common case
-        // in OpenQASM 2.0) bit 0 of the register carries the measurement result.
-        let base = self.creg_bit_base.get(register).copied()
-            .unwrap_or(0);
-        let condition_bit = crate::types::BitId(base);
+        // Create a placeholder condition bit (would be computed from register comparison)
+        // For now, we'll use BitId(0) as a placeholder
+        let condition_bit = crate::types::BitId(0);
+        self.cfg.bits.insert(condition_bit);
 
         // Create blocks for then branch and continuation
         let then_block = self.create_block();

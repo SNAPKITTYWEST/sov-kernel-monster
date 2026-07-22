@@ -1,8 +1,8 @@
 [package]
-name = "sov-kernel-wasm"
+name = "quantum-wasm"
 version = "1.0.0"
 edition = "2021"
-description = "Sovereign Kernel WASM bridge — Rust WASM bridge porting bob_*.f90 math"
+description = "BOB Quantum Civilization Engine — Rust WASM bridge porting bob_*.f90 math"
 
 [lib]
 crate-type = ["cdylib"]
