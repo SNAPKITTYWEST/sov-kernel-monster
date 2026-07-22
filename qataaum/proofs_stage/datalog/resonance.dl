@@ -1,0 +1,133 @@
+// resonance.dl  — Soufflé Datalog
+// Monotone restatement of:
+//   DEVFLOW-FINANCE/packages/sovereign-router/resonance.pl
+//   resonance.emoji FSM (⛳ → 📦 → 🔐 → 🪄 → ⛳)
+//
+// Why Datalog here:
+//   resonance.pl contains only POSITIVE facts: envelope/2, soul/2, phase topology.
+//   The valid_resonance rule is: coherent ∧ ¬collapse — no negation on DERIVED facts
+//   (collapse is a base fact), so this is stratifiable at stratum 0.
+//   Datalog fixed-point finds all valid resonance paths in one pass.
+//
+// EmojiScript FSM encoded as phase_transition edges.
+// Phase topology: alpha→phi→sigma→lambda→delta→psi→omega, reversible.
+// Transitive reachability: phase_reaches(From, To) for FSM connectivity proof.
+//
+// Ahmad Ali Parr · SnapKitty Collective · 2026
+
+// ── EDB declarations ──────────────────────────────────────────────────────────
+
+// Envelope properties — asserted by the router at envelope construction time
+.decl envelope(prop: symbol, value: symbol)
+.input envelope
+
+// Soul assignments — agent identity
+.decl soul(agent: symbol, essence: symbol)
+.input soul
+
+// Coherence: all required envelope fields are present
+.decl coherent()
+.input coherent
+
+// Collapse: envelope has entered a collapsed state (base fact, not derived)
+.decl collapse()
+.input collapse
+
+// Phase declarations — EmojiScript FSM
+.decl phase(name: symbol)
+.input phase
+
+// Directed edges in phase topology (includes reverse edges for reversibility)
+.decl phase_edge(from_phase: symbol, to_phase: symbol)
+.input phase_edge
+
+// ── IDB: phase topology ───────────────────────────────────────────────────────
+
+// Transitive reachability — proves FSM connectivity
+.decl phase_reaches(from_phase: symbol, to_phase: symbol)
+
+phase_reaches(A, B) :-
+    phase_edge(A, B).
+
+phase_reaches(A, C) :-
+    phase_reaches(A, B),
+    phase_edge(B, C).
+
+// Reflexive closure: every phase reaches itself (for self-loop invariants)
+.decl phase_reaches_self(p: symbol)
+phase_reaches_self(P) :- phase(P), phase_reaches(P, P).
+
+// ── IDB: envelope validity ────────────────────────────────────────────────────
+
+// The three required envelope fields from resonance.pl:
+//   envelope(trust, bifrost_worm)
+//   envelope(gate,  plasma)
+//   envelope(logic, prolog_deterministic)
+.decl has_trust_field()
+.decl has_gate_field()
+.decl has_logic_field()
+
+has_trust_field() :- envelope("trust", "bifrost_worm").
+has_gate_field()  :- envelope("gate",  "plasma").
+has_logic_field() :- envelope("logic", "prolog_deterministic").
+
+.decl envelope_complete()
+envelope_complete() :- has_trust_field(), has_gate_field(), has_logic_field().
+
+// ── IDB: soul validity ────────────────────────────────────────────────────────
+// Both core souls must be registered: nova (dream-in-abjad) and enki (logic-skeleton)
+
+.decl has_nova_soul()
+.decl has_enki_soul()
+.decl souls_registered()
+
+has_nova_soul() :- soul("nova", "dream-in-abjad").
+has_enki_soul() :- soul("enki", "logic-skeleton").
+
+souls_registered() :- has_nova_soul(), has_enki_soul().
+
+// ── IDB: valid_resonance ──────────────────────────────────────────────────────
+// Mirrors: valid_resonance :- coherent, \+ collapse.
+// Datalog: coherent() ∧ ¬collapse() — collapse is BASE EDB, so stratification holds.
+// Extended: also requires envelope_complete + souls_registered (structural pre-conditions).
+
+.decl valid_resonance()
+.output valid_resonance
+
+valid_resonance() :-
+    coherent(),
+    envelope_complete(),
+    souls_registered(),
+    !collapse().
+
+// ── IDB: EmojiScript FSM reachability ─────────────────────────────────────────
+// Prove that all states are reachable from the start state (alpha).
+// FSM cycle: alpha→phi→sigma→lambda→delta→psi→omega→alpha (reversible).
+
+.decl fsm_reachable_from_start(p: symbol)
+.output fsm_reachable_from_start
+
+fsm_reachable_from_start(P) :- phase_reaches("alpha", P).
+
+// ── IDB: FSM completeness check ───────────────────────────────────────────────
+// All 7 phases in the topology must be reachable — structural invariant.
+
+.decl unreachable_phase(p: symbol)
+.decl fsm_complete()
+.output fsm_complete
+
+unreachable_phase(P) :-
+    phase(P),
+    !fsm_reachable_from_start(P).
+
+fsm_complete() :- !unreachable_phase(_).
+
+// ── IDB: resonance gate ───────────────────────────────────────────────────────
+// Final go/no-go: resonance is valid AND the FSM is structurally complete.
+
+.decl resonance_gate_open()
+.output resonance_gate_open
+
+resonance_gate_open() :-
+    valid_resonance(),
+    fsm_complete().

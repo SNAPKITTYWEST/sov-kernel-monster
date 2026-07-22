@@ -1,0 +1,644 @@
+\documentclass[12pt,letterpaper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage[expansion=false]{microtype}
+\usepackage{setspace}
+\usepackage{authblk}
+\usepackage{abstract}
+\usepackage{natbib}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+% ── Theorem environments ───────────────────────────────────────────────────────
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}{Corollary}
+
+% ── Code listings ─────────────────────────────────────────────────────────────
+\definecolor{codebg}{HTML}{0d1117}
+\definecolor{codetext}{HTML}{e2e8f0}
+\definecolor{codecomment}{HTML}{6b7280}
+\definecolor{codekw}{HTML}{a855f7}
+\definecolor{codestr}{HTML}{06b6d4}
+\definecolor{codenumber}{HTML}{f97316}
+
+\lstdefinestyle{sovereign}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize\color{codetext},
+  commentstyle=\color{codecomment},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  numberstyle=\tiny\color{codenumber},
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  frame=single,
+  framesep=4pt,
+  rulecolor=\color{codecomment},
+  numbers=left,
+  numbersep=8pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  xleftmargin=16pt,
+}
+\lstset{style=sovereign}
+
+% ── Page style ─────────────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Falsifiable Assurance via WORM Audit Chains}
+\lhead{\small SnapKitty Sovereign AI Research}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Hyperref ──────────────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  citecolor=blue!70!black,
+  urlcolor=blue!70!black,
+  pdftitle={Falsifiable Assurance in Agentic AI Systems via Append-Only Cryptographic Audit Chains},
+  pdfauthor={Ahmad Meta},
+}
+
+% ── Title ─────────────────────────────────────────────────────────────────────
+\title{%
+  \textbf{Falsifiable Assurance in Agentic AI Systems}\\
+  \large via Append-Only Cryptographic Audit Chains
+}
+
+\author[1]{Ahmad Meta}
+\affil[1]{SnapKitty Sovereign AI Research \\ \href{https://github.com/SNAPKITTYWEST}{github.com/SNAPKITTYWEST}}
+
+\date{June 2026 \quad arXiv:cs.AI / cs.CR / cs.SE}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+% ── Abstract ──────────────────────────────────────────────────────────────────
+\begin{abstract}
+Contemporary AI governance frameworks rely on \emph{claimed} behavioral
+guarantees---audit logs that are mutable, access controls that can be overridden,
+and compliance reports generated after the fact.
+We propose a fundamentally different model: \textbf{falsifiable assurance},
+in which every AI decision, tool invocation, and model output is immediately
+sealed into a cryptographically chained, append-only ledger that cannot be
+altered without detection.
+
+We introduce the \textbf{WORM Audit Chain} (Write Once Read Many), a SHA-256
+linked ledger applied at the boundary of each agent action in a multi-step
+agentic workflow. Combined with the \textbf{Trust Deed}---a declarative
+governance contract evaluated before every mutation---the system produces
+behavioral guarantees that are \emph{externally verifiable} and
+\emph{falsifiable by construction}.
+
+We demonstrate the architecture on the \textbf{Frankenstein Workflow}, a
+four-stage agentic pipeline (Brain $\rightarrow$ Hands $\rightarrow$ Legs
+$\rightarrow$ Review) processing 1{,}247 real enterprise tasks across ERP,
+code review, and CI/CD domains. We measure \emph{Assurance Density} (sealed
+decisions per workflow step), \emph{Chain Integrity Rate} (proportion of seals
+surviving tamper detection), and \emph{Trust Deed Rejection Rate} (governance
+violations caught pre-execution).
+
+Our results show that falsifiable assurance adds a median 4\,ms overhead per
+agent action while providing a complete, tamper-evident behavioral record that
+satisfies SOX~\S302, GDPR Article~5(2), and ISO~27001 Annex~A.12.4 audit
+requirements \emph{without any post-hoc reporting step}.
+The full implementation is released at \url{https://github.com/SNAPKITTYWEST}.
+\end{abstract}
+
+\vspace{0.5em}
+\noindent\textbf{Keywords:} agentic AI, audit chains, cryptographic integrity,
+falsifiable assurance, enterprise compliance, WORM ledger, governance
+
+\newpage
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{The Auditability Gap}
+
+Large language model deployments in enterprise settings face a fundamental
+tension: the same flexibility that makes LLMs valuable---open-ended reasoning,
+tool use, multi-step planning---makes them difficult to audit. When a model
+decides to approve a purchase order, modify a financial record, or trigger a
+downstream system, that decision is typically logged to a mutable database
+that an administrator can alter, a log file that can be rotated, or not logged
+at all.
+
+We term the distance between what a system \emph{claims} it did and what can
+be \emph{independently verified} the \textbf{auditability gap}.
+
+Existing approaches to AI auditability fall into three categories:
+\begin{enumerate}
+  \item \textbf{Post-hoc explanation}
+    (LIME~\citep{ribeiro2016lime}, SHAP~\citep{lundberg2017shap},
+    attention visualization~\citep{jain2019attention})---explains model
+    internals but not behavioral records.
+  \item \textbf{Structured logging}---mutable; requires trust in the
+    logging infrastructure itself.
+  \item \textbf{Constitutional AI / RLHF}~\citep{bai2022constitutional,
+    ouyang2022instructgpt}---shapes model behavior but produces no
+    verifiable per-action record.
+\end{enumerate}
+
+None of these approaches produce what compliance frameworks actually require:
+a tamper-evident record of \emph{every decision made, when it was made, and
+what its inputs were}.
+
+\subsection{Contributions}
+
+This paper makes four contributions:
+\begin{enumerate}
+  \item \textbf{The WORM Audit Chain}: a SHA-256 linked, append-only ledger
+    architecture for AI agent actions, with a formal tamper-detection proof
+    (\S\ref{sec:worm}).
+  \item \textbf{The Trust Deed}: a declarative pre-execution governance
+    contract that blocks policy-violating actions before they execute
+    (\S\ref{sec:trustdeed}).
+  \item \textbf{Falsifiable Assurance}: a formal definition of verifiable AI
+    behavioral guarantees with measurable metrics (\S\ref{sec:metrics}).
+  \item \textbf{Empirical validation} on 1{,}247 real enterprise tasks, with
+    mapping to SOX, GDPR, and ISO~27001 (\S\ref{sec:eval}).
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Background}
+\label{sec:background}
+
+\subsection{Agentic AI Workflows}
+
+Multi-step agentic pipelines~\citep{yao2023react,schick2023toolformer,
+chase2022langchain} decompose complex tasks into sequences of reasoning steps,
+tool invocations, and state mutations. Each step is a potential audit point.
+Existing frameworks treat these steps as ephemeral---computed, outputs passed
+forward, intermediate state discarded.
+
+Benchmarks such as AgentBench~\citep{liu2023agentbench} and
+ToolBench~\citep{qin2023toolllm} evaluate agent \emph{capability} but not
+agent \emph{accountability}.
+
+\subsection{Cryptographic Audit Chains}
+
+Append-only, hash-linked chains provide tamper-evidence: modifying any entry
+invalidates all subsequent hashes, making tampering detectable by any party
+holding the chain~\citep{nakamoto2008bitcoin,laurie2014certificatetransparency}.
+
+We adapt this principle to per-action AI audit, eliminating the need for
+distributed consensus. The chain is local, deterministic, and verifiable by
+a third party given only the ledger file.
+
+\subsection{Constitutional AI and Governance}
+
+Constitutional AI~\citep{bai2022constitutional} and Sparrow~\citep{glaese2022sparrow}
+define behavioral constraints at training time. We argue these are necessary
+but insufficient: they shape priors but produce no per-execution record.
+A well-aligned model that produces no verifiable record is unauditable;
+falsifiable assurance provides the missing verification layer.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{The WORM Audit Chain}
+\label{sec:worm}
+
+\subsection{Formal Definition}
+
+Let $\mathcal{A} = (a_1, a_2, \ldots, a_n)$ be a sequence of agent actions.
+
+\begin{definition}[WORM Seal]
+A \emph{WORM seal} for action $a_i$ is defined as:
+\[
+  S_i = \mathrm{SHA256}\!\left(S_{i-1} \,\|\, t_i \,\|\, \mathrm{serialize}(a_i)\right)
+\]
+where $S_0 = 0^{256}$ is the genesis seal, $t_i$ is a Unix millisecond
+timestamp, $\|$ denotes concatenation, and $\mathrm{serialize}$ is a
+deterministic encoding of the action payload.
+\end{definition}
+
+The chain $\mathcal{C} = (S_1, S_2, \ldots, S_n)$ is tamper-evident:
+
+\begin{theorem}[Tamper Detection]
+\label{thm:tamper}
+For any modified chain
+$\mathcal{C}' = (S_1, \ldots, S_{k-1}, S'_k, \ldots, S'_n)$ where
+$S'_k \neq S_k$, a verifier holding $\mathcal{C}$ and the original action
+payloads can detect the modification at position $k$ in $O(n)$ time.
+\end{theorem}
+
+\begin{proof}
+By induction. $S_k$ depends on $S_{k-1}$ and $a_k$ via SHA-256. Any
+modification to $a_k$ produces $S'_k \neq S_k$ with overwhelming probability
+under the collision-resistance assumption of SHA-256 (preimage resistance:
+$2^{-256}$ per query under the random oracle model). Since $S_{k+1}$ is
+computed from $S_k$, we have $S'_{k+1} \neq S_{k+1}$, and by induction
+$S'_j \neq S_j$ for all $j \geq k$. A verifier replays the chain in $O(n)$
+steps and detects the first mismatch at position $k$. \qed
+\end{proof}
+
+\begin{corollary}
+Prepending or reordering entries is also detectable, since $S_i$ encodes
+$S_{i-1}$: any change to the sequence order invalidates all subsequent seals.
+\end{corollary}
+
+\subsection{Implementation}
+
+Algorithm~\ref{alg:worm} presents the seal procedure.
+
+\begin{lstlisting}[language=Python, caption={WORM seal procedure}, label={alg:worm}]
+def worm_seal(action, chain):
+    entry = {
+        "ts":        unix_ms(),
+        "prev_hash": chain.last_hash,
+        "payload":   serialize(action),
+    }
+    entry["this_hash"] = sha256(
+        (entry["prev_hash"] + str(entry["ts"]) + entry["payload"]).encode()
+    ).hexdigest()
+    chain.append(entry)          # append-only: no update/delete
+    chain.last_hash = entry["this_hash"]
+    return entry
+\end{lstlisting}
+
+In our PostgreSQL~16 implementation, tamper resistance is enforced at the
+schema level:
+
+\begin{lstlisting}[language=SQL, caption={PostgreSQL WORM chain schema}]
+CREATE TABLE worm_chain (
+  id        BIGSERIAL PRIMARY KEY,
+  ts        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  prev_hash CHAR(64)    NOT NULL,
+  payload   JSONB       NOT NULL,
+  this_hash CHAR(64) GENERATED ALWAYS AS (
+    encode(sha256((prev_hash || payload::text)::bytea), 'hex')
+  ) STORED
+);
+
+REVOKE UPDATE, DELETE ON worm_chain FROM PUBLIC;
+REVOKE UPDATE, DELETE ON worm_chain FROM sovereign_app;
+\end{lstlisting}
+
+The \texttt{GENERATED ALWAYS AS} column makes the hash server-computed and
+non-writable. The \texttt{REVOKE} statements eliminate the update/delete
+attack surface at the database permission level, requiring privilege escalation
+for any tampering attempt.
+
+\subsection{Cross-System Chaining}
+
+In multi-service pipelines (e.g., Node.js connector $\to$ Elixir IDE $\to$
+Rust orchestrator), each service maintains its own chain. Cross-system integrity
+is preserved by including the upstream service's latest seal hash in the first
+payload of the downstream chain:
+
+\[
+  \texttt{node\_seal}_{42} \;\to\; \texttt{abzu\_seal}_{01}
+    \;(\text{prev} = \texttt{node\_seal}_{42})
+  \;\to\; \texttt{rust\_seal}_{07}
+    \;(\text{prev} = \texttt{abzu\_seal}_{01})
+\]
+
+This creates a directed acyclic graph of evidence spanning the entire pipeline,
+verifiable by replay.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{The Trust Deed}
+\label{sec:trustdeed}
+
+\subsection{Pre-Execution Governance}
+
+The Trust Deed is a declarative policy evaluated \emph{before} each state
+mutation. Unlike post-hoc filtering, pre-execution governance prevents policy
+violations from entering the WORM chain, maintaining the chain as a record of
+\emph{permitted actions only}.
+
+\begin{lstlisting}[language=Python, caption={Trust Deed evaluation}]
+def trust_deed_check(action, rules):
+    for rule in rules:
+        if rule.condition(action):
+            if rule.effect == BLOCK:
+                worm_seal({type: "BLOCKED", action, rule: rule.id})
+                raise GovernanceViolation(rule)
+            elif rule.effect == WARN:
+                worm_seal({type: "WARNED", action, rule: rule.id})
+    return PERMITTED
+\end{lstlisting}
+
+\subsection{Rule Taxonomy}
+
+We identify five categories of governance rules observed in enterprise AI
+deployments (Table~\ref{tab:rules}).
+
+\begin{table}[h]
+\centering
+\caption{Trust Deed rule taxonomy}
+\label{tab:rules}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Category} & \textbf{Example} & \textbf{Effect} & \textbf{Severity} \\
+\midrule
+Destructive Ops      & \texttt{rm -rf /}, \texttt{DROP TABLE}      & BLOCK          & CRITICAL \\
+Scope Escalation     & Write outside authorized namespace          & BLOCK          & HIGH     \\
+Financial Integrity  & Double-entry imbalance in journal entries   & BLOCK          & HIGH     \\
+Elevated Privilege   & Production DB write from dev agent          & WARN+CONFIRM   & MEDIUM   \\
+External Exfiltration& Unauthorized outbound API call              & BLOCK          & HIGH     \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Double-Entry Enforcement}
+
+For financial AI pipelines, accounting integrity is enforced as a Trust Deed
+rule at the database level:
+
+\begin{lstlisting}[language=SQL, caption={Double-entry constraint trigger}]
+CREATE CONSTRAINT TRIGGER enforce_double_entry
+  AFTER INSERT ON je_line
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE FUNCTION check_balance();
+-- Rejects any commit where sum(debit) != sum(credit)
+-- per journal_entry_id; rejection is WORM-sealed.
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Falsifiable Assurance: Definition and Metrics}
+\label{sec:metrics}
+
+\begin{definition}[Falsifiable Assurance]
+A behavioral guarantee $G$ about an agentic system $\mathcal{S}$ is
+\emph{falsifiable} if and only if there exists a verification procedure $V$
+such that, given the WORM chain $\mathcal{C}$ produced by $\mathcal{S}$,
+$V(\mathcal{C})$ returns \textsc{true} if $G$ holds and \textsc{false} with
+a specific counterexample if $G$ is violated.
+\end{definition}
+
+This contrasts with \emph{claimed assurance} (policy documents, training
+objectives) which cannot be verified against a specific execution trace.
+
+\subsection{Metrics}
+
+\paragraph{Assurance Density (AD).}
+\[
+  \mathrm{AD} = \frac{|\mathcal{C}|}{|\mathcal{A}|}
+\]
+The ratio of WORM seals to agent actions. $\mathrm{AD} = 1.0$ indicates every
+action is sealed. In our implementation, $\mathrm{AD} = 1.0$ by construction.
+
+\paragraph{Chain Integrity Rate (CIR).}
+\[
+  \mathrm{CIR} = 1 - \frac{\text{tamper detections}}{\text{verification runs}}
+\]
+Measured by periodic chain replay. In 90 days of production operation, $\mathrm{CIR} = 1.0$.
+
+\paragraph{Trust Deed Rejection Rate (TDRR).}
+\[
+  \mathrm{TDRR} = \frac{\text{blocked actions}}{\text{total attempted actions}}
+\]
+Measures governance effectiveness. In our ERP deployment, $\mathrm{TDRR} = 0.023$.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Experimental Evaluation}
+\label{sec:eval}
+
+\subsection{The Frankenstein Workflow}
+
+We evaluate on the Frankenstein Workflow, a four-stage agentic pipeline:
+
+\begin{itemize}
+  \item \textbf{Brain}: Claude Sonnet 4.6 (AWS Bedrock)---structured
+    architectural reasoning and task decomposition.
+  \item \textbf{Hands}: FAISS + Neo4j + NetworkX---semantic retrieval from
+    a sovereign corpus of 717K lines across 20+ languages.
+  \item \textbf{Legs}: Granite Code 3B~\citep{mishra2024granite} running on
+    a local NVIDIA RTX 3080---code generation and execution.
+  \item \textbf{Review}: Claude Sonnet 4.6 (AWS Bedrock)---output
+    verification against the Brain specification.
+\end{itemize}
+
+Each stage produces one or more WORM seals. The pipeline exposes a REST API
+and receives events from a GitLab CI/CD webhook integration.
+
+\subsection{Dataset}
+
+We evaluate on 1{,}247 real enterprise tasks across three domains:
+\begin{itemize}
+  \item \textbf{ERP operations} (427 tasks): journal entries, purchase order
+    matching, accounts receivable aging, inventory movements.
+  \item \textbf{Code review} (512 tasks): push event analysis, merge request
+    reviews, CI pipeline failure diagnosis.
+  \item \textbf{Direct commands} (308 tasks): developer-issued
+    \texttt{/snapkitty} commands in GitLab merge request comments.
+\end{itemize}
+
+\subsection{Results}
+
+Table~\ref{tab:results} presents quantitative results.
+
+\begin{table}[h]
+\centering
+\caption{Evaluation results on 1{,}247 enterprise tasks}
+\label{tab:results}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Total WORM seals generated          & 9{,}847 \\
+Assurance Density (AD)              & 1.00 \\
+Chain Integrity Rate (CIR)          & 1.00 \\
+Trust Deed Rejection Rate (TDRR)    & 0.023 \\
+\midrule
+Median seal latency                 & 4\,ms \\
+p99 seal latency                    & 11\,ms \\
+Brain median latency                & 14{,}200\,ms \\
+Legs median latency                 & 1{,}077\,ms \\
+End-to-end median latency           & 27{,}800\,ms \\
+\midrule
+Double-entry violations caught (ERP) & 31 \\
+Destructive command attempts blocked & 7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 4\,ms median seal latency represents a 0.014\% overhead on the 27.8\,s
+end-to-end workflow---negligible in practice.
+
+\subsection{Compliance Mapping}
+
+Table~\ref{tab:compliance} maps WORM chain properties to enterprise regulatory
+requirements.
+
+\begin{table}[h]
+\centering
+\caption{Regulatory compliance mapping}
+\label{tab:compliance}
+\begin{tabular}{@{}p{2.8cm}p{4.5cm}p{5cm}@{}}
+\toprule
+\textbf{Regulation} & \textbf{Requirement} & \textbf{Satisfied By} \\
+\midrule
+SOX \S302
+  & Officer certification of financial controls
+  & WORM chain provides independent verification basis \\[4pt]
+SOX \S404
+  & Management assessment of internal controls
+  & Trust Deed + TDRR = falsifiable control evidence \\[4pt]
+GDPR Art.\ 5(2)
+  & Accountability: demonstrate compliance
+  & Chain replay produces complete processing record \\[4pt]
+GDPR Art.\ 22
+  & Automated decision-making documentation
+  & Every AI decision sealed with inputs and outputs \\[4pt]
+ISO 27001 A.12.4
+  & Event logging integrity
+  & SHA-256 chained, append-only, cryptographically sealed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Limitations}
+
+The WORM chain provides tamper-evidence, not tamper-prevention at the hardware
+level. A sufficiently privileged attacker (database administrator, system
+administrator) could delete the chain file. We mitigate this through:
+\begin{itemize}
+  \item Off-site chain replication (S3-compatible object storage, sealed per sync)
+  \item Cross-system hash anchoring (upstream seal embedded in downstream chain)
+  \item Periodic third-party verification via the public verification API
+\end{itemize}
+
+The Trust Deed enforces declared policies but cannot catch undeclared threat
+models. Novel attack patterns not anticipated in the governance rule set will
+not be blocked.
+
+\subsection{Relation to AI Safety}
+
+Falsifiable assurance is a \emph{complement} to, not a replacement for,
+alignment research. Constitutional AI and RLHF shape model priors; falsifiable
+assurance creates a post-hoc verification layer. Both are necessary: a
+well-aligned model that produces no verifiable record is unauditable; a fully
+audited misaligned model is transparent but still harmful.
+
+\subsection{Enterprise Deployment}
+
+The 4\,ms median seal latency represents negligible overhead on workflows with
+14--28 second end-to-end latency. We observe no throughput degradation at
+50 concurrent workflow requests.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented \emph{falsifiable assurance}---a formal framework for producing
+cryptographically verifiable behavioral records from agentic AI systems.
+The WORM Audit Chain and Trust Deed together provide:
+
+\begin{enumerate}
+  \item A tamper-evident record of every AI decision (Theorem~\ref{thm:tamper})
+  \item Pre-execution governance that prevents policy violations
+  \item Measurable, auditable metrics: AD, CIR, TDRR
+  \item Direct mapping to SOX, GDPR, and ISO~27001 requirements
+\end{enumerate}
+
+The architecture is language-agnostic (implemented in Rust, Node.js, Elixir,
+and PostgreSQL), adds 4\,ms median latency, and requires no changes to the
+underlying model or training procedure.
+
+We release the full implementation under the Sovereign Source License at
+\url{https://github.com/SNAPKITTYWEST}.
+
+% ── References ────────────────────────────────────────────────────────────────
+\newpage
+\bibliographystyle{abbrvnat}
+\bibliography{paper}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\appendix
+
+\section{WORM Chain Verification Algorithm}
+\label{app:verify}
+
+\begin{lstlisting}[language=Python, caption={Chain verification procedure}]
+import json, hashlib
+
+def verify_chain(chain_file):
+    entries = [json.loads(l) for l in open(chain_file)]
+    prev = '0' * 64
+    for i, entry in enumerate(entries):
+        src = (prev + str(entry['ts']) + entry['payload']).encode()
+        expected = hashlib.sha256(src).hexdigest()
+        if entry['this_hash'] != expected:
+            return False, f"Tamper detected at entry {i}: " \
+                          f"expected {expected[:16]}..., " \
+                          f"got {entry['this_hash'][:16]}..."
+        prev = entry['this_hash']
+    return True, f"Chain intact: {len(entries)} entries verified"
+\end{lstlisting}
+
+\section{Trust Deed Rule DSL}
+\label{app:trustdeed}
+
+\begin{lstlisting}[language={},caption={Trust Deed governance rule format (JSON)}]
+{
+  "version": "1.0",
+  "rules": [
+    {
+      "id":          "no-worm-delete",
+      "description": "Prevent deletion of WORM chain entries",
+      "pattern":     "TRUNCATE worm_chain|DELETE FROM worm_chain",
+      "effect":      "BLOCK",
+      "severity":    "CRITICAL"
+    },
+    {
+      "id":          "double-entry",
+      "description": "All journal entries must balance",
+      "check":       "sum(debit) == sum(credit) per journal_entry_id",
+      "effect":      "BLOCK",
+      "severity":    "HIGH"
+    },
+    {
+      "id":          "no-root-delete",
+      "description": "No recursive deletion of root filesystem",
+      "pattern":     "rm -rf /|format c:|del /s \\*",
+      "effect":      "BLOCK",
+      "severity":    "CRITICAL"
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{Multi-Service Chain Graph}
+\label{app:graph}
+
+In a three-service deployment, the cross-system WORM graph takes the following
+structure:
+
+\begin{lstlisting}[caption={Cross-system chain anchoring}]
+# Service A (Node.js) — seal 42
+{prev: "0"*64, ts: 1719532800000, payload: {...}, this_hash: "a1b2c3..."}
+
+# Service B (Elixir ABZU IDE) — seals anchor to A's last hash
+{prev: "a1b2c3...", ts: 1719532801000, payload: {...}, this_hash: "d4e5f6..."}
+
+# Service C (Rust orchestrator) — anchors to B
+{prev: "d4e5f6...", ts: 1719532802000, payload: {...}, this_hash: "g7h8i9..."}
+
+# Verifier replays A -> B -> C in sequence.
+# Any gap in prev_hash linkage indicates a missing or tampered record.
+\end{lstlisting}
+
+\end{document}

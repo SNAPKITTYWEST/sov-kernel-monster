@@ -1,0 +1,30 @@
+{
+  "profiles": {
+    "dev_alice": {
+      "dev_id": "dev_alice",
+      "total_proofs": 6,
+      "avg_proof_length": 3.0,
+      "favorite_tactics": [
+        {
+          "tactic": "intro",
+          "frequency": 0.3333333333333333
+        },
+        {
+          "tactic": "simp",
+          "frequency": 0.3333333333333333
+        },
+        {
+          "tactic": "ring",
+          "frequency": 0.3333333333333333
+        }
+      ],
+      "common_mistakes": [],
+      "personalized_suggestions": [
+        "You prefer 'intro' \u2014 try it first"
+      ],
+      "success_rate": 1.0,
+      "timestamp": "2026-07-20T09:38:08.852865"
+    }
+  },
+  "timestamp": "2026-07-20T09:39:58.259530"
+}
