@@ -73,10 +73,14 @@ theorem jordan_fixed_point_commutes
 
   -- Step 1: From fixed-point equation, isolate φ⁻¹ · U ρ* Uᴴ
   have step1 : φ_inv • (U * ρ_star * star U) = (1 - φ_inv_sq) • ρ_star := by
-    have := h_fp
-    simp only [add_comm] at this
-    linarith [this]  -- φ⁻¹ · X + φ⁻² · ρ* = ρ* ⟹ φ⁻¹ · X = (1 - φ⁻²) · ρ*
-  sorry -- linarith works for ℝ; need smul version over ℂ — see step1' below
+    have key : φ_inv • (U * ρ_star * star U) + φ_inv_sq • ρ_star = ρ_star := h_fp
+    have sum1 : φ_inv + φ_inv_sq = 1 := phi_sum_one
+    rw [← sum1, add_smul] at key
+    have eq : φ_inv • (U * ρ_star * star U) + φ_inv_sq • ρ_star =
+              φ_inv • ρ_star + φ_inv_sq • ρ_star := key
+    have h1 : φ_inv • (U * ρ_star * star U) = φ_inv • ρ_star := by linarith
+    rw [show (1 : ℂ) - φ_inv_sq = φ_inv by linarith [sum1]]
+    exact h1
 
   -- Step 1 (matrix version over ℂ):
   have step1' : φ_inv • (U * ρ_star * star U) = φ_inv • ρ_star := by
