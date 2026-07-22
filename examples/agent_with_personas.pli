@@ -1,0 +1,133 @@
+/* AGENT_WITH_PERSONAS.PL/I - Live Examples */
+
+AgentWithPersonas: package options(reorder);
+
+  declare builtin (FLOAT, HEX, FIXED, BINARY);
+
+  declare external PersonaDecision
+    entry(pointer, fixed bin(31) returns(pointer));
+
+  declare external WormSeal
+    entry(pointer returns(pointer));
+
+  CartAgentDecision: procedure(query_ptr, query_len) returns(pointer);
+    declare query_ptr pointer;
+    declare query_len fixed bin(31);
+    declare context char(2048);
+    declare persona_decision pointer;
+    declare capability_check bit;
+
+    context = 'CARTO: capability_transfer_request';
+    persona_decision = PersonaDecision(addr(context), length(context));
+
+    if (persona_decision -> seal -> is_valid = '1'b &
+        persona_decision -> confidence > 0.8) then
+      capability_check = '1'b;
+    else
+      capability_check = '0'b;
+    end if;
+
+    return(persona_decision);
+  end CartAgentDecision;
+
+  ResonanceAgentDecision: procedure(matrix_ptr, matrix_dim) returns(pointer);
+    declare matrix_ptr pointer;
+    declare matrix_dim fixed bin(31);
+    declare context char(2048);
+    declare persona_decision pointer;
+    declare eigenvalue_search bit;
+
+    context = 'RESONANCE: spectral_decomposition_query';
+    persona_decision = PersonaDecision(addr(context), length(context));
+
+    if (persona_decision -> confidence > 0.75) then
+      eigenvalue_search = '1'b;
+    else
+      eigenvalue_search = '0'b;
+    end if;
+
+    return(persona_decision);
+  end ResonanceAgentDecision;
+
+  AxiomProofDecision: procedure(theorem_ptr, theorem_len) returns(pointer);
+    declare theorem_ptr pointer;
+    declare theorem_len fixed bin(31);
+    declare context char(2048);
+    declare persona_decision pointer;
+    declare fixed_point_verified bit;
+    declare worm_chain_ptr pointer;
+
+    context = 'AXIOM: fixed_point_completion_check';
+    persona_decision = PersonaDecision(addr(context), length(context));
+
+    if (persona_decision -> seal -> is_valid = '1'b) then
+      fixed_point_verified = '1'b;
+      worm_chain_ptr = WormSeal(persona_decision);
+    else
+      fixed_point_verified = '0'b;
+    end if;
+
+    return(persona_decision);
+  end AxiomProofDecision;
+
+  MultiAgentCompose: procedure(agents_ptr, num_agents) returns(pointer);
+    declare agents_ptr pointer;
+    declare num_agents fixed bin(31);
+    declare i fixed bin(31);
+    declare composed_context char(2048);
+    declare persona_decision pointer;
+
+    composed_context = 'HARNESS: multi_agent_orchestration';
+    persona_decision = PersonaDecision(addr(composed_context),
+                                       length(composed_context));
+
+    if (persona_decision -> confidence > 0.9) then
+      do i = 1 to num_agents;
+      end do;
+    end if;
+
+    return(persona_decision);
+  end MultiAgentCompose;
+
+  Main: procedure options(main);
+    declare carto_decision pointer;
+    declare resonance_decision pointer;
+    declare axiom_decision pointer;
+    declare composed_decision pointer;
+    declare query_text char(256);
+    declare matrix_ptr pointer;
+    declare theorem_ptr pointer;
+    declare agents_ptr pointer;
+
+    query_text = 'Test query';
+    allocate matrix_ptr;
+    allocate theorem_ptr;
+    allocate agents_ptr;
+
+    put skip list ('BIFROST Persona Integration Test');
+    put skip list ('=================================');
+
+    carto_decision = CartAgentDecision(addr(query_text), length(query_text));
+    if (carto_decision -> seal -> is_valid = '1'b) then
+      put skip list ('OK: CARTO decision sealed');
+    end if;
+
+    resonance_decision = ResonanceAgentDecision(matrix_ptr, 256);
+    if (resonance_decision -> seal -> is_valid = '1'b) then
+      put skip list ('OK: RESONANCE decision sealed');
+    end if;
+
+    axiom_decision = AxiomProofDecision(theorem_ptr, 1024);
+    if (axiom_decision -> seal -> is_valid = '1'b) then
+      put skip list ('OK: AXIOM decision sealed');
+    end if;
+
+    composed_decision = MultiAgentCompose(agents_ptr, 3);
+    if (composed_decision -> seal -> is_valid = '1'b) then
+      put skip list ('OK: Composition sealed');
+    end if;
+
+    put skip list ('Governance complete.');
+  end Main;
+
+end AgentWithPersonas;
