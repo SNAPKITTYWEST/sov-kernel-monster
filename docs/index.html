@@ -284,9 +284,8 @@ footer a{color:var(--orange);text-decoration:none}
         onmouseover="this.style.background='#5a8bb8'" onmouseout="this.style.background='var(--blue)'">
         ⟳ Living Rewrite
       </button>
-      <button onclick="closeArt()"
-        style="background:transparent;color:var(--gray);border:1px solid rgba(255,255,255,0.15);padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer"
-        id="close-art-btn" style="display:none">
+      <button id="close-art-btn"
+        style="display:none;background:transparent;color:var(--gray);border:1px solid rgba(255,255,255,0.15);padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer">
         ✕ Close
       </button>
     </div>
@@ -320,29 +319,6 @@ footer a{color:var(--orange);text-decoration:none}
     </div>
   </noscript>
 </div>
-
-<script>
-function loadArt(src, label) {
-  const panel = document.getElementById('art-panel');
-  const iframe = document.getElementById('art-iframe');
-  const lbl = document.getElementById('art-panel-label');
-  const link = document.getElementById('art-open-link');
-  const closeBtn = document.getElementById('close-art-btn');
-  iframe.src = src;
-  lbl.textContent = label;
-  link.href = src;
-  panel.style.display = 'block';
-  closeBtn.style.display = 'inline-block';
-  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-function closeArt() {
-  const panel = document.getElementById('art-panel');
-  const iframe = document.getElementById('art-iframe');
-  iframe.src = '';
-  panel.style.display = 'none';
-  document.getElementById('close-art-btn').style.display = 'none';
-}
-</script>
 
 <!-- ═══════════════ PRIOR ART ═══════════════ -->
 <section>
@@ -384,7 +360,7 @@ function closeArt() {
     <div class="card">
       <div class="card-icon">📄</div>
       <h3>The Parr Papers (PDF)</h3>
-      <p>38-page LaTeX paper. Cover art, prior art table, all theorems, Jacobian attack, J-Space comparison, Living Rewrite section, historical context.</p>
+      <p>43-page LaTeX paper. Cover art, prior art table, all theorems, Jacobian attack, J-Space comparison, Living Rewrite section, historical context. Nemotron-audited.</p>
       <a class="btn btn-primary" href="parr_paper.pdf" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">Download PDF</a>
     </div>
     <div class="card">
@@ -429,5 +405,32 @@ function closeArt() {
   <em style="color:rgba(255,255,255,0.3)">"Evidence or Silence. Nothing in between."</em>
 </footer>
 
+<script>
+function loadArt(src, label) {
+  var panel = document.getElementById('art-panel');
+  var iframe = document.getElementById('art-iframe');
+  var lbl = document.getElementById('art-panel-label');
+  var link = document.getElementById('art-open-link');
+  var closeBtn = document.getElementById('close-art-btn');
+  iframe.src = src;
+  lbl.textContent = label;
+  link.href = src;
+  panel.style.display = 'block';
+  closeBtn.style.display = 'inline-block';
+  setTimeout(function(){ panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+}
+function closeArt() {
+  var panel = document.getElementById('art-panel');
+  var iframe = document.getElementById('art-iframe');
+  iframe.src = '';
+  panel.style.display = 'none';
+  document.getElementById('close-art-btn').style.display = 'none';
+}
+// Wire close button after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('close-art-btn');
+  if (btn) btn.addEventListener('click', closeArt);
+});
+</script>
 </body>
 </html>
