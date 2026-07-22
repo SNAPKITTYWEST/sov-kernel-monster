@@ -21,8 +21,12 @@ Zero external dependencies. Zero libc. Formally verified.
 [![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf)
 [![Prior_Art](https://img.shields.io/badge/Prior_Art-PAR--001--019-d4af37?style=for-the-badge)](#prior-art)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-quantum--swarm-ff9d00?style=for-the-badge&logo=huggingface)](https://huggingface.co/Snapkitty/quantum-swarm)
+[![Enterprise](https://img.shields.io/badge/Enterprise-Bel_Esprit_Trust-141413?style=for-the-badge&logo=github)](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS)
 
 </div>
+
+> **Enterprise mirror:** [`BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster`](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster)  
+> Sovereign Source Trust · EIN 42-697643 · [The Shared Primordial Foundation](https://github.com/enterprises/the-shared-primordial-foundation)
 
 ---
 
@@ -360,9 +364,21 @@ Lean Float caveat, uniqueness constraint, softmax round-trip scope.
 PAR-001 through PAR-019 recorded under SSL v3.0 Part IX.
 Cryptographic anchors on public git history.
 
+## Enterprise & Trust
+
+| | |
+|---|---|
+| **Primary** | [`SNAPKITTYWEST/sov-kernel-monster`](https://github.com/SNAPKITTYWEST/sov-kernel-monster) |
+| **Enterprise mirror** | [`BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster`](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster) |
+| **Enterprise** | [The Shared Primordial Foundation](https://github.com/enterprises/the-shared-primordial-foundation) |
+| **Team** | [Sovereign Architecture](https://github.com/orgs/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/teams/sovereign-architecture) |
+| **Trust** | Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643 |
+| **HuggingFace** | [Snapkitty/quantum-swarm](https://huggingface.co/Snapkitty/quantum-swarm) |
+| **Interactive hub** | [snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/) |
+
 ## License
 
-[Sovereign Source License v3.0](LICENSE) — Bel Esprit D'Accord Irrevocable Trust.
+[Sovereign Source License v3.0](LICENSE) — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643.
 
 ---
 
