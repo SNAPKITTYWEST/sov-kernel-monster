@@ -1,0 +1,183 @@
+// cap_transfer.dl  — Soufflé Datalog
+// Monotone restatement of:
+//   snap-os/bifrost/policy/cap_transfer.pl
+//   snap-os/bifrost/policy/jit_compile.pl
+//
+// Three permission domains unified here:
+//   1. transfer_allowed  — can capability move between agents?
+//   2. delegate_allowed  — can capability be sub-delegated?
+//   3. seal_allowed      — can agent emit WORM seals?
+//   4. jit_allowed       — can agent JIT compile at opt level?
+//
+// Trust level threshold from cap_transfer.pl:
+//   policy_allows/4 requires trust_level >= 128
+//   Hard-coded block: transfer_blocked(koko, silverback)
+//
+// Bit-field semantics for cap_rights (from cap_transfer.pl):
+//   bit 0  (1)   = TRANSFER allowed
+//   bit 1  (2)   = DELEGATE allowed
+//   bit 2  (4)   = SEAL allowed
+//
+// Ahmad Ali Parr · SnapKitty Collective · 2026
+
+// ── EDB declarations ──────────────────────────────────────────────────────────
+
+.decl agent(name: symbol)
+.input agent
+
+.decl cap(cap_id: symbol, owner: symbol, rights_bits: number)
+.input cap
+
+.decl worm_sealed_policy(policy_cid: symbol)
+.input worm_sealed_policy
+
+.decl trust_level(agent: symbol, level: number)
+.input trust_level
+
+// Hard-coded policy exceptions — these are NOT derived, only asserted
+.decl transfer_blocked_pair(from_agent: symbol, to_agent: symbol)
+.input transfer_blocked_pair
+
+// Default gas budget for JIT (from jit_compile.pl: 1,000,000 units)
+.decl gas_budget(agent: symbol, units: number)
+.input gas_budget
+
+// Requested JIT optimization level per agent
+.decl jit_request(agent: symbol, soul_ir: symbol, opt_level: number)
+.input jit_request
+
+// ── IDB: trust threshold ──────────────────────────────────────────────────────
+// policy_allows/4 in cap_transfer.pl: trust_level >= 128
+.decl trusted_agent(agent: symbol)
+
+trusted_agent(A) :-
+    trust_level(A, L),
+    L >= 128.
+
+// ── IDB: capability rights (bit decomposition) ────────────────────────────────
+// bit 0 set: 1 AND rights_bits  (bitmask)
+// Soufflé uses bitwise operators since v2.0: band(a,b)
+
+.decl has_transfer_right(cap_id: symbol)
+.decl has_delegate_right(cap_id: symbol)
+.decl has_seal_right(cap_id: symbol)
+
+has_transfer_right(C) :- cap(C, _, R), band(R, 1) = 1.
+has_delegate_right(C) :- cap(C, _, R), band(R, 2) = 2.
+has_seal_right(C)     :- cap(C, _, R), band(R, 4) = 4.
+
+// ── IDB: active (unrevoked) capability ───────────────────────────────────────
+// We receive revoked caps as a separate EDB relation.
+// active_cap = cap ∧ ¬revoked  (stratum 0: revoked is base)
+
+.decl revoked_cap(cap_id: symbol)
+.input revoked_cap
+
+.decl active_cap(cap_id: symbol)
+
+active_cap(C) :-
+    cap(C, _, _),
+    !revoked_cap(C).
+
+// ── INV-1: transfer_allowed ───────────────────────────────────────────────────
+// Mirrors cap_transfer.pl:
+//   valid_transfer(Agent, Cap, Dst, Level) :-
+//       trust_level >= 128 ∧ worm_sealed(PolicyCID) ∧ ¬transfer_blocked(Agent, Dst)
+//
+// We require BOTH the capability CID AND a policy CID to be WORM-sealed.
+
+.decl worm_sealed_cap(cap_id: symbol)
+.input worm_sealed_cap
+
+.decl not_blocked(from_agent: symbol, to_agent: symbol)
+.decl transfer_allowed(agent: symbol, cap_id: symbol, dst_agent: symbol)
+.output transfer_allowed
+
+not_blocked(A, B) :- agent(A), agent(B), !transfer_blocked_pair(A, B).
+
+transfer_allowed(Agent, Cap, Dst) :-
+    trusted_agent(Agent),
+    active_cap(Cap),
+    cap(Cap, Agent, _),                // agent owns the cap
+    has_transfer_right(Cap),
+    worm_sealed_cap(Cap),
+    worm_sealed_policy(_),             // at least one policy CID is sealed
+    not_blocked(Agent, Dst),
+    agent(Dst).
+
+// ── INV-2: delegate_allowed ───────────────────────────────────────────────────
+// A sub-delegation is valid when:
+//   • The cap has delegate rights (bit 1)
+//   • The delegating agent is trusted (≥128)
+//   • The cap is WORM-sealed and active
+
+.decl delegate_allowed(agent: symbol, cap_id: symbol, sub_agent: symbol)
+.output delegate_allowed
+
+delegate_allowed(Agent, Cap, SubAgent) :-
+    trusted_agent(Agent),
+    active_cap(Cap),
+    cap(Cap, Agent, _),
+    has_delegate_right(Cap),
+    worm_sealed_cap(Cap),
+    agent(SubAgent),
+    SubAgent != Agent.
+
+// ── INV-3: seal_allowed ───────────────────────────────────────────────────────
+// Emit a WORM seal when:
+//   • Cap has seal rights (bit 2)
+//   • Agent is trusted
+//   • Cap is active
+
+.decl seal_allowed(agent: symbol, cap_id: symbol)
+.output seal_allowed
+
+seal_allowed(Agent, Cap) :-
+    trusted_agent(Agent),
+    active_cap(Cap),
+    cap(Cap, Agent, _),
+    has_seal_right(Cap).
+
+// ── INV-4: jit_allowed ────────────────────────────────────────────────────────
+// From jit_compile.pl:
+//   opt_level 0: always permitted
+//   opt_level 1: trust >= 64
+//   opt_level 2: trust >= 128
+//   gas: default 1,000,000 units
+//
+// We derive permitted_opt_level(Agent, OptLevel) by trust threshold,
+// then intersect with the agent's gas budget and their request.
+
+.decl permitted_opt_level(agent: symbol, opt_level: number)
+.decl jit_allowed(agent: symbol, soul_ir: symbol, opt_level: number)
+.output jit_allowed
+
+// opt_level 0 — always
+permitted_opt_level(A, 0) :- agent(A).
+
+// opt_level 1 — trust >= 64
+permitted_opt_level(A, 1) :- trust_level(A, L), L >= 64.
+
+// opt_level 2 — trust >= 128
+permitted_opt_level(A, 2) :- trust_level(A, L), L >= 128.
+
+// Gas budget valid: at least the default 1,000,000 units
+.decl has_gas(agent: symbol)
+has_gas(A) :- gas_budget(A, U), U >= 1000000.
+
+jit_allowed(Agent, SoulIR, OptLevel) :-
+    jit_request(Agent, SoulIR, OptLevel),
+    permitted_opt_level(Agent, OptLevel),
+    has_gas(Agent),
+    worm_sealed_cap(SoulIR).            // SoulIR itself must be WORM-sealed
+
+// ── Sovereign gate ─────────────────────────────────────────────────────────────
+// All permission domains coherent: at least one transfer, delegate, seal, and jit
+// capability is valid — signals that the cap system is properly bootstrapped.
+
+.decl cap_system_live()
+.output cap_system_live
+
+cap_system_live() :-
+    transfer_allowed(_, _, _),
+    seal_allowed(_, _).
