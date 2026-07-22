@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 project(BOBQuantumCivilizationEngine
   VERSION 1.0.0
   DESCRIPTION "Quantum simulation engine for distributed civilization mesh"
-  LANGUAGES C CXX
+  LANGUAGES C CXX Fortran
 )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -62,6 +62,8 @@ set(BOB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 file(GLOB BOB_SOURCES
   ${BOB_SRC_DIR}/*.c
   ${BOB_SRC_DIR}/*.cpp
+  ${BOB_SRC_DIR}/*.f90
+  ${BOB_SRC_DIR}/*.S
 )
 
 file(GLOB BOB_HEADERS
