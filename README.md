@@ -22,6 +22,7 @@ Zero external dependencies. Zero libc. Formally verified.
 [![Prior_Art](https://img.shields.io/badge/Prior_Art-PAR--001--019-d4af37?style=for-the-badge)](#prior-art)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-quantum--swarm-ff9d00?style=for-the-badge&logo=huggingface)](https://huggingface.co/Snapkitty/quantum-swarm)
 [![Enterprise](https://img.shields.io/badge/Enterprise-Bel_Esprit_Trust-141413?style=for-the-badge&logo=github)](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS)
+[![QATAAUM](https://img.shields.io/badge/QATAAUM-Quantum_Compiler-00ff88?style=for-the-badge)](qataaum/)
 
 </div>
 
@@ -62,6 +63,11 @@ sov-kernel-monster/
 │   ├── LiquidLean/Jacobian/     Theorem 3 crack — genus-0 forcing
 │   ├── LiquidLean/AdaptiveVerifiedRuntime.hs  self-evolving kernel runtime
 │   └── liquidlean-theorem3.cabal
+├── qataaum/                 QATAAUM Quantum Assembly Runtime (IBM Bob, 2026-07-22)
+│   ├── compiler/                OpenQASM 2/3 + MetaQASM-4 → 9-level IR → SABRE routing
+│   ├── simulator/               State-vector + density-matrix simulators
+│   ├── runtime/                 ShadowRPG-Q + IBM i FFI (RPG/COBOL/CL)
+│   └── verification/            Lean 4 (31 theorems, 0 sorry) + Liquid Haskell
 ├── quantum-piper/           Sovereign Docker + Haiku swarm infra
 │   ├── infra/                   docker-compose, Gitea, sov-registry, sov-attest.sh
 │   ├── provision/               Ansible bootstrap (WORM vol, Ed25519 keys)

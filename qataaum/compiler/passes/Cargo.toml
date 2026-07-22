@@ -1,0 +1,11 @@
+[package]
+name = "qataaum-passes"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+qataaum-ir = { path = "../ir" }
+
+[dev-dependencies]
+
+# Made with Bob

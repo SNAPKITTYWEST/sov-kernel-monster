@@ -1,0 +1,18 @@
+[package]
+name = "qataaum-ibmi-ffi"
+version = "0.1.0"
+edition = "2021"
+authors = ["QATAAUM Project"]
+description = "IBM i FFI boundary for QATAAUM quantum runtime (C-compatible interface)"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+shadow-rpg-q = { path = "../shadow-rpg-q" }
+serde_json = "1.0"
+libc = "0.2"
+
+[build-dependencies]
+cbindgen = "0.26"
