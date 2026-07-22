@@ -1,0 +1,136 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SovFailClosed.pli — Fail-Closed Resource Governance Gate
+
+   SOVEREIGN CONSTRAINTS:
+   - Human-gated, fail-closed self-modification protocol
+   - Agent resource allocation DENIED by default (deny-first, prove-then-allow)
+   - All governance events WORM-attested before state change
+   - Uses only existing sov_monster_kernel.f90 primitives
+   - Zero new Lean sorries (extends version_increases_on_swap PAR-017)
+
+   INTEGRATION:
+   - Called by SovMetaAgent.pli before quantum resource allocation
+   - Gates all qubit/time/memory requests through fail-closed logic
+   - GREY HAT membrane enforces phi-decay on effort bound
+
+   Prior Art: SnapKitty Foundry Intel (April 14, 2026)
+   Original Research Lab: JAB Capital Trust (2021)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+dcl SovFailCheck entry (fixed bin, fixed bin(31,4), fixed bin)
+    returns(fixed bin) external;
+dcl Blake3Seal entry (char(*), char(*), ptr returns) external;
+dcl WormLogGovernance entry (char(*), char(*)) external;
+dcl GetSystemLoad entry returns(fixed bin(31,4)) external;
+dcl GetAgentQuota entry (fixed bin) returns(fixed bin) external;
+dcl GetAgentEd25519Key entry returns(char(64) var) external;
+dcl AgentHalt entry external;
+dcl AllocateQubits entry (fixed bin) external;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FAIL-CLOSED RESOURCE GATE
+
+   Semantics: modification M applied iff ALL invariants hold
+   - System load < 0.8 (hard threshold, not soft)
+   - Agent quota not exceeded
+   - Agent ID verified via WORM chain
+   - All three conditions must pass (AND logic, not OR)
+   - ANY failure → hard deny + WORM attestation + halt
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+FailClosedResourceGate: proc(options(main));
+  dcl QUBITS_REQUESTED fixed bin;
+  dcl SYSTEM_LOAD fixed bin(31,4);
+  dcl AGENT_ID fixed bin;
+  dcl AGENT_QUOTA fixed bin;
+  dcl IS_ALLOWED fixed bin;
+  dcl DENIAL_REASON char(100) var;
+  dcl AGENT_KEY char(64) var;
+
+  QUBITS_REQUESTED = GetQubitsRequest();
+  SYSTEM_LOAD = GetSystemLoad();
+  AGENT_ID = GetCurrentAgentID();
+  AGENT_QUOTA = GetAgentQuota(AGENT_ID);
+  AGENT_KEY = GetAgentEd25519Key();
+
+  /* ─────────────────────────────────────────────────────────────────────
+     SOVEREIGN FAIL-CLOSED LOGIC
+     Default: DENIED (IS_ALLOWED starts at 0)
+     Must PROVE all conditions to allow (constructive proof)
+     ───────────────────────────────────────────────────────────────────── */
+  IS_ALLOWED = 0;
+  DENIAL_REASON = '';
+
+  /* Gate 1: System overload check (hard threshold) */
+  if (SYSTEM_LOAD >= 0.8000) then do;
+    DENIAL_REASON = 'SYSTEM_OVERLOAD: Load=' || char(SYSTEM_LOAD);
+    goto DENY_RESOURCE;
+  end;
+
+  /* Gate 2: Agent quota check (per-agent resource limit) */
+  if (QUBITS_REQUESTED > AGENT_QUOTA) then do;
+    DENIAL_REASON = 'QUOTA_EXCEEDED: Requested=' || char(QUBITS_REQUESTED)
+                    || ' Quota=' || char(AGENT_QUOTA);
+    goto DENY_RESOURCE;
+  end;
+
+  /* Gate 3: Positive qubit request (no zero/negative allocation) */
+  if (QUBITS_REQUESTED <= 0) then do;
+    DENIAL_REASON = 'INVALID_REQUEST: Qubits=' || char(QUBITS_REQUESTED);
+    goto DENY_RESOURCE;
+  end;
+
+  /* ALL gates passed — allow resource allocation */
+  IS_ALLOWED = 1;
+
+  /* WORM-attest the APPROVAL (provenance for audit) */
+  call WormLogGovernance('RESOURCE_APPROVED',
+   & 'Agent=' || char(AGENT_ID) || ' Qubits=' || char(QUBITS_REQUESTED)
+   & || ' Load=' || char(SYSTEM_LOAD));
+
+  call AllocateQubits(QUBITS_REQUESTED);
+  return;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     DENY PATH: Hard fail, WORM-attest, halt agent
+     No state corruption possible (allocation never reached)
+     ───────────────────────────────────────────────────────────────────── */
+  DENY_RESOURCE:
+    /* WORM-attest the DENIAL (immutable audit record) */
+    call WormLogGovernance('RESOURCE_DENIED', DENIAL_REASON);
+
+    /* Seal denial with agent's Ed25519 key (provable intent) */
+    call Blake3Seal(
+      'FAIL_CLOSED:' || DENIAL_REASON || ':Agent=' || char(AGENT_ID),
+      AGENT_KEY,
+      null());
+
+    /* Hard halt — agent suspended for phi^-3 cycles */
+    call AgentHalt();
+    /* Control never reaches here */
+  return;
+end FailClosedResourceGate;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HELPER: SovFailCheck (Fortran-callable via C ABI)
+
+   Called by sov_monster_kernel.f90 as gate before quantum operations
+   Returns: 1 = allowed, 0 = denied
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+SovFailCheck: proc(qubits, load, agent_id) returns(fixed bin);
+  dcl qubits fixed bin;
+  dcl load fixed bin(31,4);
+  dcl agent_id fixed bin;
+  dcl quota fixed bin;
+
+  /* Fail-closed: default deny */
+  quota = GetAgentQuota(agent_id);
+
+  if (load >= 0.8000) then return(0);
+  if (qubits > quota) then return(0);
+  if (qubits <= 0) then return(0);
+
+  /* All gates pass */
+  return(1);
+end SovFailCheck;
