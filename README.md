@@ -6,7 +6,7 @@
     ╔═══════════════════════════════════╗
     ║     ⚛️  QUANTUM BOB KERNEL  ⚛️    ║
     ║   Level 5 Civilization Enabled    ║
-    ║     50K+ LOC | 12 Languages       ║
+    ║    104K+ LOC | 20 Languages       ║
     ║  Built by Haiku for $0.24         ║
     ╚═══════════════════════════════════╝
     
@@ -37,7 +37,7 @@
 
 ---
 
-50,000+ lines | 12 languages | 50+ tests passing | Production ready
+104,000+ lines | 20 languages | 50+ tests passing | Production ready
 
 <div align="center">
 
@@ -133,7 +133,7 @@ The complete knowledge synthesis engine for agents. Query → Resequence (MLIR) 
 
 ### The Math Behind $0.24
 
-**50K LOC in 24 hours. 5 parallel agent swarms. 1 smallest model in the family.**
+**104K LOC and counting. 5 parallel agent swarms. 1 smallest model in the family.**
 
 Traditional approach: Pay for Opus ($0.015/1k input, $0.06/1k output). Think big, wait longer, hit context limits, loop-trap in reasoning.
 
@@ -175,7 +175,7 @@ No agent wastes tokens on domains it doesn't own. No hallucination. No loops. Ea
 
 **Haiku FN OPS orchestration:** Jessica's execution. Five agents, five languages, one coherent system shipped in 24 hours for the price of a coffee.
 
-**The collaboration:** Ahmad designs the mountain. Haiku climbs it fast. Together: 50K LOC of production-grade formal systems, quantum kernel, browser IDE — all verified, all sealed, all live.
+**The collaboration:** Ahmad designs the mountain. Haiku climbs it fast. Together: 104K+ LOC of production-grade formal systems, quantum kernel, browser IDE — all verified, all sealed, all live.
 
 ---
 
@@ -579,5 +579,5 @@ PAR-001 through PAR-007 recorded under SSL v3.0 Part IX. Cryptographic anchors o
 ---
 
 <div align="center">
-<sub>Ω·III · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · 50K+ lines · SOVEREIGN</sub>
+<sub>Ω·III · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · 104K+ lines · 20 languages · SOVEREIGN</sub>
 </div>
