@@ -1,0 +1,11 @@
+[package]
+name = "trajectory_export"
+version = "0.1.0"
+edition = "2021"
+description = "Exports stochastic solver trajectory data as flat Float32 binary for WebGL consumption"
+repository = "https://github.com/SNAPKITTYWEST/sov-kernel-monster"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+ndarray = "0.15"
+bytemuck = { version = "1.14", features = ["derive"] }
