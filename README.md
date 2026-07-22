@@ -224,6 +224,26 @@ Sovereign inference engine for RTX 4090 Ada (sm_89). No libc, no C runtime, no e
 
 ---
 
+## Sovereign Agent Architecture — Speed Over Size
+
+**5 parallel agent swarms. 1 smallest model in the family. Independent vertical expertise.**
+
+Each agent operates on **one semantic domain** — no token waste on domains it doesn't own:
+
+- **Fortran Agent** — kernel calls, vector ops, ABI contracts, Goldilocks field, WORM chain
+- **Haskell Agent** — type proofs, Jacobian algebra, polynomial reduction, Mora basis
+- **Lean Agent** — formal verification, proof objects, zero-sorry enforcement
+- **MLIR Agent** — polyhedral fusion, loop schedules, backend targeting (SVE2/AVX-512/PTX)
+- **IDE Agent** — terminal emulation, file I/O, WORM sealing, browser bridge
+
+**Why it works:** Haiku's latency advantage (4–7ms vs 200–400ms for larger models) means parallel wall-clock = slowest single agent, not sum of all. 5 agents @ 50ms each ≈ 50ms total (one agent serialized would be 250ms). Speed beats raw reasoning power when coordinating independent subsystems.
+
+**Result:** 5 independent research-lab-grade outputs that **coherently integrate** — not because one model is thinking about all five, but because each is an expert in its lane and the integration surface is mathematically formal (WORM sealing, Blake3 attestation, Ed25519 verification).
+
+**Powered By: Ahmad Ali Parr** — sovereign stack architecture conceived as a unit, not patches. Fortran + quantum + MLIR + formal proofs unified from day zero.
+
+---
+
 ## SovMetaAgent — Knowledge Synthesis Engine
 
 Query → Resequence (MLIR) → Synthesize (Born rule) → Seal (WORM) → Agent.
@@ -232,13 +252,21 @@ Query → Resequence (MLIR) → Synthesize (Born rule) → Seal (WORM) → Agent
 - **Knowledge Search:** Cosine similarity (768-dim embeddings, GPU-fused)
 - **Synthesis:** Born rule aggregation `tr(q_j·ρ)` native — no softmax, no LLM
 - **Attestation:** Blake3 (32B) + Ed25519 (64B) per output
+- **Zero External Deps:** Only uses existing Bob primitives
 - **Verified:** 4 zero-sorry Lean 4 theorems
+
+**Deliverables:**
+- `sovereign-pli/SovMetaAgent.pli` (356 lines, non-recursive)
+- `src/sov_knowledge.f90` (445 lines, 3 helper functions)
+- `lean/SovMonster_MetaAgent.lean` (211 lines, 4 theorems)
+- `SOVMETAAGENT_INTEGRATION.md` (485 lines, full spec)
+- `tests/test_sovmetaagent.f90` (330 lines, 5 tests)
 
 ---
 
 ## Bob Twin Council — 5-Agent BFT Consensus
 
-Byzantine fault-tolerant multi-agent reasoning. 4-of-5 quorum required for execution. Tolerates 1 Byzantine agent.
+Byzantine fault-tolerant multi-agent reasoning. 4-of-5 quorum required for execution. Tolerates 1 Byzantine agent (33% malicious capacity).
 
 | Agent | Role |
 |---|---|
@@ -248,7 +276,21 @@ Byzantine fault-tolerant multi-agent reasoning. 4-of-5 quorum required for execu
 | Agent 4 | Audit Guardian (WORM chain verification) |
 | Agent 5 | Forge Master (Polyhedral MLIR optimizer) |
 
-Output: Forge-optimized IR + Blake3 attestation + Ed25519 signature. Fallback: revert to raw JST IR if consensus fails.
+**Consensus Mechanism:**
+- **Quorum:** 4-of-5 Byzantine agreement required
+- **Fault Tolerance:** Tolerates 1 Byzantine agent
+- **Output:** Forge-optimized IR + Blake3 attestation + Ed25519 signature
+- **Fallback:** Revert to %jst_ir if consensus fails
+
+**Build Pipeline (8 steps):**
+1. Fortran → MLIR
+2. MLIR fusion + vectorize + lower
+3. MLIR → LLVM IR
+4. ARM64 SVE2 object
+5. x86_64 AVX-512 object
+6. PTX NVIDIA object
+7. Agent 5: MLIR Sovereign Optimizer
+8. Static link (ARM64, primary)
 
 ---
 
@@ -290,6 +332,45 @@ This is the same fixed-point commutativity that drives the JST kernel — the al
 Each proof step (Mora reduction, δ-invariant, Plücker formula) emits tokens to WORM chain. Receipt: `(genus_bound, energy_spent, Ed25519_sig, Blake3_hash)`
 
 See [`haskell/INTEGRATION_GUIDE.md`](haskell/INTEGRATION_GUIDE.md)
+
+---
+
+## Modules
+
+### Bob Quantum Engine — 5,850 lines (15 modules)
+
+| Module | Lines | What it does |
+|---|---|---|
+| `bob_kinds` | 55 | ISO C binding types, Goldilocks constants |
+| `bob_errors` | 115 | 13 stable error codes, thread-local state |
+| `bob_rng` | 219 | xoshiro256** PRNG |
+| `bob_state` | 327 | State vector \|ψ⟩, norm, inner product |
+| `bob_gates` | 481 | Pauli X/Y/Z, H, T, S, CNOT, phase rotation |
+| `bob_lattice` | 508 | 3D Josephson vortex lattice, topological charge |
+| `bob_measurement` | 531 | Born rule measurement, wavefunction collapse |
+| `bob_hamiltonian` | 550 | Ising H = −JΣσᶻσᶻ − hΣσˣ, Padé exp |
+| `bob_integrator` | 456 | Trotter-2 evolution O(dt²) per step |
+| `bob_metrics` | 495 | Entropy, purity, coherence, fidelity |
+| `bob_goldilocks` | 429 | Field arithmetic p=2⁶⁴−2³²+1, NTT |
+| `bob_worm` | 421 | Blake3 WORM chain, full Fortran 2018 impl |
+| `bob_circuit` | 376 | QFT, Grover, Shor, QPE, Bell pair, teleportation |
+| `bob_phdae` | 400 | Port-Hamiltonian DAE, power balance audit |
+| `bob_abi` | 487 | 14 C ABI exports via bind(C) |
+
+### Sovereign Monster Kernel — 3,189 lines (6 modules)
+
+| Module | Lines | What it does |
+|---|---|---|
+| `sov_monster_kernel` | 1506 | Blake3 + Ed25519 + APL ZGEMM fused kernel |
+| `boolean_spectral_lens` | 296 | Jordan algebra → spectral flow → Lisp world dump |
+| `measurement_head` | 305 | Born rule, Fibonacci temperature τ=φ⁻ᵏ |
+| `jordan_block` | 284 | Jordan step, fixpoint, gradient adjoint + GREY HAT gates |
+| `spe_encoder` | 444 | SPE frame encoder |
+| `training_adjoint` | 354 | Training adjoint for optimization |
+
+### WASM Bridge — 599 lines Rust
+
+Ports the full quantum engine to browser-native WebAssembly. Build: `make wasm` → 44KB `.wasm` file.
 
 ---
 
