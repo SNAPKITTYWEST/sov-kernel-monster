@@ -177,6 +177,41 @@ contains
       end if
     end block
 
+    ! ═══════════════════════════════════════════════════════════════
+    ! ZMOS SPECTRAL INVARIANT: Track pole-zero proximity in complex s-plane
+    ! Evaluates Z(s,t) at critical line s = 1/2 + iτ
+    ! Δ(t) = min |s_pole - zero_approx| over WORM-attested primes
+    ! Triggers fault tolerance if Δ(t) < ε (entropy spike detected)
+    ! ═══════════════════════════════════════════════════════════════
+    block
+      real(dp) :: delta_t
+      real(dp), parameter :: ZMOS_THRESHOLD = 1.0e-6_dp
+
+      interface
+        real(c_double) function zmos_spectral_invariant(h_ptr, n_dim, tau) &
+            bind(C, name="zmos_spectral_invariant")
+          import :: c_ptr, c_int64_t, c_double
+          type(c_ptr), value :: h_ptr
+          integer(c_int64_t), value :: n_dim
+          real(c_double), value :: tau
+        end function
+      end interface
+
+      ! Compute Δ(t) via Rust spectral.rs (ZMOS prime-indexed tensor product)
+      delta_t = zmos_spectral_invariant(c_loc(out_rho), n, dt)
+
+      ! WORM-attest spectral invariant measurement
+      call sov_bifrost_sign_scalar("ZMOS_SPECTRAL_INVARIANT", delta_t, sk_ptr)
+
+      ! Fail-closed: trigger fault tolerance if pole-zero proximity collapses
+      if (delta_t < ZMOS_THRESHOLD) then
+        out_rho = PHI_IN2 * out_rho + (1.0_dp - PHI_IN2) * rho
+        trace_r = 0.0_dp
+        do ii = 1, n; trace_r = trace_r + real(out_rho(ii,ii)); end do
+        if (abs(trace_r) > epsilon(0.0_dp)) out_rho = out_rho / trace_r
+      end if
+    end block
+
     call sov_blake3_hash_matrix(out_rho, int(n), hash_ptr)
     call sov_bifrost_sign(hash_ptr, int(32, c_size_t), sk_ptr, sig_ptr)
 

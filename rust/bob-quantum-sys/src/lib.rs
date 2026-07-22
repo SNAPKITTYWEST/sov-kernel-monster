@@ -1,3 +1,5 @@
+pub mod spectral;
+
 use std::ffi::c_void;
 use std::os::raw::{c_int, c_double};
 use std::ptr;
