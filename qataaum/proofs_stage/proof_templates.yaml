@@ -1,0 +1,85 @@
+# GKN Formal Court - Proof Template Library
+# Common patterns for code generation
+
+templates:
+  lawfulness_basic:
+    pattern_type: lawfulness
+    complexity: easy
+    template: |
+      theorem {name} (a : MoralAction) :
+          {statement} := by
+        intro h
+        unfold {definition} at h
+        by_cases h_check : {predicate}
+        · {success_case}
+        · {failure_case}
+    tactics: [intro, unfold, by_cases, simp]
+    example: approved_is_lawful
+
+  induction_nat:
+    pattern_type: induction
+    complexity: medium
+    template: |
+      theorem {name} {params} : {statement} := by
+        induction {var} with
+        | zero => {base_case}
+        | succ n ih => {inductive_case}
+    tactics: [induction, cases]
+    example: nat_induction_example
+
+  ring_closure:
+    pattern_type: ring_tactic
+    complexity: easy
+    template: |
+      theorem {name} {params} : {statement} := by
+        intro {vars}
+        simp [{definitions}]
+        ring
+    tactics: [intro, simp, ring]
+    example: ring_closure_example
+
+  verdict_bridge:
+    pattern_type: bridge
+    complexity: medium
+    template: |
+      theorem {name} {params} : {statement} := by
+        rw [{definition}]
+        match {value} with
+        | {pattern1} => {case1}
+        | {pattern2} => {case2}
+    tactics: [rw, match, rfl]
+    example: verdict_bridge_example
+
+  scaling_law:
+    pattern_type: scaling_law
+    complexity: easy
+    template: |
+      theorem {name} {params} : {statement} := by
+        intro {vars}
+        unfold {definition}
+        simp [mul_assoc, mul_comm, mul_left_comm]
+        ring
+    tactics: [intro, unfold, simp, ring]
+    example: scaling_law_example
+
+  moral_judge:
+    pattern_type: lawfulness
+    complexity: medium
+    template: |
+      theorem {name} (a : MoralAction) :
+          {statement} := by
+        unfold judge
+        by_cases h : lawful a = true
+        · exact {success_case}
+        · exact {failure_case}
+    tactics: [unfold, by_cases, exact]
+    example: judge_theorem_example
+
+  exact_proof:
+    pattern_type: general
+    complexity: trivial
+    template: |
+      theorem {name} : {statement} := by
+        exact {proof}
+    tactics: [exact]
+    example: trivial_proof
