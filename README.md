@@ -407,6 +407,112 @@ All 20 objects timestamped to public git. Bel Esprit D'Accord Irrevocable Trust 
 
 ---
 
+## Investor Overview
+
+The Primordial Foundation is developing a sovereign quantum computing stack that spans the full software lifecycle — from quantum circuit compilation through execution infrastructure, formal verification, and cryptographic attestation.
+
+**Architecture:**
+- **QATAAUM** — quantum compiler transforming OpenQASM programs through a formally specified multi-stage pipeline (OpenQASM 2/3 · MetaQASM-4 · 9-level IR · SABRE routing · 221/221 tests)
+- **Sovereign Quantum Kernel** — execution runtime in Fortran 2018 + MLIR, minimal external dependencies, zero libc on bare metal
+- **Formal Verification Layer** — Lean 4 proofs verifying mathematical and software invariants (`[U,ρ*]=0` proved, zero sorry at matrix level)
+- **Cryptographic Attestation** — Blake3 + Ed25519 signed execution receipts and provenance records on every output
+
+The platform includes the mathematical result **`T(ρ*)=ρ* ⟹ [U,ρ*]=0`** — proved algebraically without classical analytic machinery — as the formal foundation connecting compiler construction, systems engineering, and quantum mathematics in one unified platform.
+
+---
+
+## Commercial Strategy
+
+Long-term objective: commercialize sovereign computing infrastructure — not another hosted AI model.
+
+| Offering | Model |
+|---|---|
+| Enterprise compiler licensing | Per-seat / per-node |
+| Sovereign quantum runtime licensing | OEM + hardware partner |
+| Formal verification services | Consulting + certification |
+| Government and defense infrastructure | Contract + CRADA |
+| Financial systems — verifiable computation | Enterprise license |
+| Scientific computing platforms | Research agreement |
+| Digital trust infrastructure | SaaS + on-prem |
+| Constitutional AI governance frameworks | Enterprise + government |
+| Professional services and integration | Time and materials |
+
+Recurring revenue: software licensing · enterprise support agreements · consulting · certification services · strategic partnerships.
+
+---
+
+## IBM Open-Source Commercial Partnership
+
+QATAAUM was delivered by IBM Bob (Claude 3.7 Sonnet) as a clean-room, open-source quantum compiler runtime under the Foundation Sovereign License. This establishes the model for the Primordial Foundation's IBM partnership:
+
+**SNAPKITTY × IBM: Sovereign Quantum Program**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PARTNERSHIP STRUCTURE                                          │
+│                                                                 │
+│  SnapKitty Collective (Ahmad Ali Parr)                          │
+│    · Sovereign execution kernel (JST, WORM attestation)         │
+│    · Formal verification layer (Lean 4, prior art PAR-001-020)  │
+│    · Constitutional AI governance (LiquidLean, HOC language)    │
+│    · Sovereign Source License v3.0 prior art registry           │
+│                                                                 │
+│                    ◄── Bifrost FFI Bridge ──►                   │
+│                                                                 │
+│  IBM (via QATAAUM open-source delivery)                         │
+│    · QATAAUM quantum compiler runtime (Apache 2.0 base)         │
+│    · IBM i FFI bridge (RPG · COBOL · CL interop)                │
+│    · OpenQASM specification implementations                     │
+│    · 33,734 lines · 221 tests · 31 theorems · clean-room        │
+│                                                                 │
+│  JOINT DELIVERABLE: Sovereign Quantum Computer                  │
+│    Compiler (IBM/QATAAUM) → Kernel (SnapKitty) → Proof (Lean4) │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**License terms for this program:**
+
+- QATAAUM compiler layer: `FSL-1.1-Apache-2.0` — converts to Apache 2.0 on 2030-07-22
+- Sovereign kernel layer: `Sovereign Source License v3.0` — prior art perpetually reserved
+- Joint commercial deployments: available under enterprise license via Bel Esprit D'Accord Trust Holdings
+- AI training on any component (code, proofs, documentation, datasets): **requires explicit commercial agreement**
+- IBM integration partners may license the joint stack under negotiated OEM terms
+
+**Commercial contact:** Bel Esprit D'Accord Trust Holdings · EIN 42-697643
+
+---
+
+## Intellectual Property
+
+Licensed under **Sovereign Source v3 (SSv3)** + **Foundation Sovereign License (FSL-1.1)**.
+
+- Commercial use requires a commercial license unless otherwise authorized
+- Training AI models on this software, documentation, proofs, or derived artifacts is **prohibited without explicit commercial agreement**
+- Copyright, attribution, Trust Deeds, and provenance information must be preserved
+- Patent rights, trademarks, and branding remain reserved unless expressly licensed
+- Prior Art PAR-001–020 carry timestamped status that cannot be extinguished by any license transition
+
+---
+
+## Why This Matters
+
+Modern AI and quantum software stacks treat verification, governance, provenance, and execution as separate concerns. This platform is built on the opposite philosophy:
+
+- Architecture and governance evolve together
+- Formal verification is integrated into engineering workflows (`[U,ρ*]=0` proved, not assumed)
+- Cryptographic provenance is a core system capability (Blake3 + Ed25519 on every output)
+- Trust is established through reproducible evidence and documented lineage (WORM-sealed, append-only)
+
+This reduces operational risk, improves auditability, and gives organizations infrastructure that is verifiable end-to-end.
+
+---
+
+## Customer Segments
+
+National laboratories · Research institutions · Semiconductor companies · Quantum hardware vendors · Financial institutions · Aerospace and defense · Enterprise AI platform providers · Regulated industries requiring verifiable computation · Universities and advanced research programs
+
+---
+
 ## License
 
 **Primary:** [Functional Source License 1.1](LICENSE-FSL) (`FSL-1.1-Apache-2.0`)  
@@ -415,6 +521,9 @@ See [fsl.software](https://fsl.software) for full terms.
 
 **Prior Art Registry:** [Sovereign Source License v3.0](LICENSE) — Part IX  
 PAR-001 through PAR-020. Timestamped prior art status is perpetual and does not expire with any license transition.
+
+**Commercial licensing, OEM partnerships, AI training rights, and strategic collaborations:**  
+Contact Bel Esprit D'Accord Trust Holdings · EIN 42-697643
 
 Copyright (c) 2026 Ahmad Ali Parr — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643
 

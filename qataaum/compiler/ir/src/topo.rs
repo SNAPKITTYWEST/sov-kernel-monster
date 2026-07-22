@@ -232,20 +232,48 @@ impl TopoBuilder {
     }
     
     fn route_gate(&self, topo_ir: &mut TopoIR, gate: &Gate) -> Result<(), String> {
-        // TODO: Rewrite to use Gate.kind (GateKind enum) instead of old GateOp
-        // For now, just add the gate without routing logic
+        use crate::gate::GateKind;
+
+        // Single-qubit gates need no routing — place directly on physical qubit.
+        // Two-qubit gates (CNOT etc.) may require SWAP insertion if the qubits
+        // are not adjacent in the coupling map.
+        let needs_routing = gate.qubits.len() >= 2 && matches!(
+            gate.kind,
+            GateKind::CX | GateKind::CZ | GateKind::Swap | GateKind::CCX
+        );
+
+        let physical_qubits: Vec<PhysicalQubit> =
+            gate.qubits.iter().map(|q| PhysicalQubit(q.0 as u32)).collect();
+
+        if needs_routing && physical_qubits.len() == 2 {
+            // Check adjacency; insert SWAP if not adjacent
+            let (q0, q1) = (physical_qubits[0], physical_qubits[1]);
+            let dist = topo_ir.topology.distance(q0, q1).unwrap_or(usize::MAX);
+            if dist > 1 {
+                self.insert_swaps(topo_ir, q0, q1)?;
+            }
+        }
+
+        // Assign cost by gate class (rough fidelity model)
+        let cost = match gate.kind {
+            GateKind::CX | GateKind::CZ | GateKind::Swap => 3.0,
+            GateKind::CCX => 6.0,
+            _ => 1.0,
+        };
+        let fidelity = match gate.kind {
+            GateKind::CX | GateKind::CZ => Some(0.995),
+            GateKind::Swap => Some(0.985),
+            GateKind::CCX => Some(0.970),
+            _ => Some(0.999),
+        };
+
         topo_ir.add_gate(PhysicalGateOp {
             gate: gate.clone(),
-            physical_qubits: gate.qubits.iter().map(|q| PhysicalQubit(q.0 as u32)).collect(),
-            cost: 1.0,
-            fidelity: Some(0.99),
+            physical_qubits,
+            cost,
+            fidelity,
         });
         Ok(())
-        
-        /* OLD CODE - needs rewrite for new Gate structure
-        match gate.kind {
-            GateKind::X | GateKind::Y | GateKind::Z | GateKind::H => {
-        */
     }
     
     fn insert_swaps(

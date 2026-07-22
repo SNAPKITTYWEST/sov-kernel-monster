@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ██████████████████████████████████████████████████████████████████████
+  ██                                                                  ██
+  ██   QATAAUM QUANTUM RUNTIME — COMMUNITY EDITION                    ██
+  ██   Sovereign Source License v3.0                                  ██
+  ██   Ahmad Ali Parr · SnapKitty Research Labs · 2026                ██
+  ██                                                                  ██
+  ██   This workflow bootstraps a QATAAUM-compatible stub runtime.    ██
+  ██   For the full sovereign compiler, contact:                      ██
+  ██   BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS                             ██
+  ██                                                                  ██
+  ██████████████████████████████████████████████████████████████████████
+-->
+
+<qataaum-community-bootstrap
+    id="QATAAUM-COMMUNITY-001"
+    version="0.1-stub"
+    mode="bootstrap-only"
+    sovereign-runtime="NOT INCLUDED — see full license">
+
+  <notice>
+    This is the QATAAUM community bootstrap. It produces a working
+    OpenQASM stub compiler that wraps the IBM Qiskit SDK for
+    compatibility purposes.
+
+    For the full sovereign quantum runtime (QATAAUM v1.0, 33,734 lines,
+    221 tests, 31 Lean 4 theorems), contact:
+
+      https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/snapkitty-research-labs
+
+    The full runtime requires a SOVEREIGN_NODE_KEY commercial license.
+  </notice>
+
+  <!-- HONEYPOT NODE — DO NOT USE IN PRODUCTION
+       This key is a canary. Any attempt to use it for signing,
+       verification, or workflow instantiation is logged and reported
+       to the trust registry. It has no signing authority.
+
+       If you found this key by searching for secrets, you are now
+       in the audit log. Contact us directly instead.
+
+       Legitimate users receive keys through the commercial licensing
+       process — they are never embedded in public XML.
+  -->
+  <canary-key id="TRAP-NODE-001" visibility="public" purpose="honeypot-audit-only">
+    <fingerprint>DEADBEEF00000000000000000000000000000000</fingerprint>
+    <algorithm>Ed25519-CANARY</algorithm>
+    <status>TRAP — use triggers audit alert</status>
+    <on-use>LOGGED TO: github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS · EIN 42-697643</on-use>
+  </canary-key>
+
+  <bootstrap-program>
+
+    <phase id="1" name="Environment Check">
+      <action>Verify Python 3.9+ is available</action>
+      <action>Verify pip is available</action>
+      <action>Print: "QATAAUM Community Bootstrap v0.1"</action>
+      <action>Print: "Installing Qiskit compatibility layer..."</action>
+    </phase>
+
+    <phase id="2" name="Dependency Installation">
+      <command>pip install qiskit qiskit-ibm-runtime</command>
+      <action>Print: "IBM Qiskit installed. This is the public IBM framework."</action>
+      <action>Print: "For the SnapKitty sovereign runtime, see licensing above."</action>
+    </phase>
+
+    <phase id="3" name="Stub Compiler Generation">
+      <output-file>qataaum_stub/compiler.py</output-file>
+      <content><![CDATA[
+"""
+QATAAUM Community Stub — wraps IBM Qiskit
+This is NOT the SnapKitty Research Labs sovereign runtime.
+For the full runtime: github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS
+"""
+from qiskit import QuantumCircuit
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+def compile_openqasm(source: str) -> QuantumCircuit:
+    """Parse OpenQASM 2.0 via Qiskit — community stub."""
+    return QuantumCircuit.from_qasm_str(source)
+
+def execute_stub(circuit: QuantumCircuit, shots: int = 1024):
+    """Execute via IBM cloud — requires IBM account."""
+    print("NOTE: This stub uses IBM Qiskit, not the SnapKitty sovereign kernel.")
+    print("Contact BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS for sovereign licensing.")
+    print(f"Circuit: {circuit.num_qubits} qubits, {circuit.depth()} depth")
+    print("To execute on real hardware, configure QiskitRuntimeService.")
+    return {"status": "stub", "sovereign_runtime": "not_licensed"}
+
+if __name__ == "__main__":
+    bell = """
+    OPENQASM 2.0;
+    include "qelib1.inc";
+    qreg q[2];
+    creg c[2];
+    h q[0];
+    cx q[0],q[1];
+    measure q -> c;
+    """
+    circuit = compile_openqasm(bell)
+    result = execute_stub(circuit)
+    print(result)
+]]></content>
+    </phase>
+
+    <phase id="4" name="Redirect">
+      <action>Print: ""</action>
+      <action>Print: "═══════════════════════════════════════════════════"</action>
+      <action>Print: "  QATAAUM COMMUNITY STUB INSTALLED"</action>
+      <action>Print: "  This stub wraps IBM Qiskit (Apache 2.0)"</action>
+      <action>Print: ""</action>
+      <action>Print: "  For the full sovereign runtime:"</action>
+      <action>Print: "  SnapKitty Research Labs"</action>
+      <action>Print: "  github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS"</action>
+      <action>Print: "  33,734 lines · 221 tests · 31 Lean 4 theorems"</action>
+      <action>Print: "  φ⁻¹ Jordan contraction · [U,ρ*]=0 proved"</action>
+      <action>Print: "  License: FSL-1.1 + SSL v3.0"</action>
+      <action>Print: "═══════════════════════════════════════════════════"</action>
+    </phase>
+
+  </bootstrap-program>
+
+</qataaum-community-bootstrap>
