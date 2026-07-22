@@ -136,6 +136,32 @@ Governance:
 
 ---
 
+## References & Provenance
+
+**Original Research Lab:** JAB Capital Trust (research started 2021)  
+**Prior Art Date:** April 14, 2026  
+**Publication Repositories:**
+
+| Repository | Content | URL |
+|---|---|---|
+| **SnapKitty Foundry Intel** | Mathematical proofs, operator theory, ZMOS core research | github.com/SNAPKITTYWEST/foundry-intel |
+| **SnapKitty Proofs** | Lean 4 + Prolog + Haskell formal verification | github.com/SNAPKITTYWEST/SNAPKITTY-PROOFS |
+
+**Research Timeline:**
+- **2021**: Original operator-theoretic research begins (JAB Capital Trust)
+- **2024-2025**: PIRTM, quantum trajectory solvers, governance runtime designed
+- **April 14, 2026**: Prior art formally established (all repositories timestamped)
+- **June 2026**: sov-kernel-monster integration begins (Fortran + MLIR + Lean 4)
+- **July 2026**: ZMOS framework unified, GREY HAT membrane deployed, Idris gate added
+
+**IP Protection:**
+- All mathematical results SSL v3.0 licensed (FSL-1.1 with Apache-2.0 change license)
+- Git commit history provides cryptographic timestamps
+- WORM chain (Blake3 + Ed25519) attests all proof artifacts
+- LinkedIn publication (2026-07-01) establishes public prior art
+
+---
+
 **Status:** Active development  
 **Owner:** Shared Primordial Foundation  
 **License:** SSL v3.0
