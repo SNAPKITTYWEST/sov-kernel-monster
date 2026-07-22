@@ -267,57 +267,27 @@ footer a{color:var(--orange);text-decoration:none}
 
 <!-- ═══════════════ LIVE ART ═══════════════ -->
 <div class="art-section">
-  <div style="max-width:1100px;margin:0 auto 40px">
+  <div style="max-width:1100px;margin:0 auto">
     <div class="section-label">LIVE ALGORITHMS</div>
-    <h2 style="color:var(--light)">The Art Is the Math</h2>
-    <p style="color:var(--gray);font-size:15px;margin-bottom:28px">Both algorithms run the actual Jordan contraction. Click to load interactively.</p>
-
-    <!-- Tab nav -->
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <button onclick="loadArt('sovereign_convergence.html','SOVEREIGN CONVERGENCE — φ⁻¹ contraction · golden angle attractors · Born collapse')"
-        style="background:var(--orange);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer;transition:all .2s"
-        onmouseover="this.style.background='#c86641'" onmouseout="this.style.background='var(--orange)'">
-        ◎ Sovereign Convergence
-      </button>
-      <button onclick="loadArt('living_rewrite.html','LIVING REWRITE — self-modifying code · density matrix · fixed point = theorem')"
-        style="background:var(--blue);color:#fff;border:none;padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer;transition:all .2s"
-        onmouseover="this.style.background='#5a8bb8'" onmouseout="this.style.background='var(--blue)'">
-        ⟳ Living Rewrite
-      </button>
-      <button id="close-art-btn"
-        style="display:none;background:transparent;color:var(--gray);border:1px solid rgba(255,255,255,0.15);padding:10px 22px;border-radius:6px;font-family:Share Tech Mono,monospace;font-size:13px;cursor:pointer">
-        ✕ Close
-      </button>
-    </div>
-  </div>
-
-  <!-- Art panel — hidden until clicked -->
-  <div id="art-panel" style="max-width:1100px;margin:0 auto;display:none">
-    <div id="art-panel-label" style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--gray);padding:10px 0 8px;letter-spacing:1px"></div>
-    <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
-      <iframe id="art-iframe"
-        src=""
-        title="Art"
-        style="width:100%;height:800px;border:none;display:block;background:#04040a">
-      </iframe>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:12px">
-      <a id="art-open-link" href="#" target="_blank"
-        style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--orange);text-decoration:none">
-        ↗ Open in full tab
+    <h2 style="color:var(--light);margin-bottom:16px">The Art Is the Math</h2>
+    <p style="color:var(--gray);font-size:15px;margin-bottom:40px">Both run the actual Jordan contraction. Open in full screen.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px">
+      <a href="sovereign_convergence.html"
+         style="display:block;background:rgba(217,119,87,0.08);border:1px solid rgba(217,119,87,0.3);border-radius:12px;padding:32px 24px;text-decoration:none;transition:border-color .2s">
+        <div style="font-size:32px;margin-bottom:12px">◎</div>
+        <div style="color:#d97757;font-family:Share Tech Mono,monospace;font-size:13px;font-weight:600;margin-bottom:8px">SOVEREIGN CONVERGENCE</div>
+        <div style="color:#b0aea5;font-size:13px;line-height:1.6">φ⁻¹ Jordan contraction · golden angle attractors · Born collapse · WORM trails</div>
+        <div style="margin-top:16px;color:#d97757;font-family:Share Tech Mono,monospace;font-size:11px">→ Open interactive art</div>
+      </a>
+      <a href="living_rewrite.html"
+         style="display:block;background:rgba(106,155,204,0.08);border:1px solid rgba(106,155,204,0.3);border-radius:12px;padding:32px 24px;text-decoration:none;transition:border-color .2s">
+        <div style="font-size:32px;margin-bottom:12px">⟳</div>
+        <div style="color:#6a9bcc;font-family:Share Tech Mono,monospace;font-size:13px;font-weight:600;margin-bottom:8px">LIVING REWRITE</div>
+        <div style="color:#b0aea5;font-size:13px;line-height:1.6">Self-modifying code · density matrix evolution · fixed point = theorem</div>
+        <div style="margin-top:16px;color:#6a9bcc;font-family:Share Tech Mono,monospace;font-size:11px">→ Open interactive demo</div>
       </a>
     </div>
   </div>
-
-  <!-- Fallback direct links if JS disabled -->
-  <noscript>
-    <div style="max-width:1100px;margin:24px auto 0;display:flex;gap:16px;flex-wrap:wrap">
-      <a href="sovereign_convergence.html" target="_blank"
-        style="color:var(--orange);font-family:Share Tech Mono,monospace;font-size:13px">↗ Sovereign Convergence</a>
-      <a href="living_rewrite.html" target="_blank"
-        style="color:var(--blue);font-family:Share Tech Mono,monospace;font-size:13px">↗ Living Rewrite</a>
-    </div>
-  </noscript>
 </div>
 
 <!-- ═══════════════ PRIOR ART ═══════════════ -->
@@ -405,32 +375,5 @@ footer a{color:var(--orange);text-decoration:none}
   <em style="color:rgba(255,255,255,0.3)">"Evidence or Silence. Nothing in between."</em>
 </footer>
 
-<script>
-function loadArt(src, label) {
-  var panel = document.getElementById('art-panel');
-  var iframe = document.getElementById('art-iframe');
-  var lbl = document.getElementById('art-panel-label');
-  var link = document.getElementById('art-open-link');
-  var closeBtn = document.getElementById('close-art-btn');
-  iframe.src = src;
-  lbl.textContent = label;
-  link.href = src;
-  panel.style.display = 'block';
-  closeBtn.style.display = 'inline-block';
-  setTimeout(function(){ panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-}
-function closeArt() {
-  var panel = document.getElementById('art-panel');
-  var iframe = document.getElementById('art-iframe');
-  iframe.src = '';
-  panel.style.display = 'none';
-  document.getElementById('close-art-btn').style.display = 'none';
-}
-// Wire close button after DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-  var btn = document.getElementById('close-art-btn');
-  if (btn) btn.addEventListener('click', closeArt);
-});
-</script>
 </body>
 </html>
