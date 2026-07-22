@@ -1,3 +1,17 @@
+<!--
+SPDX-License-Identifier: FSL-1.1-Apache-2.0
+FSL License: https://fsl.software
+Change Date: 2030-07-22
+Change License: Apache-2.0
+Copyright (c) 2026 Ahmad Ali Parr — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643
+
+This software is made available under the Functional Source License 1.1
+with Apache 2.0 as the Change License. You may use this software for any
+non-competing purpose. On the Change Date (four years from first publication),
+this software becomes available under the Apache-2.0 license.
+See LICENSE and https://fsl.software for full terms.
+-->
+
 # SOVEREIGN QUANTUM COMPUTING PLATFORM
 
 ### `sov-kernel-monster` · Ahmad Ali Parr · SnapKitty Collective · 2026
@@ -27,7 +41,8 @@
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
-[![License](https://img.shields.io/badge/License-SSL_v3.0-ff6d00?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-FSL--1.1-ff6d00?style=for-the-badge)](LICENSE-FSL)
+[![SSL](https://img.shields.io/badge/Prior_Art-SSL_v3.0-d4af37?style=for-the-badge)](LICENSE)
 [![Lean4](https://img.shields.io/badge/Lean_4-Zero_Sorry-00ff88?style=for-the-badge)](#formal-verification)
 [![QATAAUM](https://img.shields.io/badge/QATAAUM-221%2F221_Tests-00ff88?style=for-the-badge)](qataaum/)
 [![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf)
@@ -394,8 +409,14 @@ All 20 objects timestamped to public git. Bel Esprit D'Accord Irrevocable Trust 
 
 ## License
 
-[Sovereign Source License v3.0](LICENSE) — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643.  
-**Not MIT. Not Apache. SSL v3.0.**
+**Primary:** [Functional Source License 1.1](LICENSE-FSL) (`FSL-1.1-Apache-2.0`)  
+Use freely for any non-competing purpose. Converts to Apache 2.0 on **2030-07-22**.  
+See [fsl.software](https://fsl.software) for full terms.
+
+**Prior Art Registry:** [Sovereign Source License v3.0](LICENSE) — Part IX  
+PAR-001 through PAR-020. Timestamped prior art status is perpetual and does not expire with any license transition.
+
+Copyright (c) 2026 Ahmad Ali Parr — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643
 
 ---
 
