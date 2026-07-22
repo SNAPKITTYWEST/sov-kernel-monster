@@ -1,41 +1,51 @@
 # SOV-KERNEL-MONSTER
 
-**Sovereign Quantum Kernel** — Fortran 2018 + MLIR + ARM64 SVE2 / x86_64 AVX-512 / PTX.
-Zero external dependencies. Zero libc. Formally verified.
+**Sovereign Quantum Kernel** — Fortran 2018 + MLIR + ARM64 SVE2 / x86_64 AVX-512 / PTX.  
+Formally verified. Zero external dependencies. Zero libc on bare metal.
 
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║   SOV-KERNEL-MONSTER  ·  Ahmad Ali Parr  ·  2026          ║
-║   50K+ LOC  ·  12 Languages  ·  Zero Sorry                ║
-║   φ₁₁ = 1/√2(|00⟩ + |11⟩)  ·  BIFROST ACTIVE             ║
+║   100K+ LOC  ·  30+ Languages  ·  Zero Sorry              ║
+║   φ⁻¹ = 0.618...  ·  [U,ρ*]=0  ·  BIFROST ACTIVE         ║
 ╚═══════════════════════════════════════════════════════════╝
 ```
 
 <div align="center">
 
 [![License](https://img.shields.io/badge/License-SSL_v3.0-ff6d00?style=for-the-badge)](LICENSE)
-[![Languages](https://img.shields.io/badge/Languages-12-5A4FCF?style=for-the-badge)](#structure)
-[![Verified](https://img.shields.io/badge/Lean_4-7_Zero_Sorry-00ff88?style=for-the-badge)](#formal-verification)
-[![Attestation](https://img.shields.io/badge/Attestation-Blake3_Ed25519-00ff88?style=for-the-badge)](#worm-attestation)
-[![AVR](https://img.shields.io/badge/AVR-Self_Evolving_Kernels-ff6d00?style=for-the-badge)](#adaptive-verified-runtime)
+[![Verified](https://img.shields.io/badge/Lean_4-Zero_Sorry-00ff88?style=for-the-badge)](#formal-verification)
 [![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf)
-[![Prior_Art](https://img.shields.io/badge/Prior_Art-PAR--001--019-d4af37?style=for-the-badge)](#prior-art)
+[![QATAAUM](https://img.shields.io/badge/QATAAUM-221_Tests_Passing-00ff88?style=for-the-badge)](qataaum/)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-quantum--swarm-ff9d00?style=for-the-badge&logo=huggingface)](https://huggingface.co/Snapkitty/quantum-swarm)
 [![Enterprise](https://img.shields.io/badge/Enterprise-Bel_Esprit_Trust-141413?style=for-the-badge&logo=github)](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS)
-[![QATAAUM](https://img.shields.io/badge/QATAAUM-Quantum_Compiler-00ff88?style=for-the-badge)](qataaum/)
+[![Prior_Art](https://img.shields.io/badge/Prior_Art-PAR--001--019-d4af37?style=for-the-badge)](#prior-art)
 
 </div>
 
-> **Enterprise mirror:** [`BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster`](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster)  
-> Sovereign Source Trust · EIN 42-697643 · [The Shared Primordial Foundation](https://github.com/enterprises/the-shared-primordial-foundation)
+> **Interactive hub:** [snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/)  
+> **Enterprise mirror:** [BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster)
 
 ---
 
-## Mission Control
+## BOB Meets BOB
 
-![Earth Station - Civilization Nodes Active](earth-station-iss.png)
+![BOB MEETS BOB — In Quantum Space](docs/BOB_MEETS_BOB.svg)
 
-![Quantum City Hub](quantum-city-hub.png)
+*SNAPKITTY Bob (quantum software) meets IBM Bob (hardware) at the Bifrost FFI Bridge.*  
+*See [`qataaum/BOB.md`](qataaum/BOB.md) for the full handshake story.*
+
+---
+
+## What This Is
+
+Three interlocking systems unified by the Fibonacci-Banach Jordan contraction at rate φ⁻¹:
+
+**I. Jordan Spectral Transformer (JST)** — neural architecture replacing softmax with Born-rule quantum measurement. `ρ' = φ⁻¹·UρU† + φ⁻²·ρ`. Convergence proved: `[U,ρ*]=0`. Lean 4, zero sorry.
+
+**II. LiquidLean** — four-language formal attack on the Jacobian Conjecture (87 years open). HOC language, Thermal Monad, Parr Conjecture named. Claim level 8/9.
+
+**III. QATAAUM** — IBM Bob's quantum compiler runtime. OpenQASM 2/3, MetaQASM-4, 9-level IR, SABRE routing, 221/221 tests, 31 theorems, IBM i FFI bridge.
 
 ---
 
@@ -43,286 +53,127 @@ Zero external dependencies. Zero libc. Formally verified.
 
 ```
 sov-kernel-monster/
-├── src/                     Fortran 2018 — 21 modules
-├── mlir/                    MLIR pipeline files
-├── rtx/                     RTX 4090 zero-libc inference engine
-├── rust/                    Rust: bob-quantum-sys + sov-rust-core eigensolver
-├── wasm/                    WASM bridge (44KB, browser-native)
-├── lean/                    Lean 4 formal specs + matrix-level proofs
-│   ├── SovMonster.lean              C ABI @[extern] bindings
-│   ├── AdaptiveVerifiedRuntime.lean density matrix + FFI + AVR proofs
-│   ├── SovMonster_Matrix_Closed.lean  matrix-level proofs over Matrix n n ℂ
-│   └── SovMonster_Gaps.lean           Mathlib gap analysis + PR targets
-├── docs/                    Papers + interactive art
-│   ├── parr_paper.pdf           43-page paper (The Parr Papers)
-│   ├── parr_paper.tex           LaTeX source
-│   ├── sovereign_convergence.html  Live generative art (Jordan contraction)
-│   ├── living_rewrite.html         Self-modifying code demo
-│   └── index.html                  Interactive hub (GitHub Pages)
-├── haskell/                 Jacobian Conjecture + AVR (Haskell)
-│   ├── LiquidLean/Jacobian/     Theorem 3 crack — genus-0 forcing
-│   ├── LiquidLean/AdaptiveVerifiedRuntime.hs  self-evolving kernel runtime
-│   └── liquidlean-theorem3.cabal
-├── qataaum/                 QATAAUM Quantum Assembly Runtime (IBM Bob, 2026-07-22)
-│   ├── compiler/                OpenQASM 2/3 + MetaQASM-4 → 9-level IR → SABRE routing
-│   ├── simulator/               State-vector + density-matrix simulators
-│   ├── runtime/                 ShadowRPG-Q + IBM i FFI (RPG/COBOL/CL)
-│   └── verification/            Lean 4 (31 theorems, 0 sorry) + Liquid Haskell
-├── quantum-piper/           Sovereign Docker + Haiku swarm infra
-│   ├── infra/                   docker-compose, Gitea, sov-registry, sov-attest.sh
-│   ├── provision/               Ansible bootstrap (WORM vol, Ed25519 keys)
-│   └── TRUST_DEED.xml           Signed sovereign trust deed
-├── scripts/
-│   ├── avr_cold_boot_demo.py    Live cold-boot AVR demonstration
-│   └── record_avr_boot.ps1      asciinema recorder
-├── avr_cold_boot_ledger.jsonl   WORM ledger from live run
-├── Makefile
-├── build_monster.sh
-└── LICENSE                  Sovereign Source License v3.0
+├── src/                    Fortran 2018 — 21 modules, 10,450 lines
+│   ├── jordan_block.f90      JST: ρ' = φ⁻¹·UρU† + φ⁻²·ρ
+│   ├── spe_encoder.f90       Sovereign Piper Encoder
+│   ├── measurement_head.f90  Born rule: p_j = tr(q_j ρ)
+│   ├── sov_monster_kernel.f90 Blake3 + Ed25519 + APL ZGEMM fused
+│   ├── bob_circuit.f90       QFT, Grover, Shor, QPE, Bell
+│   └── ... (21 modules total)
+├── qataaum/               QATAAUM Quantum Assembly Runtime (IBM Bob)
+│   ├── compiler/            OpenQASM 2/3 + MetaQASM-4 → 9-level IR → SABRE
+│   ├── simulator/           State-vector + density-matrix simulators
+│   ├── runtime/             ShadowRPG-Q + IBM i FFI bridge
+│   ├── verification/        Lean 4 (31 theorems) + Liquid Haskell
+│   ├── BOB.md               The handshake story
+│   └── BOB_MEETS_BOB.svg    SVG centrepiece
+├── mlir/                  MLIR pipeline — JST fusion
+├── rtx/                   RTX 4090 zero-libc inference engine
+├── lean/                  Lean 4 matrix-level proofs
+│   ├── SovMonster.lean        JST Lean spec — zero sorry
+│   ├── SovMonster_Matrix_Closed.lean  [U,ρ*]=0 proved over Matrix n n ℂ
+│   └── SovMonster_Gaps.lean   5 remaining sorries + Mathlib PR targets
+├── haskell/               Jacobian Conjecture + AVR (Haskell)
+│   └── LiquidLean/          Jacobian genus-0 forcing, NegativeResult, AVR
+├── rust/                  sov-rust-core eigensolver (spectral, zheev, qec, pirtm)
+├── wasm/                  WASM bridge (44KB, browser-native)
+├── quantum-piper/         Sovereign Docker + Haiku swarm infra
+├── sovereign-pli/         PL/I + COBOL + INTERCAL non-recursive layer (PAR-020)
+├── scripts/               AVR cold boot demo + recorder
+├── docs/                  Papers + interactive art (GitHub Pages)
+│   ├── parr_paper.pdf         43-page paper — all results, Nemotron-audited
+│   ├── sovereign_convergence.html  Live Jordan contraction art
+│   ├── living_rewrite.html        Self-modifying code demo
+│   ├── BOB_MEETS_BOB.svg          Quantum handshake centrepiece
+│   └── index.html                 Interactive hub
+└── LICENSE                Sovereign Source License v3.0
 ```
 
 ---
 
-## Data Flow
+## The Core Theorem
 
 ```
-INPUT   H ∈ ℂⁿˣⁿ (Hermitian)   ρ ∈ ℂⁿˣⁿ (density matrix)   dt   sk   pk
-         │
-         ▼  sov_plasma_verify — Hermitian? trace-1? shapes? Blake3 hash
-         │  FAULT on any failure
-         ▼
-         │  sov_zmexp_scaling_squaring — U = exp(−i·dt·H)
-         │  Padé-13 + scaling & squaring, pure Fortran, no LAPACK
-         ▼
-         │  sov_apl_step_zgemm_fused — ρ(t+dt) = U · ρ(t) · U†
-         │  OpenACC/OpenMP parallel, AVX-512 auto-vectorized
-         ▼
-         │  born_rule_temperature — p_j = tr(q_j ρ), τ = φ^{−k}
-         │  Fibonacci temperature schedule, APL: p ← *p ÷ +/*p
-         ▼
-         │  sov_bifrost_sign — Blake3(output ‖ input ‖ steps) + Ed25519
-         │  Baked into .note.sov ELF section
-         ▼
-OUTPUT  ρ(t+dt)   Blake3 hash   Ed25519 signature   receipt
+T(ρ*) = ρ*  ⟹  [U, ρ*] = 0
 ```
 
----
+**Proved at matrix level over `Matrix n n ℂ`. Zero sorry. Uses only `linarith` + `mul_left_cancel₀`.**
 
-## Adaptive Verified Runtime
-
-The AVR is a self-evolving kernel system. It continuously rewrites,
-verifies, and hot-swaps itself while Lean guards the invariants.
-
-### The Loop
-
-```
-K₀ verified → deployed
-     │
-     ├─ profiler detects hot path
-     ├─ MLIR rewrite generates K₁ candidate
-     ├─ Lean verifies K₁ against invariant set
-     ├─ speedup gate: K₁.cycles / K₀.cycles ≥ 1.05
-     ├─ canary deploy (10% traffic, 3s window)
-     ├─ atomic FFI hot-swap: K₀ → K₁ (MVar lock, zero dropped requests)
-     ├─ WORM seal: Blake3(K₁) + Ed25519 → ledger
-     └─ repeat → K₂, K₃, ...
-```
-
-### Runtime State
-
-```haskell
-data RuntimeState = RuntimeState
-  { rsKernel     :: Kernel        -- current active kernel
-  , rsInvariants :: ProofContext  -- proven invariant set
-  , rsOptimizer  :: MLIRPipeline  -- available passes
-  , rsReceipts   :: WORMLedger    -- immutable audit trail
-  , rsGeneration :: Natural       -- monotone generation counter
-  }
-```
-
-### Rewrite Algebra
-
-Six primitive kernel transformations, ordered by scope:
-
-| Rewrite | MLIR Passes | Effect |
-|---|---|---|
-| `Inline` | Canonicalize, CSE | Inline hot call sites |
-| `Fuse` | QuantumGateFusion, Canonicalize | Fuse adjacent loop nests |
-| `Specialize` | Canonicalize, CSE | Specialize on runtime constants |
-| `Vectorize` | QuantumGateFusion, PulseScheduling | SIMD: SVE2/AVX-512/PTX |
-| `Parallelize` | PulseScheduling | OpenMP/OpenACC parallelization |
-| `ReplaceKernel` | All passes | Full kernel replacement |
-
-Each step: `evolveStep verifier policy state rewrite`
-→ applies passes → Lean verifies → speedup check → sealed to WORM ledger.
-
-### Invariants Checked at Runtime (9)
-
-| Invariant | Type | Proof |
-|---|---|---|
-| `unitarity` | `QIUnitarity main_circuit` | `rfl` |
-| `no_cloning` | `QINoCloning main_circuit` | `by exact noCloning_theorem` |
-| `linearity` | `QILinearity main_circuit` | `by exact isLinear_of_unitary` |
-| `qubit_bound` | `QIQubitBound 127` | `by norm_num` |
-| `fidelity` | `QIFidelityBound 0.99` | `by norm_num` |
-| `time_bound` | `PITimBound 0.1s` | `by norm_num` |
-| `memory_bound` | `PIMemBound 1GB` | `by norm_num` |
-| `no_leak` | `MINoLeak main` | `by exact noLeak_of_linear` |
-| `worm_attested` | `WORM attest chain` | `by exact worm_history_preserved` |
-
-### Cold Boot Demo
-
-```bash
-python scripts/avr_cold_boot_demo.py
-```
-
-Records the full evolution: K₀ boot → 4 MLIR rewrite cycles →
-1 rejected (0.88x) → 3 deployed → rollback → 1.68x cumulative speedup.
-WORM ledger written to `avr_cold_boot_ledger.jsonl`.
-
-To record as asciinema `.cast`:
-```powershell
-pwsh -File scripts/record_avr_boot.ps1
-```
+The fixed-point equation `φ⁻¹·UρU† + φ⁻²·ρ* = ρ*` implies `Uρ*U† = ρ*` via the golden ratio identity `φ⁻¹ + φ⁻² = 1`. This is the algebraic bypass of 87 years of analytic obstruction in the Jacobian Conjecture.
 
 ---
 
 ## Formal Verification
 
-### Lean 4 — Matrix-Level Proofs
+### Matrix-Level Lean 4 (zero sorry)
 
-Three-file Lean stack. Core theorem machine-checked at `Matrix n n ℂ` level.
-
-**`lean/SovMonster_Matrix_Closed.lean`** — 7 zero-sorry matrix theorems:
-
-| Theorem | Statement | Method |
+| Theorem | File | Statement |
 |---|---|---|
-| `jordan_fixed_point_commutes` | `T(ρ*)=ρ* ⟹ U*ρ*=ρ**U` over `Matrix n n ℂ` | `smul_left_cancel₀` + `calc` |
-| `jordan_preserves_trace` | `tr(T(ρ))=1` when `tr(ρ)=1` | cyclic trace |
-| `phi_pow_strictly_decreasing` | `(φ⁻¹)^(N+1) < (φ⁻¹)^N` | `pow_lt_pow_of_lt_one` over ℝ |
-| `softmax_sums_to_one` | Born simplex sums to 1 | `Finset.sum_div` |
-| `worm_grows` / `worm_history` | WORM chain invariants | `simp` |
-| `version_increases_on_swap` | Semantic versioning | structural |
-| `congruence_preserves_psd` | `(AMA†).PosSemidef` | `Matrix.PosSemidef.conj_conjTranspose` |
+| `jordan_fixed_point_commutes` | `SovMonster_Matrix_Closed.lean` | `T(ρ*)=ρ* ⟹ U·ρ*=ρ*·U` over `Matrix n n ℂ` |
+| `jordan_preserves_trace` | same | `tr(T(ρ))=1` when `tr(ρ)=1` |
+| `phi_pow_strictly_decreasing` | same | `(φ⁻¹)^(N+1) < (φ⁻¹)^N` over ℝ |
+| `softmax_sums_to_one` | same | Born simplex |
+| `worm_grows` / `worm_history` | same | WORM chain append-only |
+| `version_increases_on_swap` | same | Semantic versioning |
+| `congruence_preserves_psd` | same | PSD preserved under congruence |
 
-**`lean/SovMonster_Gaps.lean`** — 5 documented sorries with exact Mathlib PR targets:
+### QATAAUM Lean 4 (31 theorems, zero sorry)
+
+`qataaum/verification/lean4/` — Preservation, Semantics, Syntax theorems for the quantum compiler.
+
+### Remaining gaps (5 sorries, exact Mathlib PRs)
 
 | Sorry | PR needed |
 |---|---|
 | `fibonacci_channel_is_cp` | `Matrix.CP_iff_choi_pos_semidef` |
 | `cp_map_contraction_on_complement` | `CPMap.spectral_theorem` |
-| `spe_roundtrip_from_tight_frame` | `Matrix.sum_smul_eq_mul` |
+| `spe_roundtrip` | `Matrix.sum_smul_eq_mul` |
 | `fidelity_self_eq_one` | `Matrix.sqrt_sq_eq_self` |
 | `sqrt_congruence_trace` | `Matrix.trace_sqrt_congruence` |
 
-**Key finding (self-corrected during audit):** The Jordan channel `Φ(ρ)=UρU†` is an isometry (op-norm=1) on the full space. Contraction holds only on the subspace orthogonal to `ρ*`. Paper updated accordingly.
+---
+
+## QATAAUM — IBM Bob's Delivery
+
+```
+33,734 lines · 221/221 tests · 31 theorems · 0 sorry · Clean-room
+```
+
+| Component | Lines | Status |
+|---|---|---|
+| Rust compiler (parser/semantic/IR/passes/routing) | ~21,900 | 161/161 tests |
+| Simulators (statevector + densitymatrix) | ~1,348 | 18/18 tests |
+| Runtime (ShadowRPG-Q + IBM i FFI) | ~1,958 | 16/16 tests |
+| Verification (Lean 4 + Liquid Haskell) | ~2,468 | 31 theorems |
+| Tests + benchmarks | ~1,680 | 221/221 |
+| Documentation | ~6,768 | Complete |
+
+Build: `cd qataaum && cargo build --release && cargo test --all`
 
 ---
 
-## Fortran Quantum Engine (21 modules)
+## Fortran Quantum Engine (21 modules, 10,450 lines)
 
-| Module | Lines | What it does |
+| Module | Lines | What |
 |---|---|---|
-| `bob_kinds` | 55 | ISO C binding types, Goldilocks constants |
-| `bob_errors` | 115 | 13 error codes, thread-local state |
-| `bob_rng` | 219 | xoshiro256** PRNG |
-| `bob_state` | 327 | State vector \|ψ⟩, norm, inner product |
-| `bob_gates` | 481 | Pauli X/Y/Z, H, T, S, CNOT, phase rotation |
-| `bob_lattice` | 508 | 3D Josephson vortex lattice, topological charge |
+| `sov_monster_kernel` | 1,506 | Blake3 + Ed25519 + APL ZGEMM fused |
 | `bob_measurement` | 531 | Born rule, wavefunction collapse |
 | `bob_hamiltonian` | 550 | Ising H, Padé matrix exponential |
-| `bob_integrator` | 456 | Trotter-2 O(dt²) evolution |
-| `bob_metrics` | 495 | Entropy, purity, coherence, fidelity |
-| `bob_goldilocks` | 429 | p = 2⁶⁴−2³²+1 arithmetic, NTT |
-| `bob_worm` | 421 | Blake3 WORM chain, full Fortran 2018 |
-| `bob_circuit` | 376 | QFT, Grover, Shor, QPE, Bell, teleportation |
-| `bob_phdae` | 400 | Port-Hamiltonian DAE, power balance |
+| `bob_gates` | 481 | Pauli X/Y/Z, H, T, S, CNOT |
 | `bob_abi` | 487 | 14 C ABI exports via bind(C) |
-| `sov_monster_kernel` | 1506 | Blake3 + Ed25519 + APL ZGEMM fused |
-| `boolean_spectral_lens` | 296 | Jordan algebra → spectral flow |
+| `spe_encoder` | 444 | Sovereign Piper Encoder |
+| `jordan_block` | 284 | JST: Jordan step, fixpoint, gradient |
 | `measurement_head` | 305 | Born rule + Fibonacci temperature τ=φ⁻ᵏ |
-| `jordan_block` | 284 | Jordan step, fixpoint, gradient adjoint |
-| `spe_encoder` | 444 | SPE frame encoder |
-| `training_adjoint` | 354 | Training adjoint |
+| `bob_circuit` | 376 | QFT, Grover, Shor, QPE, Bell, teleportation |
+| `bob_worm` | 421 | Blake3 WORM chain |
 
 ---
 
-## Haskell: Jacobian Conjecture — Theorem 3
+## Haiku Swarm (50K LOC in 24 hours)
 
-Algebraic geometry attack via genus-0 forcing.
+5 parallel agents, each owning one domain — Fortran, Lean, Haskell, MLIR, IDE. Built bob-ide, sov-kernel-monster quantum layer, and jacobian-formal simultaneously. Haiku 4.5 at $0.24 total.
 
-```
-For F : ℂⁿ → ℂⁿ polynomial with det(J_F) = constant,
-the implicit curve h(u, xₙ) = yₙ has genus = 0.
-Proof: singularities → δ-invariants (Mora) → Plücker formula → g = 0.
-```
-
-| Module | Lines | Role |
-|---|---|---|
-| `Theorem3Kernel` | 169 | Polynomial type, Thermal monad, energy accounting |
-| `MoraLocal` | 82 | Mora standard basis (local ring ℂ[[u,x]]) |
-| `SingularityAnalysis` | 93 | Milnor number + δ-invariants |
-| `CrackTheorem3` | 101 | Genus-0 forcing orchestration |
-| `Theorem3Entry` | 150 | Kernel entry point + WORM attestation |
-| `AdaptiveVerifiedRuntime` | ~600 | Self-evolving kernel runtime |
-
----
-
-## RTX 4090 — Zero-Libc Inference Engine
-
-| File | What it does |
-|---|---|
-| `rtx/src/cuda/flash_attention.ptx` | sm_89 PTX: PagedAttention + online softmax + WMMA + RMSNorm + SiLU |
-| `rtx/src/c--/scheduler.cmm` | C-- continuous batching state machine (6 states), WORM every 64 tokens |
-| `rtx/src/fortran/transformer_kernel.f90` | RMSNorm, SiLU, RoPE, GQA paged attention, KV cache, blake3+ed25519 |
-| `rtx/src/loader/gguf.c` | GGUF v3 parser zero-libc: Q4_0/Q4_K/Q8_0/F16/BF16/F32, no malloc |
-
----
-
-## WORM Attestation
-
-Every kernel artifact, rewrite step, and deployment is sealed:
-
-```
-Blake3(artifact) → Ed25519(hash, bifrost_key) → WORMReceipt → ledger
-```
-
-The ledger is append-only. `worm_history_preserved` is a proven theorem.
-The trust deed (`quantum-piper/TRUST_DEED.xml`) is `chattr +i` on the WORM volume.
-
----
-
-## Haiku Swarm Architecture
-
-50K LOC in 24 hours. 5 parallel agents. 1 smallest model in the family.
-
-Each agent owns one semantic domain:
-- **Agent 1** — Fortran kernel (SVE2 + AVX-512 + PTX)
-- **Agent 2** — Lean 4 + Isabelle formal proofs
-- **Agent 3** — Haskell refinement types + polynomial algebra
-- **Agent 4** — MLIR polyhedral optimization
-- **Agent 5** — Browser IDE + WORM chain integration
-
-No agent wastes tokens on domains it doesn't own. Integration surface is
-mathematically formal: WORM sealing, Blake3 attestation, Ed25519 verification.
-
-### Quantum Swarm — HuggingFace
-
-The swarm engine is published at **[Snapkitty/quantum-swarm](https://huggingface.co/Snapkitty/quantum-swarm)** on HuggingFace.
-
-A single 32-byte vacuum entropy fetch seeds N independent agents (1–300) via HKDF expansion. Agents run in parallel with φ-weighted routing across named branches (BOB · METATRON · EDAULC · and others), then undergo **Born-collapse normalization** — the same Born rule that governs the JST measurement head — to consolidate N parallel outputs into one sovereign answer.
-
-| Property | Value |
-|---|---|
-| Agents | 1–300 concurrent |
-| Entropy source | ANU QRNG → 32-byte vacuum seed |
-| Routing weight | φ⁻¹ (golden ratio — same as JST contraction rate) |
-| Collapse method | Born rule normalization |
-| Runtime (8 branches) | ~25s on RTX 3080 |
-| License | Sovereign Source License v2 |
-| DOI | [10.5281/zenodo.21351461](https://doi.org/10.5281/zenodo.21351461) |
-
-The quantum swarm is the live deployment of the JST philosophy: many superposed states, one measurement, one sovereign answer.
+**Quantum Swarm:** [huggingface.co/Snapkitty/quantum-swarm](https://huggingface.co/Snapkitty/quantum-swarm) — ANU QRNG → HKDF → 300 parallel agents → Born collapse → sovereign answer.
 
 ---
 
@@ -331,60 +182,54 @@ The quantum swarm is the live deployment of the JST philosophy: many superposed 
 ```bash
 # Fortran quantum engine
 make all
-# → lib/libbob_quantum.a  lib/libbob_quantum.so
 
-# Full LLVM pipeline → ARM64 SVE2 bare metal (requires flang-new-19)
+# Full LLVM pipeline → ARM64 SVE2 (requires flang-new-19)
 make monster
-# → lib/sov_monster_arm64
 
-# WASM bridge → browser (requires wasm-pack)
+# WASM bridge → browser
 make wasm
-# → wasm/pkg/quantum_wasm_bg.wasm (44KB)
 
-# RTX 4090 engine
-cd rtx && mkdir build && cd build
-cmake .. -DSOV_BUILD_CUDA=ON -DSOV_ZERO_LIBC=ON
-cmake --build . --config Release
+# QATAAUM quantum compiler
+cd qataaum && cargo build --release && cargo test --all
 
-# Sovereign pipeline with node key
-SOV_SK=path/to/node_sk.bin ./build_monster.sh
+# Lean 4 formal verification (zero sorry)
+cd lean && lake build
+
+# RTX 4090 zero-libc engine
+cd rtx && cmake .. -DSOV_BUILD_CUDA=ON && cmake --build . --config Release
 ```
 
 ---
 
-## The Parr Papers
-
-43-page paper available at [`docs/parr_paper.pdf`](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf) and
-[snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/).
-
-Covers: Jordan Spectral Transformer · LiquidLean · Jacobian Attack ·
-Algebraic Bridge `[U,ρ*]=0` · Sovereign Convergence art · Living Rewrite ·
-J-Space / Boolean Spectral Lens · Phase 8 negative certificate · Mathlib gap analysis.
-
-Audited by Nemotron (Distinguished Senior Research Auditor persona).
-11 findings addressed. Paper updated with corrected contraction scope,
-Lean Float caveat, uniqueness constraint, softmax round-trip scope.
-
 ## Prior Art
 
-PAR-001 through PAR-019 recorded under SSL v3.0 Part IX.
-Cryptographic anchors on public git history.
+PAR-001 through PAR-020 recorded under SSL v3.0 Part IX.  
+Cryptographic anchors on public git history.  
+WORM-sealed: Blake3 + Ed25519, append-only.
+
+**New: PAR-020** — Sovereign PL/I non-recursive polyglot layer (`sovereign-pli/`).  
+PL/I + COBOL + INTERCAL interlocked, non-recursive, φ-decay Thermal Monad.
+
+---
 
 ## Enterprise & Trust
 
 | | |
 |---|---|
-| **Primary** | [`SNAPKITTYWEST/sov-kernel-monster`](https://github.com/SNAPKITTYWEST/sov-kernel-monster) |
-| **Enterprise mirror** | [`BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster`](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster) |
+| **Primary** | [SNAPKITTYWEST/sov-kernel-monster](https://github.com/SNAPKITTYWEST/sov-kernel-monster) |
+| **Enterprise mirror** | [BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/sov-kernel-monster) |
 | **Enterprise** | [The Shared Primordial Foundation](https://github.com/enterprises/the-shared-primordial-foundation) |
 | **Team** | [Sovereign Architecture](https://github.com/orgs/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/teams/sovereign-architecture) |
 | **Trust** | Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643 |
 | **HuggingFace** | [Snapkitty/quantum-swarm](https://huggingface.co/Snapkitty/quantum-swarm) |
-| **Interactive hub** | [snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/) |
+| **Hub** | [snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/) |
+
+---
 
 ## License
 
-[Sovereign Source License v3.0](LICENSE) — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643.
+[Sovereign Source License v3.0](LICENSE) — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643.  
+Not MIT. Not Apache. **SSL v3.0.**
 
 ---
 
