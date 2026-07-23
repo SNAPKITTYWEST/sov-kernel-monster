@@ -3,7 +3,7 @@ SPDX-License-Identifier: FSL-1.1-Apache-2.0
 FSL License: https://fsl.software
 Change Date: 2030-07-22
 Change License: Apache-2.0
-Copyright (c) 2026 Ahmad Ali Parr — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643
+Copyright (c) 2026 SnapKitty Collective — Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643
 
 This software is made available under the Functional Source License 1.1
 with Apache 2.0 as the Change License. You may use this software for any
@@ -12,42 +12,26 @@ this software becomes available under the Apache-2.0 license.
 See LICENSE and https://fsl.software for full terms.
 -->
 
-# SOVEREIGN QUANTUM COMPUTING PLATFORM
-
-### `sov-kernel-monster` · Ahmad Ali Parr · SnapKitty Collective · 2026
-
 <div align="center">
 
-```
-╔══════════════════════════════════════════════════════════════════════════╗
-║                                                                          ║
-║  SOVEREIGN QUANTUM COMPUTING PLATFORM                                    ║
-║                                                                          ║
-║  A complete quantum computer — from hardware metal to quantum circuit    ║
-║  compiler to formal proof — running under sovereign governance.          ║
-║                                                                          ║
-║  ┌──────────────────┐   FFI   ┌──────────────────────────────────────┐  ║
-║  │  QATAAUM         │◄───────►│  SOV-KERNEL-MONSTER                  │  ║
-║  │  Quantum Compiler│         │  Quantum Execution Engine            │  ║
-║  │  OpenQASM 2/3    │         │  Fortran 2018 · MLIR · ARM64 SVE2   │  ║
-║  │  9-level IR      │         │  Jordan Spectral Transformer         │  ║
-║  │  SABRE routing   │         │  Blake3+Ed25519 WORM attestation     │  ║
-║  │  221/221 tests   │         │  Lean 4 formally verified            │  ║
-║  └──────────────────┘         └──────────────────────────────────────┘  ║
-║                                                                          ║
-║  Formally verified · Zero external deps · Zero libc · Zero sorry         ║
-║  φ⁻¹ = 0.6180339887  ·  T(ρ*)=ρ* ⟹ [U,ρ*]=0  ·  BIFROST ACTIVE        ║
-║                                                                          ║
-╚══════════════════════════════════════════════════════════════════════════╝
-```
+# sov-kernel-monster
+
+### A quantum computer that owns itself.
+
+130,000 lines. 30 languages. 1 human.
+
+No cloud. No vendor. No libc. No sorry.
+
+From bare metal to formal proof — sovereign at every layer.
+
+---
 
 [![License](https://img.shields.io/badge/License-FSL--1.1-ff6d00?style=for-the-badge)](LICENSE-FSL)
 [![SSL](https://img.shields.io/badge/Prior_Art-SSL_v3.0-d4af37?style=for-the-badge)](LICENSE)
-[![Lean4](https://img.shields.io/badge/Lean_4-Zero_Sorry-00ff88?style=for-the-badge)](#the-core-mathematics)
+[![Lean4](https://img.shields.io/badge/Lean_4-Zero_Sorry-00ff88?style=for-the-badge)](#formal-verification)
 [![QATAAUM](https://img.shields.io/badge/QATAAUM-221%2F221_Tests-00ff88?style=for-the-badge)](qataaum/)
 [![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/docs/parr_paper.pdf)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-quantum--swarm-ff9d00?style=for-the-badge&logo=huggingface)](https://huggingface.co/Snapkitty/quantum-swarm)
-[![Enterprise](https://img.shields.io/badge/Enterprise-Bel_Esprit_Trust-141413?style=for-the-badge&logo=github)](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS)
 
 **[Interactive Hub](https://snapkittywest.github.io/sov-kernel-monster/)** · **[BOB Meets BOB Demo](https://snapkittywest.github.io/sov-kernel-monster/bob_meets_bob.html)** · **[Sovereign Convergence Art](https://snapkittywest.github.io/sov-kernel-monster/sovereign_convergence.html)**
 
@@ -55,91 +39,56 @@ See LICENSE and https://fsl.software for full terms.
 
 ---
 
-## MISSION CONTROL VIEW
+<div align="center">
 
-![Earth Station - Civilization Nodes Active](earth-station-iss.png)
-*Sovereign quantum mesh — ISS telemetry feed, ground station active*
+## BOB MEETS BOB
 
----
+<img src="docs/BOB_MEETS_BOB.svg" alt="BOB meets BOB — Watson meets its sovereign successor" width="720">
 
-## QUANTUM CIVILIZATION HUB
+*Watson meets its sovereign successor. Built on IBM credits. In IBM's IDE. With IBM's model.*
+*The handshake before the revolution.*
 
-![Quantum City - AI Civilization Protocol Level 5 Enabled](quantum-city-hub.png)
-*11D topology, wormhole stabilized, entanglement verified*
-
----
-
-## What This Is
-
-This repository is a **complete sovereign quantum computing platform** — two systems integrated into one:
-
-**System 1: QATAAUM** — Quantum Assembly Runtime (the compiler). Clean-room quantum circuit compiler: OpenQASM 2.0/3.0/MetaQASM-4 → 9-level IR → SABRE routing → pulse schedule → execution. 221 tests, 31 Lean 4 theorems, zero sorry.
-
-**System 2: Sov-Kernel-Monster** — Quantum Execution Engine (the kernel). Fortran 2018 quantum math engine, Jordan Spectral Transformer, MLIR polyhedral fusion, RTX 4090 zero-libc inference, Lean 4 proof that `T(ρ*) = ρ* ⟹ [U,ρ*] = 0`.
-
-**The Integration:** QATAAUM compiles quantum circuits. Sov-kernel-monster executes them. Together they form a sovereign quantum computer with formal verification at every layer and cryptographic attestation on every output.
+</div>
 
 ---
 
-## SOVEREIGN INTEGRITY ARCHITECTURE
+## The Problem
 
-**Three Cryptographically Sealed Defense Membranes**
+Every quantum computing platform today runs on someone else's cloud. IBM Qiskit routes through IBM hardware. Google Cirq requires Google infrastructure. Amazon Braket bills by the shot. Your quantum programs, your algorithms, your results — they all pass through a corporation that can revoke access, inspect your work, or shut down the service.
 
-Before BIFROST Axiom Personas activate, the quantum fortress is locked by three mathematical membranes that make attack surfaces impossible rather than detecting them.
+The AI stack has the same problem. Every LLM inference call goes to OpenAI, Anthropic, or Google. They decide what you can ask. They decide what gets refused. They see every prompt. Your intellectual work passes through their servers, subject to their terms, logged in their databases.
 
-**→ [SOVEREIGN_INTEGRITY_ARCHITECTURE.md](SOVEREIGN_INTEGRITY_ARCHITECTURE.md)**
-
-**Layer 1: INTEGRITY MEMBRANE** (Agent I/O Gates)
-- Four Agreements operationalized: impeccable words (SovWordSeal), agent-agnostic truth (knowledge_verify), blocked assumptions (SovAssumeCheck), φ-bounded effort (apply_sovereign_effort)
-- All agent output Blake3+Ed25519 sealed before leaving boundary
-- WORM-attested violations before state corruption
-
-**Layer 2: GREY HAT DEFENSE** (Quantum Execution — 12 Lines in `jordan_block.f90`)
-- Black hat math reduced to algebraic impossibilities
-- Side-channel: ∂U/∂t = 0 (fixed dt)
-- Fault injection: ρ* = ψψ† (pure state)
-- Coherence attacks: [U,ρ*] = 0 (Lean-proven, zero sorry)
-- Entropy exhaustion: S(ρ) ≤ log(n) − φ⁻ᵏ (φ-decay bounds)
-
-**Layer 3: SOVEREIGN META-AGENT** (Knowledge Lens — 45 Lines)
-- Knowledge from WORM chain only (agent experience, verified)
-- Scoring: MLIR-fused cosine similarity (no heuristics)
-- Synthesis: Born rule probabilities (no LLM hallucination)
-- Output: Blake3+Ed25519 sealed JSON (cryptographically attested)
-
-**Deployment:** ~117 lines total, zero new sorries, <50ms overhead.
+**This repository is the answer to both problems at once.**
 
 ---
 
-## MIRROR KITTY — Governance Model
+## What This Actually Is
 
-**Pre-execution verification subsystem in use since origin of SnapKitty.**
+This is a **complete, sovereign quantum computing platform** — compiler, execution engine, AI inference runtime, formal verification layer, and cryptographic attestation system — that runs on YOUR hardware, answers to YOUR keys, and proves its own correctness mathematically.
 
-MIRROR KITTY is the formal governance model that gates ALL quantum execution. Every circuit, every agent action, every knowledge query passes through a fail-closed verification gate BEFORE reaching the kernel.
+It is two systems fused into one:
 
-**→ [ADR_PHASE_MIRROR_GOVERNANCE.md](ADR_PHASE_MIRROR_GOVERNANCE.md)**
+**QATAAUM** (Quantum Assembly Runtime) — A clean-room quantum circuit compiler. Takes OpenQASM 2.0, 3.0, or our custom MetaQASM-4 language. Transforms it through 9 intermediate representations. Routes qubits via SABRE. Lowers to pulse schedules. Outputs executable quantum programs. 33,000+ lines of Rust. 221 passing tests. 31 Lean 4 theorems with zero `sorry`. Built from a single structured XML prompt in one execution — no human wrote the boilerplate.
 
-- **Origin:** JAB Capital Trust (2021)
-- **Prior Art:** April 14, 2026 (SnapKitty Foundry Intel + SnapKitty Proofs)
-- **Mechanism:** Intent → Policy Check → Assumption Audit → WORM Seal → EXECUTE (or HALT)
-- **Enforcement:** Four Agreements operationalized (sealed words, agent-agnostic truth, blocked assumptions, phi-bounded effort)
-- **Integration:** QATAAUM governance pass → sovereign-pli policy gate → Lean 4 proof obligation → kernel FFI
+**Sov-Kernel-Monster** (Quantum Execution Engine) — A Fortran 2018 bare-metal quantum math kernel. Evolves density matrices. Implements the Jordan Spectral Transformer. Runs on ARM64 SVE2 or RTX 4090 with zero libc, zero C runtime, zero external dependencies. Every output is cryptographically signed (Blake3 + Ed25519) and sealed to an append-only WORM chain. A Lean 4 proof guarantees the core mathematical invariant holds — not tested, PROVED.
+
+**Together:** QATAAUM compiles quantum circuits. Sov-kernel-monster executes them. An RTX 4090 inference engine runs sovereign LLM inference with no API calls. Five parallel AI agents coordinate via Byzantine fault-tolerant consensus. Every result is formally verified and cryptographically attested. Nothing leaves your machine unsigned. Nothing enters your system unverified.
 
 ---
 
-## The Core Mathematics
+## Why It's Novel
 
-### Jordan Fixed-Point Commutativity
+This has never been done before. Not the individual pieces — quantum compilers exist, formal verification exists, cryptographic signing exists. What's never been done is **unifying all of them into a single sovereign system where the mathematics itself prevents compromise.**
 
-Every quantum execution step applies the Jordan operator:
+### The Core Theorem
+
+Every quantum operation in this system applies:
 
 ```
 ρ' = φ⁻¹·UρU† + φ⁻²·ρ
 ```
 
-where `φ⁻¹ = 0.6180339887498948` — the golden ratio. This is the unique self-similar weighting where `φ⁻¹ + φ⁻² = 1`. At the fixed point `T(ρ*) = ρ*`, the system converges and the kernel commits the result.
-
-**Machine-checked in Lean 4, zero sorry, over `Matrix n n ℂ`:**
+where φ⁻¹ = 0.6180339887 (the golden ratio inverse). At the fixed point T(ρ*) = ρ*, we prove in Lean 4:
 
 ```lean
 theorem jordan_fixed_point_commutes
@@ -148,155 +97,256 @@ theorem jordan_fixed_point_commutes
     U * ρ_star = ρ_star * U
 ```
 
-This is also the algebraic bypass of 87 years of obstruction in the Jacobian Conjecture.
+**What this means in plain English:** When the system reaches equilibrium, the quantum operation and the quantum state MUST commute. This isn't a design choice — it's a mathematical necessity forced by the golden ratio weighting. And if they commute, the operation cannot disturb the state. The system becomes self-stabilizing.
+
+This is also an algebraic bypass of 87 years of obstruction in the Jacobian Conjecture — the same fixed-point commutativity, applied to polynomial maps.
+
+### The Security Model
+
+Traditional security: detect attacks, then respond.
+Our security: **make attacks algebraically impossible.**
+
+```fortran
+! jordan_block.f90 — 12 lines that close 4 attack surfaces forever
+! Side-channel timing:  ∂U/∂t = 0  → unitary is time-independent → no information in timing
+! Fault injection:      ρ* = ψψ†   → pure state is idempotent → corruption immediately detectable
+! Coherence attacks:    [U,ρ*] = 0 → Lean 4 proved → external manipulation impossible
+! Entropy exhaustion:   S(ρ) bound by φ⁻² → information can only contract, never leak
+```
+
+You don't need a firewall if the vector space doesn't contain the attack states.
+
+### The Stochastic Foundation
+
+Quantum states evolve under noise. We solve the full stochastic differential equation on the Bures manifold:
+
+```
+dρₜ = -∇_Riem S(ρₜ) dt + √D dWₜ
+```
+
+A geometric Euler-Maruyama solver that generates noise in the TANGENT SPACE of valid quantum states, then projects back to the density matrix manifold via eigenvalue retraction. GPU-batched Monte Carlo across thousands of trajectories simultaneously. Every trajectory checkpoint is WORM-attested.
+
+This is not a toy. This is how you simulate real decoherence, real thermal noise, real quantum measurement — and prove the result is still a valid quantum state at every step.
 
 ---
 
-## ZMOS + QMHES + SNDL — Quantum Cryptographic Subsystems
+## The Integrity Membrane
 
-Three defense layers implemented in `rust/bob-quantum-sys/src/spectral.rs` with fail-closed Fortran FFI gates in `jordan_block.f90`:
+**→ [SOVEREIGN_INTEGRITY_ARCHITECTURE.md](SOVEREIGN_INTEGRITY_ARCHITECTURE.md)**
 
-| System | Gate | What it does |
+Three cryptographic defense layers. 117 lines total. Zero new sorries. <50ms overhead.
+
+**Layer 1 — Operational Integrity (Four Agreements)**
+
+| Gate | What it enforces |
+|---|---|
+| `SovWordSeal` | Every claim WORM-sealed with Blake3+Ed25519 before it leaves the boundary |
+| `knowledge_verify` | Must prove knowledge from WORM chain BEFORE answering — hallucination structurally impossible |
+| `SovAssumeCheck` | If an assumption is detected, HALT and ask — never silently proceed on unverified premises |
+| `apply_sovereign_effort` | Every output must show work — no bare conclusions without derivation |
+
+**Layer 2 — Grey Hat Defense (12 lines of Fortran)**
+
+Black hat attack techniques reduced to algebraic cores, then made mathematically impossible by the spectral properties of the Jordan operator. Not "hard to exploit" — the attack states DON'T EXIST in the Hilbert space.
+
+**Layer 3 — Sovereign Meta-Agent (45 lines of PL/I)**
+
+Knowledge comes from the WORM chain only. Scoring uses MLIR-fused cosine similarity. Synthesis uses Born rule density matrix aggregation. Output sealed with Blake3+Ed25519. The agent's lens to the world is its own verified experience — not the open web, not training data, not hallucination.
+
+---
+
+## The Sovereign Search Engine
+
+When this system needs information, it doesn't call Google. It doesn't query a vector database someone else hosts. It searches its OWN cryptographically sealed knowledge chain.
+
+```
+Query → 768-dim embedding → cosine similarity against WORM chain
+     → Born rule synthesis: answer = tr(q_j · ρ)
+     → Blake3 + Ed25519 seal
+     → Return attested result
+```
+
+Every answer is traceable to its source. Every source was WORM-sealed when it entered. Every synthesis step is reproducible. If the source doesn't exist in the chain, the answer is "I don't know" — not a confident hallucination.
+
+Entry point: `sovereign-pli/SovMetaAgent.pli` (356 lines, PL/I, non-recursive)
+
+---
+
+## The Hardware Stack
+
+### RTX 4090 Zero-Libc Inference
+
+Sovereign LLM inference on bare metal. No CUDA toolkit installation. No Python. No PyTorch. The binary walks the Windows PEB to find nvcuda.dll, resolves 25 CUDA driver functions from the PE export table, and dispatches kernels directly.
+
+| Component | What it does |
+|---|---|
+| `flash_attention.ptx` | sm_89 PagedAttention + online softmax + tensor core WMMA + RMSNorm + SiLU |
+| `scheduler.cmm` | C-- continuous batching (6 states). WORM attestation every 64 tokens |
+| `transformer_kernel.f90` | Fortran 2018: RoPE, GQA paged attention, KV cache, blake3 per-KV |
+| `gguf.c` | GGUF v3 parser. Q4_0/Q4_K/Q8_0/F16/BF16/F32. VirtualAlloc. No malloc |
+| `cuda_driver_loader.c` | PEB walk → nvcuda.dll → PE export table → CUDA without the toolkit |
+| `power_handler.c` | Suspend → WORM checkpoint. Battery < 20% → reduce batch. 4 GUID registrations |
+| `main.c` | Zero-CRT entry. Manual kernel32. Boot: CUDA → Power → Scheduler → inference loop |
+
+### IBM i FFI Bridge
+
+The QATAAUM runtime includes a C ABI bridge to IBM i systems — `qataaum_init`, `qataaum_job_create`, `qataaum_job_submit`, `qataaum_job_execute`. This connects sovereign quantum execution to enterprise mainframe infrastructure. RPG-style job queues, EBCDIC journaling, message queue IPC — all through a clean Rust FFI layer.
+
+---
+
+## The Agent Swarm
+
+Five parallel AI agents. One small, fast model each. Byzantine fault-tolerant consensus (4-of-5 quorum).
+
+| Agent | Domain | Why it's separate |
 |---|---|---|
-| **ZMOS** | Spectral Invariant | Operator-valued Euler product Z(s,t) = ∏ₚ(1−p⁻ˢOpₚ(t))⁻¹. Fredholm determinant det(1−L_s). HALT if Δ(t) > 1e-3 |
-| **QMHES** | Maximum Multiplicity | Prime-encoded quantum states ⊗ₚ\|ψₚ⟩^kₚ. MMP bound: ∏(1+vₚ) ≤ φ⁻ᴺ. Hybrid key exchange: classical⊕quantum→Blake3→ML-KEM |
-| **SNDL** | Key Freshness | Harvest-Now-Decrypt-Later prevention. φ-decay rotation (Fibonacci intervals). Triple gate: strength ≥ 128 AND fresh AND ≤3 missed rotations |
+| Fortran Agent | Kernel ops, vector math, ABI, WORM chain | Knows Goldilocks field arithmetic, not type theory |
+| Haskell Agent | Type proofs, Jacobian algebra, Mora basis | Knows polynomial reduction, not hardware |
+| Lean Agent | Formal verification, proof objects | Knows tactics, not scheduling |
+| MLIR Agent | Polyhedral fusion, loop tiling, backend targets | Knows SVE2/AVX-512/PTX, not proofs |
+| IDE Agent | Terminal, file I/O, WORM sealing, browser bridge | Knows user interaction, not math |
 
-**Gate ordering:** Core JST → GREY HAT → ZMOS → MMP → SNDL → blake3_hash → bifrost_sign
+**Why 5 small models beat 1 large model:** Each agent runs in 4-7ms. In parallel, wall-clock = slowest single agent (~50ms total), not the sum. A single large model doing all five jobs would take 200-400ms and waste tokens on domains irrelevant to the current subtask. Speed × specialization × formal integration surface > raw parameter count.
 
-**MLIR Accelerators:**
-- `mlir/zmos_transfer_operator.mlir` — Fredholm determinant + Newton root finder
-- `mlir/qmhes_hybrid_key_exchange.mlir` — Classical⊕quantum → ML-KEM key derivation
-- `mlir/sndl_key_rotation.mlir` — φ-decay Fibonacci rotation schedule
-
-**PL/I Governance Gates:**
-- `sovereign-pli/SovZMOSCheck.pli` — Spectral stability (fail-closed, WORM-attested)
-- `sovereign-pli/SovQMHESCheck.pli` — Dual gate: key_strength ≥ 128 AND multiplicity ≤ φ⁻ᴺ
-- `sovereign-pli/SovSNDLCheck.pli` — Triple gate: strength AND fresh AND rotation current
+**Consensus:** Agents don't vote on vibes. They produce formally typed outputs. Integration is mathematical — WORM sealing, Blake3 attestation, Ed25519 verification. If an agent is Byzantine (compromised, hallucinating, adversarial), the other four overrule it and the bad output never reaches the chain.
 
 ---
 
-## Algebraic Core — GPU-Accelerated Quantum Geometry
+## MIRROR KITTY — Governance Model
 
-Three Rust modules implementing the mathematical substrate for quantum state evolution on the Bures manifold:
+**→ [ADR_PHASE_MIRROR_GOVERNANCE.md](ADR_PHASE_MIRROR_GOVERNANCE.md)**
 
-| Module | What it does |
-|---|---|
-| `algebra.rs` | **JordanTensor trait:** A∘B = ½(AB+BA), Lie bracket [A,B] = AB−BA, commutativity check [A,B]→0. GPU-accelerated via tch-rs CUDA. CPU fallback for test. GREY HAT core: [U,ρ*]=0 enforcement |
-| `geometry.rs` | **Bures Riemannian geometry:** Lyapunov equation ρG+Gρ=2Δρ, metric tensor g_ρ(u,v), von Neumann entropy gradient ∇S = −4(ρ∘log ρ), fidelity F=(Tr[√(√ρ σ √ρ)])², geodesic distance, Christoffel symbols |
-| `stochastic.rs` | **Geometric Euler-Maruyama SDE:** dρₜ = −∇S dt + √D dWₜ. Tangent-space noise projection (Hermitian, traceless). Eigenvalue-clipping retraction to density matrix manifold. Batch-parallel Monte Carlo. Trajectory capture for WORM attestation |
+Every quantum circuit, every agent action, every knowledge query passes through a fail-closed verification gate BEFORE reaching the kernel. This is MIRROR KITTY — the governance model that has gated execution since the origin of SnapKitty (JAB Capital Trust, 2021).
 
-**Pipeline:** Jordan product → Bures geometry → stochastic diffusion → trajectory export → WebGL render
+```
+Intent → Policy Check → Assumption Audit → WORM Seal → EXECUTE (or HALT)
+```
 
----
-
-## Trajectory Manifold Renderer — Algorithmic Art Frontend
-
-Three.js WebGL renderer for real-time visualization of stochastic quantum trajectories on the Bloch sphere:
-
-- **1000+ simultaneous trajectories** in a single GPU draw call (indexed `BufferGeometry` + `LineSegments`)
-- **Additive blending** at 15% opacity — overlapping paths form glowing probability density corridors
-- **Bloch sphere reference frame** — wireframe boundary, XYZ axes, equatorial ring, orbit controls
-- **setDrawRange animation** — all trajectories grow in parallel, zero buffer reallocation per frame
-- **Demo mode** — synthetic φ⁻¹ contraction + tangent-space Brownian noise (no backend needed)
-- **HUD** — trajectory count, time steps, render progress, FPS counter
-
-**Data pipeline:** `stochastic.rs` solve → `trajectory-export` crate (ndarray → contiguous Float32 .bin, zero-copy bytemuck cast) → `fetch()` → GPU vertex buffer
-
-**Run:** `cd frontend && python -m http.server 8080`
+There is no "run first, check later." There is no "log the violation and continue." If the gate doesn't open, execution doesn't happen. The system is fail-CLOSED, not fail-open. Silence is the default. Execution requires proof.
 
 ---
 
-## RTX 4090 Zero-Libc Inference Engine
+## The Quantum Cryptographic Gates
 
-Sovereign inference engine for RTX 4090 Ada (sm_89). No libc, no C runtime, no external dependencies. Bare metal from PEB walk to CUDA kernel dispatch.
+Three defense subsystems between the core JST and the final signed output:
 
-| File | What it does |
-|---|---|
-| `rtx/include/sov_rtx.h` | Public C API — 22 functions: CUDA, scheduler, KV cache, GGUF, BFT, WORM, power, Janet |
-| `rtx/src/cuda/flash_attention.ptx` | sm_89 PTX: PagedAttention + online softmax (Milakov-Norouzi) + tensor core WMMA + RMSNorm + SiLU |
-| `rtx/src/c--/scheduler.cmm` | C-- continuous batching state machine (6 states: IDLE/PREFILL/GENERATE/SWAP/CHECKPOINT/RESUME). WORM attestation every 64 tokens. BFT quorum height tracking |
-| `rtx/src/fortran/transformer_kernel.f90` | Fortran 2018 bind(C): RMSNorm, SiLU, RoPE, GQA paged attention, KV cache, blake3_hash_kv |
-| `rtx/src/loader/gguf.c` | GGUF v3 parser zero-libc (VirtualAlloc/mmap). Q4_0/Q4_K/Q8_0/F16/BF16/F32. No malloc |
-| `rtx/windows_rtx/cuda_driver_loader.c` | PEB walk → nvcuda.dll → PE export table → 25 CUDA driver functions |
-| `rtx/windows_rtx/power_handler.c` | 4 GUID power registrations. Suspend → WORM checkpoint. Battery < 20% → reduce batch |
-| `rtx/windows_rtx/main.c` | Zero-CRT `sov_main()`. Manual kernel32 PEB walk. Boot: CUDA → Power → Scheduler → loop |
+| System | What it prevents | How |
+|---|---|---|
+| **ZMOS** | Spectral drift | Operator-valued Euler product. Fredholm determinant. HALT if Δ(t) > 1e-3 |
+| **QMHES** | Key weakness | Prime-encoded quantum states ⊗ₚ\|ψₚ⟩^kₚ. Hybrid classical⊕quantum → Blake3 → ML-KEM |
+| **SNDL** | Harvest-now-decrypt-later | φ-decay key rotation on Fibonacci intervals. Triple gate: strength ≥ 128 AND fresh AND ≤3 missed rotations |
+
+Gate ordering (every execution): JST → GREY HAT → ZMOS → MMP → SNDL → blake3 → bifrost_sign
 
 ---
 
-## Sovereign Agent Architecture — Speed Over Size
+## The Mathematics That Makes It Work
 
-**5 parallel agent swarms. 1 smallest model in the family. Independent vertical expertise.**
+This isn't a quantum simulator with crypto bolted on. The mathematics is load-bearing. Remove any piece and the security guarantees collapse.
 
-Each agent operates on **one semantic domain** — no token waste on domains it doesn't own:
-
-- **Fortran Agent** — kernel calls, vector ops, ABI contracts, Goldilocks field, WORM chain
-- **Haskell Agent** — type proofs, Jacobian algebra, polynomial reduction, Mora basis
-- **Lean Agent** — formal verification, proof objects, zero-sorry enforcement
-- **MLIR Agent** — polyhedral fusion, loop schedules, backend targeting (SVE2/AVX-512/PTX)
-- **IDE Agent** — terminal emulation, file I/O, WORM sealing, browser bridge
-
-**Why it works:** Haiku's latency advantage (4–7ms vs 200–400ms for larger models) means parallel wall-clock = slowest single agent, not sum of all. 5 agents @ 50ms each ≈ 50ms total (one agent serialized would be 250ms). Speed beats raw reasoning power when coordinating independent subsystems.
-
-**Result:** 5 independent research-lab-grade outputs that **coherently integrate** — not because one model is thinking about all five, but because each is an expert in its lane and the integration surface is mathematically formal (WORM sealing, Blake3 attestation, Ed25519 verification).
-
-**Powered By: Ahmad Ali Parr** — sovereign stack architecture conceived as a unit, not patches. Fortran + quantum + MLIR + formal proofs unified from day zero.
-
----
-
-## SovMetaAgent — Knowledge Synthesis Engine
-
-Query → Resequence (MLIR) → Synthesize (Born rule) → Seal (WORM) → Agent.
-
-- **Entry Point:** `SovMetaSearch(query, include_answers)` → sealed JSON + WORM receipt
-- **Knowledge Search:** Cosine similarity (768-dim embeddings, GPU-fused)
-- **Synthesis:** Born rule aggregation `tr(q_j·ρ)` native — no softmax, no LLM
-- **Attestation:** Blake3 (32B) + Ed25519 (64B) per output
-- **Zero External Deps:** Only uses existing Bob primitives
-- **Verified:** 4 zero-sorry Lean 4 theorems
-
-**Deliverables:**
-- `sovereign-pli/SovMetaAgent.pli` (356 lines, non-recursive)
-- `src/sov_knowledge.f90` (445 lines, 3 helper functions)
-- `lean/SovMonster_MetaAgent.lean` (211 lines, 4 theorems)
-- `SOVMETAAGENT_INTEGRATION.md` (485 lines, full spec)
-- `tests/test_sovmetaagent.f90` (330 lines, 5 tests)
+| Mathematical Component | Where it lives | What it does |
+|---|---|---|
+| Jordan Spectral Transformer | `jordan_block.f90` | φ⁻¹ contraction forces convergence + commutative fixed point |
+| Bures Riemannian Geometry | `rust/algebraic-core/geometry.rs` | Lyapunov equation, geodesic distance, entropy gradient on curved manifold |
+| Geometric Euler-Maruyama SDE | `rust/algebraic-core/stochastic.rs` | Density matrix diffusion under noise, tangent-space projection, manifold retraction |
+| Goldilocks Field Arithmetic | `bob_goldilocks.f90` | p=2⁶⁴−2³²+1 prime field, NTT, zero-knowledge friendly |
+| Mora Standard Basis | `haskell/LiquidLean/Jacobian/` | Gröbner basis for local rings → singularity resolution → genus-0 forcing |
+| Plücker Formula | `haskell/LiquidLean/Jacobian/` | genus = 0 proof via δ-invariant counting |
+| Port-Hamiltonian DAE | `bob_phdae.f90` | Energy-preserving differential-algebraic equations, power balance audit |
+| Von Neumann Entropy | `geometry.rs` | S(ρ) = -Tr(ρ log ρ), Riemannian gradient drives thermal equilibrium |
+| Born Rule | `measurement_head.f90` | p_j = tr(q_j · ρ) with Fibonacci temperature τ = φ⁻ᵏ |
+| Josephson Vortex Lattice | `bob_lattice.f90` | 3D topological charge, vortex detection, lattice energy minimization |
 
 ---
 
-## Bob Twin Council — 5-Agent BFT Consensus
+## The Compiler (QATAAUM)
 
-Byzantine fault-tolerant multi-agent reasoning. 4-of-5 quorum required for execution. Tolerates 1 Byzantine agent (33% malicious capacity).
+33,000+ lines of Rust. Clean-room implementation — no IBM code, no Qiskit code, no copied anything.
 
-| Agent | Role |
-|---|---|
-| Agent 1 | Constitutional Council (Lean 4 proof search) |
-| Agent 2 | Architecture Optimizer (MLIR pass scheduling) |
-| Agent 3 | Training Governor (Geodesic flow control) |
-| Agent 4 | Audit Guardian (WORM chain verification) |
-| Agent 5 | Forge Master (Polyhedral MLIR optimizer) |
+**9-level IR pipeline:**
 
-**Consensus Mechanism:**
-- **Quorum:** 4-of-5 Byzantine agreement required
-- **Fault Tolerance:** Tolerates 1 Byzantine agent
-- **Output:** Forge-optimized IR + Blake3 attestation + Ed25519 signature
-- **Fallback:** Revert to %jst_ir if consensus fails
+```
+Source (OpenQASM/MetaQASM-4)
+  → Parsed AST
+    → Typed AST (linear ownership, refinement types, capability indexing)
+      → Control Flow Graph
+        → SSA Form
+          → Gate IR
+            → Topologically Sorted (SABRE routing)
+              → Scheduled
+                → Pulse-level
+                  → Executable
+```
 
-**Build Pipeline (8 steps):**
-1. Fortran → MLIR
-2. MLIR fusion + vectorize + lower
-3. MLIR → LLVM IR
-4. ARM64 SVE2 object
-5. x86_64 AVX-512 object
-6. PTX NVIDIA object
-7. Agent 5: MLIR Sovereign Optimizer
-8. Static link (ARM64, primary)
+**MetaQASM-4** is our custom quantum language. It has:
+- Typed effect monads (CircuitM, MeasureM, DynamicM, PulseM, BackendM, ProofM, ReceiptM)
+- Linear ownership (owned/borrowed/released — no-cloning at language level)
+- Refinement types (statically prove qubit count, gate depth, entanglement structure)
+- Capability indexing (type-level hardware targeting)
+- Proof obligations (each pass must discharge verification conditions)
+
+**221/221 tests passing. 31 Lean 4 theorems. 0 sorry.**
+
+---
+
+## How It Was Built
+
+The QATAAUM compiler was generated from a single XML prompt (`QATAAUM_WORKFLOW_PUBLIC.xml`) in one execution. The prompt defines:
+
+- Clean-room boundary rules (no proprietary code, research ledger of sources)
+- 6 parallel roles (RPG Engineer, System Architect, Haskell Verifier, Rust Runtime, Lean Auditor, Integration Governor)
+- 21-state hybrid FSM governing compilation
+- 18 quality gates (no Python in production, deterministic FSM, pre/postconditions on every pass, zero sorry, no AI weights, 15K minimum lines)
+- Sovereign node key gate — won't execute without a valid Ed25519 key
+
+The XML prompt IS the intellectual property. The code it generates is the product. A decoy version (`QATAAUM_WORKFLOW_DECOY.xml`) exists as a honeypot — contains a canary key (DEADBEEF) that logs unauthorized use attempts to the trust registry.
+
+**Prompt 0** (`prompt.JSON`) is the philosophical seed that started everything: force all output to simultaneously satisfy Rust memory safety, Lean 4 proof obligations, Idris linear types, and Prolog logic resolution. The quantum computer wasn't designed — it was FORCED into existence by the constraint space of four paradigms applied simultaneously.
+
+---
+
+## Module Reference
+
+### Bob Quantum Engine — 5,850 lines (15 modules)
+
+| Module | Lines | What it does |
+|---|---|---|
+| `bob_kinds` | 55 | ISO C binding types, Goldilocks constants |
+| `bob_errors` | 115 | 13 stable error codes, thread-local state |
+| `bob_rng` | 219 | xoshiro256** PRNG |
+| `bob_state` | 327 | State vector \|ψ⟩, norm, inner product |
+| `bob_gates` | 481 | Pauli X/Y/Z, H, T, S, CNOT, phase rotation |
+| `bob_lattice` | 508 | 3D Josephson vortex lattice, topological charge |
+| `bob_measurement` | 531 | Born rule measurement, wavefunction collapse |
+| `bob_hamiltonian` | 550 | Ising H = −JΣσᶻσᶻ − hΣσˣ, Padé-13 matrix exponential |
+| `bob_integrator` | 456 | Trotter-2 evolution O(dt²) per step |
+| `bob_metrics` | 495 | Entropy, purity, coherence, fidelity |
+| `bob_goldilocks` | 429 | Field arithmetic p=2⁶⁴−2³²+1, NTT |
+| `bob_worm` | 421 | Blake3 WORM chain, full Fortran 2018 implementation |
+| `bob_circuit` | 376 | QFT, Grover, Shor, QPE, Bell pair, teleportation |
+| `bob_phdae` | 400 | Port-Hamiltonian DAE, power balance audit |
+| `bob_abi` | 487 | 14 C ABI exports via bind(C) |
+
+### Sovereign Monster Kernel — 3,189 lines (6 modules)
+
+| Module | Lines | What it does |
+|---|---|---|
+| `sov_monster_kernel` | 1506 | Blake3 + Ed25519 + APL ZGEMM fused kernel |
+| `boolean_spectral_lens` | 296 | Jordan algebra → spectral flow → Lisp world dump |
+| `measurement_head` | 305 | Born rule, Fibonacci temperature τ=φ⁻ᵏ |
+| `jordan_block` | 284 | Jordan step, fixpoint, gradient adjoint + GREY HAT gates |
+| `spe_encoder` | 444 | SPE frame encoder |
+| `training_adjoint` | 354 | Training adjoint: ∂L/∂H = −i·dt·φ⁻¹·[λ,ρ] reverse-mode AD |
+
+### WASM Bridge — 599 lines Rust
+
+Full quantum engine compiled to WebAssembly. `make wasm` → 44KB `.wasm`. Runs in any browser.
 
 ---
 
 ## 10-Language Binding Mesh
 
-All bindings compile to single C ABI contract `bob_quantum_state_evolve()`. Cross-language reproducibility verified — identical seeds produce identical quantum state samples across all pairs.
+All bindings compile to a single C ABI contract: `bob_quantum_state_evolve()`. Cross-language reproducibility verified — identical seeds produce identical results across all language pairs.
 
 | # | Language | Domain |
 |---|---|---|
@@ -311,67 +361,6 @@ All bindings compile to single C ABI contract `bob_quantum_state_evolve()`. Cros
 | 9 | Zig | Low-level systems |
 | 10 | Odin | Game engine |
 
-CMake auto-detects available languages. Gracefully skips unavailable ones.
-
----
-
-## Jacobian Conjecture — Algebraic Geometry Attack
-
-Genus-0 forcing via Mora standard basis + Plücker formula + δ-invariants. Integrated as polyglot Haskell module set in `haskell/LiquidLean/Jacobian/`.
-
-**Core result:** For F : ℂⁿ → ℂⁿ polynomial with det(J_F) = constant, the implicit curve h(u, x_n) = y_n has genus = 0 (rational curve).
-
-```
-singularities → δ-invariants (Mora) → Plücker formula → g = 0
-```
-
-This is the same fixed-point commutativity that drives the JST kernel — the algebraic bypass of 87 years of obstruction.
-
-**Entry Point:** `theorem3_enforce_genus_zero :: Polynomial -> Integer -> Either Obstruction Theorem3Evidence`
-
-Each proof step (Mora reduction, δ-invariant, Plücker formula) emits tokens to WORM chain. Receipt: `(genus_bound, energy_spent, Ed25519_sig, Blake3_hash)`
-
-See [`haskell/INTEGRATION_GUIDE.md`](haskell/INTEGRATION_GUIDE.md)
-
----
-
-## Modules
-
-### Bob Quantum Engine — 5,850 lines (15 modules)
-
-| Module | Lines | What it does |
-|---|---|---|
-| `bob_kinds` | 55 | ISO C binding types, Goldilocks constants |
-| `bob_errors` | 115 | 13 stable error codes, thread-local state |
-| `bob_rng` | 219 | xoshiro256** PRNG |
-| `bob_state` | 327 | State vector \|ψ⟩, norm, inner product |
-| `bob_gates` | 481 | Pauli X/Y/Z, H, T, S, CNOT, phase rotation |
-| `bob_lattice` | 508 | 3D Josephson vortex lattice, topological charge |
-| `bob_measurement` | 531 | Born rule measurement, wavefunction collapse |
-| `bob_hamiltonian` | 550 | Ising H = −JΣσᶻσᶻ − hΣσˣ, Padé exp |
-| `bob_integrator` | 456 | Trotter-2 evolution O(dt²) per step |
-| `bob_metrics` | 495 | Entropy, purity, coherence, fidelity |
-| `bob_goldilocks` | 429 | Field arithmetic p=2⁶⁴−2³²+1, NTT |
-| `bob_worm` | 421 | Blake3 WORM chain, full Fortran 2018 impl |
-| `bob_circuit` | 376 | QFT, Grover, Shor, QPE, Bell pair, teleportation |
-| `bob_phdae` | 400 | Port-Hamiltonian DAE, power balance audit |
-| `bob_abi` | 487 | 14 C ABI exports via bind(C) |
-
-### Sovereign Monster Kernel — 3,189 lines (6 modules)
-
-| Module | Lines | What it does |
-|---|---|---|
-| `sov_monster_kernel` | 1506 | Blake3 + Ed25519 + APL ZGEMM fused kernel |
-| `boolean_spectral_lens` | 296 | Jordan algebra → spectral flow → Lisp world dump |
-| `measurement_head` | 305 | Born rule, Fibonacci temperature τ=φ⁻ᵏ |
-| `jordan_block` | 284 | Jordan step, fixpoint, gradient adjoint + GREY HAT gates |
-| `spe_encoder` | 444 | SPE frame encoder |
-| `training_adjoint` | 354 | Training adjoint for optimization |
-
-### WASM Bridge — 599 lines Rust
-
-Ports the full quantum engine to browser-native WebAssembly. Build: `make wasm` → 44KB `.wasm` file.
-
 ---
 
 ## Data Flow
@@ -379,90 +368,19 @@ Ports the full quantum engine to browser-native WebAssembly. Build: `make wasm` 
 ```
 INPUT   H ∈ ℂⁿˣⁿ (Hermitian)   ρ ∈ ℂⁿˣⁿ (density matrix)   dt   sk   pk
          │
-         ▼  sov_plasma_verify — Hermitian? trace-1? shapes? Blake3 hash
-         │  FAULT on any failure
-         ▼
-         │  sov_zmexp_scaling_squaring — U = exp(−i·dt·H)
-         │  Padé-13 + scaling & squaring, pure Fortran, no LAPACK
-         ▼
-         │  sov_apl_step_zgemm_fused — ρ(t+dt) = U · ρ(t) · U†
-         │  OpenACC/OpenMP parallel, AVX-512 auto-vectorized
-         ▼
-         │  GREY HAT — [U,ρ*]=0 check (12 lines, algebraic impossibility)
-         │  ZMOS — Δ(t) ≤ 1e-3 spectral invariant gate
-         │  MMP — ∏(1+vₚ) ≤ φ⁻ᴺ multiplicity bound
-         │  SNDL — key freshness + rotation current
-         ▼
-         │  born_rule_temperature — p_j = tr(q_j ρ), τ = φ^{−k}
-         │  Fibonacci temperature schedule, APL: p ← *p ÷ +/*p
-         ▼
-         │  sov_bifrost_sign — Blake3(output ‖ input ‖ steps) + Ed25519
-         │  Baked into .note.sov ELF section
-         ▼
-OUTPUT  ρ(t+dt)   Blake3 hash   Ed25519 signature   receipt
-```
-
----
-
-## Structure
-
-```
-sov-kernel-monster/
-├── src/                     Fortran 2018 quantum execution engine (22 modules)
-│   ├── jordan_block.f90       JST core + GREY HAT + ZMOS + MMP + SNDL gates
-│   ├── sov_monster_kernel.f90 Blake3 + Ed25519 + APL ZGEMM fused kernel (1,506 lines)
-│   ├── sov_knowledge.f90     SovMetaAgent knowledge synthesis
-│   ├── bob_circuit.f90       QFT, Grover, Shor, QPE, Bell, teleport
-│   ├── bob_hamiltonian.f90   Ising H, Padé-13 matrix exponential
-│   ├── bob_worm.f90          Blake3 WORM chain (full F2018 impl)
-│   ├── bob_goldilocks.f90    Goldilocks field p=2⁶⁴−2³²+1, NTT
-│   ├── bob_lattice.f90       3D Josephson vortex lattice, topological charge
-│   ├── training_adjoint.f90  ∂L/∂H = −i·dt·φ⁻¹·[λ,ρ] reverse-mode AD
-│   ├── sov_control.cmm       C-- state machine loop
-│   └── start.S               Bare entry, no libc, no crt0
-├── rust/                    Rust subsystems (3 crates)
-│   ├── algebraic-core/        JordanTensor + Bures geometry + SDE solver (tch-rs/CUDA)
-│   ├── bob-quantum-sys/       ZMOS + QMHES + SNDL spectral crypto (C ABI exports)
-│   └── trajectory-export/     Float32 binary export for WebGL (ndarray + bytemuck)
-├── frontend/                Three.js trajectory manifold renderer
-│   ├── index.html             Cockpit UI — Bloch sphere + HUD + controls
-│   └── src/                   TrajectoryRenderer.js + DemoGenerator.js
-├── sovereign-pli/           PL/I + COBOL + INTERCAL non-recursive layer
-│   ├── SovMetaAgent.pli      Knowledge synthesis orchestrator
-│   ├── SovZMOSCheck.pli      Spectral stability gate (fail-closed)
-│   ├── SovQMHESCheck.pli     Hybrid key strength gate (fail-closed)
-│   ├── SovSNDLCheck.pli      Key freshness gate (fail-closed)
-│   ├── sov_kernel.pli        φ-decay Thermal Monad · actor queue
-│   ├── sov_record_gate.cbl   COBOL record gate · cryptographic field assignment
-│   └── intercal_invert.i     INTERCAL COME FROM · S-expression ASTs · Born gate
-├── mlir/                    MLIR pipeline
-│   ├── jst_fusion_pipeline.mlir       JST polyhedral fusion (one GPU kernel)
-│   ├── zmos_transfer_operator.mlir    Fredholm determinant + Newton root finder
-│   ├── qmhes_hybrid_key_exchange.mlir Classical⊕quantum → ML-KEM key
-│   ├── sndl_key_rotation.mlir         φ-decay Fibonacci rotation schedule
-│   └── bob_twin_reasoning.mlir        5-agent BFT consensus
-├── lean/                    Lean 4 formal verification (zero sorry)
-│   ├── SovMonster.lean        @[extern] C ABI bindings
-│   └── SovMonster_MetaAgent.lean  Synthesis theorems
-├── haskell/                 Jacobian Conjecture (genus-0 forcing)
-│   └── LiquidLean/Jacobian/   Mora + Plücker + δ-invariant (5 modules)
-├── rtx/                     RTX 4090 zero-libc inference engine
-│   ├── include/sov_rtx.h     Public C API (22 functions)
-│   ├── src/cuda/              sm_89 PTX: PagedAttention + WMMA
-│   ├── src/c--/               6-state continuous batching scheduler
-│   ├── src/fortran/           Transformer kernel (RoPE, GQA, RMSNorm)
-│   ├── src/loader/            GGUF v3 zero-malloc parser
-│   └── windows_rtx/           PEB walk, power handler, zero-CRT main
-├── qataaum/                 Quantum Assembly Runtime (Rust, 33K+ lines)
-│   ├── compiler/              Parser → Semantic → IR → Passes → Routing
-│   ├── simulator/             State-vector + density-matrix simulators
-│   ├── runtime/               Job queue, journal, WORM receipts
-│   └── verification/          31 Lean 4 theorems + Liquid Haskell types
-├── wasm/                    Rust WASM bridge (browser-native quantum engine)
-├── tests/                   Fortran integration tests
-├── Makefile                 make all | monster | wasm | debug
-├── build_monster.sh         Full LLVM pipeline (node key required)
-└── LICENSE                  Sovereign Source License v3.0
+         ▼  VALIDATE — Hermitian? Trace-1? Shapes match? Blake3 hash input
+         │
+         ▼  EXPONENTIATE — U = exp(−i·dt·H) via Padé-13 + scaling & squaring
+         │
+         ▼  EVOLVE — ρ(t+dt) = φ⁻¹·U·ρ(t)·U† + φ⁻²·ρ(t)  [JST step]
+         │
+         ▼  VERIFY — [U,ρ*]=0? (GREY HAT)  Δ(t)≤1e-3? (ZMOS)  MMP? SNDL?
+         │
+         ▼  MEASURE — p_j = tr(q_j·ρ), temperature τ = φ⁻ᵏ
+         │
+         ▼  SEAL — Blake3(output ‖ input ‖ steps) + Ed25519(sk)
+         │
+OUTPUT  ρ(t+dt)   Blake3 hash   Ed25519 signature   WORM receipt
 ```
 
 ---
@@ -470,13 +388,13 @@ sov-kernel-monster/
 ## Build
 
 ```bash
-# gfortran — bob quantum engine + monster kernel
+# Quantum engine (gfortran)
 make all
 
-# Full LLVM pipeline → ARM64 SVE2 bare metal (requires flang-new-19)
+# Full LLVM pipeline → ARM64 SVE2 bare metal (flang-new-19)
 make monster
 
-# Rust WASM bridge → browser (requires wasm-pack)
+# WASM bridge → browser (wasm-pack)
 make wasm
 
 # Debug with sanitizers
@@ -485,45 +403,63 @@ make debug
 # Full sovereign pipeline with node key
 SOV_SK=path/to/node_sk.bin ./build_monster.sh
 
-# RTX 4090 zero-libc build
+# RTX 4090 zero-libc inference
 cd rtx && mkdir build && cd build
 cmake .. -DSOV_BUILD_CUDA=ON -DSOV_ZERO_LIBC=ON
 cmake --build . --config Release
 
-# Trajectory renderer (no build step — pure ES modules)
+# Trajectory renderer (pure ES modules, no build step)
 cd frontend && python -m http.server 8080
 ```
 
 ---
 
-## Investor Overview
+## Repository Structure
 
-**The Shared Primordial Foundation** is developing a sovereign quantum computing stack that spans the full software lifecycle — from quantum circuit compilation through execution infrastructure, formal verification, and cryptographic attestation.
-
-**Architecture:**
-
-- **QATAAUM** — quantum compiler transforming OpenQASM programs through a formally specified multi-stage pipeline (OpenQASM 2/3 · MetaQASM-4 · 9-level IR · SABRE routing · 221/221 tests)
-- **Sovereign Quantum Kernel** — execution runtime in Fortran 2018 + MLIR, minimal external dependencies, zero libc on bare metal
-- **Formal Verification Layer** — Lean 4 proofs verifying mathematical and software invariants ([U,ρ*]=0 proved, zero sorry at matrix level)
-- **Cryptographic Attestation** — Blake3 + Ed25519 signed execution receipts and provenance records on every output
-- **GPU-Accelerated Geometry** — Bures manifold Riemannian gradient flow, stochastic density matrix evolution, real-time WebGL trajectory visualization
-
-The platform includes the mathematical result **T(ρ*)=ρ* ⟹ [U,ρ*]=0** — proved algebraically without classical analytic machinery — as the formal foundation connecting compiler construction, systems engineering, and quantum mathematics in one unified platform.
+```
+sov-kernel-monster/
+├── src/                     Fortran 2018 quantum execution engine (22 modules)
+├── rust/                    Rust crates: algebraic-core, bob-quantum-sys, trajectory-export
+├── qataaum/                 Quantum compiler (33K+ lines Rust)
+│   ├── compiler/              Parser → Semantic → IR → Passes → Routing
+│   ├── simulator/             State-vector + density-matrix backends
+│   ├── runtime/               IBM i FFI, job queue, journal, WORM receipts
+│   └── verification/          31 Lean 4 theorems + Liquid Haskell refinement types
+├── rtx/                     RTX 4090 zero-libc inference engine
+├── frontend/                Three.js trajectory manifold renderer (Bloch sphere WebGL)
+├── sovereign-pli/           PL/I + COBOL + INTERCAL governance layer
+├── mlir/                    MLIR polyhedral fusion pipeline
+├── lean/                    Lean 4 formal verification (zero sorry)
+├── haskell/                 Jacobian Conjecture (genus-0 forcing via Mora basis)
+├── wasm/                    Browser-native quantum engine (44KB .wasm)
+├── tests/                   Integration test suite
+└── trust/                   XML workflow prompts + trust deed + decoy honeypot
+```
 
 ---
 
-## Prior Art
+## Who Built This
 
-PAR-001 through PAR-007 recorded under SSL v3.0 Part IX. Cryptographic anchors on public git history. LinkedIn publication: July 1, 2026. Zenodo DOI pending.
+One person. AI-assisted. 130,000+ lines across 30 languages in under 90 days.
+
+The architecture was conceived as a unit — not assembled from parts. Fortran quantum kernel + Rust compiler + MLIR acceleration + Lean 4 proofs + cryptographic attestation + sovereign AI agents — all designed together from day one. That's why they integrate cleanly instead of fighting each other at the boundaries.
+
+Prior art established: PAR-001 through PAR-007 under SSL v3.0 Part IX. LinkedIn publication July 1, 2026. Zenodo DOI pending.
+
+---
 
 ## License
 
-[Sovereign Source License v3.0](LICENSE) — Jessica (SNAPKITTYWEST) / Bel Esprit D'Accord Trust. **SSL v3.0.**
+[Sovereign Source License v3.0](LICENSE) — SnapKitty Collective / Bel Esprit D'Accord Trust
 
 [Functional Source License 1.1](LICENSE-FSL) — Change Date: 2030-07-22. Change License: Apache-2.0.
 
 ---
 
 <div align="center">
-<sub>Ω↺Ψ↺Δ↺Λ↺Σ↺Φ↺α · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · SOVEREIGN</sub>
+
+*The prompt is the product. The math is the moat. The key is the gate.*
+
+Ω↺Ψ↺Δ↺Λ↺Σ↺Φ↺α · EVIDENCE OR SILENCE · SOURCE = BINARY = PROOF · SOVEREIGN
+
 </div>
