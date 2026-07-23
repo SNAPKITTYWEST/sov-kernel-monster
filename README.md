@@ -43,10 +43,10 @@ From bare metal to formal proof — sovereign at every layer.
 
 ## BOB MEETS BOB
 
-<img src="docs/BOB_MEETS_BOB.svg" alt="BOB meets BOB — Watson meets its sovereign successor" width="720">
+<img src="docs/bob_meets_bob_bridge.png" alt="BOB meets BOB — SnapKitty BOB (Quantum Software) shakes hands with IBM BOB (Hardware) across the Bifrost FFI Bridge" width="820">
 
-*Watson meets its sovereign successor. Built on IBM credits. In IBM's IDE. With IBM's model.*
-*The handshake before the revolution.*
+*Two BOBs. Two Realms. One Bridge. Infinite Possibilities.*
+*Built on IBM credits. In IBM's IDE. With IBM's model. The handshake before the revolution.*
 
 </div>
 
