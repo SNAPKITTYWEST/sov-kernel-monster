@@ -66,6 +66,7 @@ BOB_SOURCES = \
 MONSTER_SOURCES = \
 	$(SRC_DIR)/sov_monster_kernel.f90 \
 	$(SRC_DIR)/boolean_spectral_lens.f90 \
+	$(SRC_DIR)/sov_knowledge.f90 \
 	$(SRC_DIR)/measurement_head.f90 \
 	$(SRC_DIR)/jordan_block.f90 \
 	$(SRC_DIR)/spe_encoder.f90 \
@@ -174,7 +175,8 @@ $(OBJ_DIR)/bob_abi.o:          $(OBJ_DIR)/bob_kinds.o $(OBJ_DIR)/bob_errors.o \
                                 $(OBJ_DIR)/bob_hamiltonian.o $(OBJ_DIR)/bob_integrator.o
 $(OBJ_DIR)/sov_monster_kernel.o: $(OBJ_DIR)/bob_kinds.o
 $(OBJ_DIR)/boolean_spectral_lens.o: $(OBJ_DIR)/sov_monster_kernel.o $(OBJ_DIR)/spe_encoder.o
-$(OBJ_DIR)/measurement_head.o: $(OBJ_DIR)/sov_monster_kernel.o
+$(OBJ_DIR)/sov_knowledge.o:    $(OBJ_DIR)/sov_monster_kernel.o $(OBJ_DIR)/bob_worm.o $(OBJ_DIR)/bob_kinds.o
+$(OBJ_DIR)/measurement_head.o: $(OBJ_DIR)/sov_monster_kernel.o $(OBJ_DIR)/sov_knowledge.o
 $(OBJ_DIR)/jordan_block.o:     $(OBJ_DIR)/sov_monster_kernel.o
 $(OBJ_DIR)/spe_encoder.o:      $(OBJ_DIR)/bob_kinds.o
-$(OBJ_DIR)/training_adjoint.o: $(OBJ_DIR)/sov_monster_kernel.o
+$(OBJ_DIR)/training_adjoint.o: $(OBJ_DIR)/sov_monster_kernel.o $(OBJ_DIR)/jordan_block.o $(OBJ_DIR)/sov_knowledge.o

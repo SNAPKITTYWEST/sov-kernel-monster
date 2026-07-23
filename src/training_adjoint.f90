@@ -32,7 +32,7 @@
 !=====================================================================
 module training_adjoint
   use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, &
-       c_size_t, c_loc
+       c_size_t, c_loc, c_char, c_associated, c_null_ptr
   use, intrinsic :: iso_fortran_env, only: int64, real64, int8
   use sov_monster_kernel, only: dp, ci, czero, &
        sov_zmexp_scaling_squaring, sov_apl_step_zgemm_fused, &
@@ -40,6 +40,8 @@ module training_adjoint
        sov_blake3_hash_matrix, sov_bifrost_sign, &
        sov_is_hermitian_matrix, sov_is_density_matrix, sov_fault, i8
   use jordan_block, only: jordan_step, jordan_gradient, PHI_INV
+  use sov_knowledge, only: knowledge_penalty_scale, ensure_sovereign_kb, &
+       sovereign_kb, knowledge_chunk
   implicit none
   private
 
@@ -49,6 +51,7 @@ module training_adjoint
   public :: training_step
   public :: adam_update
   public :: adam_state_t
+  public :: apply_knowledge_gradient_correction
 
   real(dp), parameter :: PHI_IN2 = 0.3819660112501051518_dp
 
@@ -178,6 +181,51 @@ contains
   end subroutine
 
   !═══════════════════════════════════════════════════════════════════
+  ! apply_knowledge_gradient_correction — sovereign trust-aware update
+  !
+  ! SOVEREIGN KNOWLEDGE GRADIENT CORRECTION:
+  !   Query KB for channel constraints; scale grads by
+  !   (1 − φ · unverified/total) so trust violations decay φ-wise.
+  !═══════════════════════════════════════════════════════════════════
+  subroutine apply_knowledge_gradient_correction(grads_ptr, n_layers, d, &
+       query_ptr, query_len) &
+       bind(C, name="apply_knowledge_gradient_correction")
+    type(c_ptr),        intent(in), value :: grads_ptr, query_ptr
+    integer(c_int64_t), intent(in), value :: n_layers, d, query_len
+
+    complex(dp), pointer :: grads(:,:,:)
+    type(knowledge_chunk), allocatable :: constraint_chunks(:)
+    character(kind=c_char), pointer :: qbuf(:)
+    character(len=:), allocatable :: query
+    integer :: i, n_out, n_unverified, nq
+    real(dp) :: scale
+
+    call ensure_sovereign_kb()
+    call c_f_pointer(grads_ptr, grads, [n_layers, d, d])
+
+    nq = max(0, int(query_len))
+    n_out = 0
+    n_unverified = 0
+    if (nq > 0 .and. c_associated(query_ptr)) then
+      call c_f_pointer(query_ptr, qbuf, [nq])
+      allocate(character(len=nq) :: query)
+      do i = 1, nq
+        query(i:i) = transfer(qbuf(i), ' ')
+      end do
+      call sovereign_kb%search(query, 3, constraint_chunks, n_out)
+      do i = 1, n_out
+        if (.not. constraint_chunks(i)%is_verified) n_unverified = n_unverified + 1
+        if (.not. sovereign_kb%verify(constraint_chunks(i)%chunk_id)) then
+          n_unverified = n_unverified + 1
+        end if
+      end do
+    end if
+
+    scale = knowledge_penalty_scale(max(n_out, 1), n_unverified)
+    grads = scale * grads
+  end subroutine
+
+  !═══════════════════════════════════════════════════════════════════
   ! project_hermitian — ensure H stays in the symmetric cone
   !
   ! {-@ project_hermitian :: M d d ℂ → Hermitian d                 @-}
@@ -267,6 +315,10 @@ contains
     call adjoint_pass( &
       c_loc(H_list), c_loc(rho_list), target_ptr, &
       n_layers, d, dt, c_loc(grads), sk_ptr, pk_ptr)
+
+    ! ── SOVEREIGN KNOWLEDGE: φ-decay trust scale on gradients ──────
+    call apply_knowledge_gradient_correction(c_loc(grads), n_layers, d, &
+         c_null_ptr, 0_c_int64_t)
 
     ! ── APL: UPDATE — H ← H - η × ∂L/∂H ───────────────────────────
     !$omp parallel do default(none) &

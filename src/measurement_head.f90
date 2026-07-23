@@ -31,16 +31,19 @@
 !=====================================================================
 module measurement_head
   use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, &
-       c_size_t, c_loc
+       c_size_t, c_loc, c_char, c_associated
   use, intrinsic :: iso_fortran_env, only: int64, real64, int8
   use sov_monster_kernel, only: dp, czero, &
        sov_blake3_hash_matrix, sov_bifrost_sign, &
        sov_is_hermitian_matrix, sov_is_density_matrix, sov_fault, i8
+  use sov_knowledge, only: knowledge_tau, ensure_sovereign_kb, sovereign_kb, &
+       knowledge_chunk
   implicit none
   private
 
   public :: born_rule
   public :: born_rule_temperature
+  public :: born_rule_knowledge
   public :: reconstruct
   public :: entropy
   public :: argmax_spectral
@@ -158,6 +161,56 @@ contains
 
     plasma_ok = 1
     deallocate(raw)
+  end subroutine
+
+  !═══════════════════════════════════════════════════════════════════
+  ! born_rule_knowledge — Born rule with sovereign knowledge annealing
+  !
+  ! SOVEREIGN KNOWLEDGE INJECTION (before output signing):
+  !   1. Query KB for measurement context
+  !   2. τ_k = τ₀ · φ⁻ⁿ  where n = # verified context chunks
+  !   3. Softmax Born at knowledge-derived temperature
+  !
+  ! No softmax inversion. No external vector DB. WORM-attested only.
+  !═══════════════════════════════════════════════════════════════════
+  subroutine born_rule_knowledge(q_ptr, rho_ptr, m, d, tau_0, &
+       context_ptr, context_len, p_ptr, plasma_ok) &
+       bind(C, name="born_rule_knowledge")
+    type(c_ptr),        intent(in),  value :: q_ptr, rho_ptr, p_ptr, context_ptr
+    integer(c_int64_t), intent(in),  value :: m, d, context_len
+    real(dp),           intent(in),  value :: tau_0
+    integer(c_int64_t), intent(out)        :: plasma_ok
+
+    type(knowledge_chunk), allocatable :: context_chunks(:)
+    character(len=:), allocatable :: context
+    character(kind=c_char), pointer :: cbuf(:)
+    integer :: i, n_hits, nctx
+    real(dp) :: tau_k
+    integer :: n_verified
+
+    call ensure_sovereign_kb()
+
+    nctx = max(0, int(context_len))
+    if (nctx > 0 .and. c_associated(context_ptr)) then
+      call c_f_pointer(context_ptr, cbuf, [nctx])
+      allocate(character(len=nctx) :: context)
+      do i = 1, nctx
+        context(i:i) = transfer(cbuf(i), ' ')
+      end do
+      call sovereign_kb%search(context, 5, context_chunks, n_hits)
+    else
+      n_hits = 0
+    end if
+
+    n_verified = 0
+    if (allocated(context_chunks)) then
+      do i = 1, size(context_chunks)
+        if (context_chunks(i)%is_verified) n_verified = n_verified + 1
+      end do
+    end if
+
+    tau_k = knowledge_tau(tau_0, n_verified)
+    call born_rule_temperature(q_ptr, rho_ptr, m, d, tau_k, p_ptr, plasma_ok)
   end subroutine
 
   !═══════════════════════════════════════════════════════════════════
