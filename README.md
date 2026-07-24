@@ -32,14 +32,20 @@ No cloud. No vendor. No libc. No sorry.
 [![Paper](https://img.shields.io/badge/Paper-43pp_PDF-5A4FCF?style=for-the-badge)](docs/parr_paper.pdf)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-quantum--swarm-ff9d00?style=for-the-badge&logo=huggingface)](https://huggingface.co/Snapkitty/quantum-swarm)
 
-**[Interactive Hub](https://snapkittywest.github.io/sov-kernel-monster/)** · **[BOB Meets BOB Demo](https://snapkittywest.github.io/sov-kernel-monster/bob_meets_bob.html)** · **[Sovereign Convergence Art](https://snapkittywest.github.io/sov-kernel-monster/sovereign_convergence.html)**
+**[Play BOB's Game](https://snapkittywest.github.io/sov-kernel-monster/bobs-game/)** · **[Interactive Hub](https://snapkittywest.github.io/sov-kernel-monster/)** · **[BOB Meets BOB Demo](https://snapkittywest.github.io/sov-kernel-monster/bob_meets_bob.html)** · **[Sovereign Convergence Art](https://snapkittywest.github.io/sov-kernel-monster/sovereign_convergence.html)**
 
 </div>
 
 ---
 
 <div align="center">
-<img src="docs/assets/readme/hero-sovereign-kernel.svg" alt="Sov-Kernel-Monster system diagram: input flows through QATAAUM compiler, executes on native/WASM/GPU targets, passes verification boundary in Lean and Agda, is signed with Ed25519, and appended to a WORM receipt chain. Central kernel orb shows orbiting QATAAUM, KERNEL, VERIFY, SIGN and WORM nodes with Ω and φ⁻¹ constants visible." width="1100"/>
+<a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">
+<img src="docs/assets/readme/sovereign-interior.gif" alt="Animated Sovereign Interior gameplay: a first-person view moves through the procedural room toward the sealed artwork, couch, evidence table, and trust-chain objective." width="1100"/>
+</a>
+<br>
+<strong><a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">ENTER SOVEREIGN INTERIOR — BOB'S PLAYABLE WORM CHAIN</a></strong>
+<br>
+<sub>First-person Three.js + Rapier3D · inspect → collect → verify → unlock → seal</sub>
 </div>
 
 ---
@@ -77,6 +83,9 @@ The IBM quantum backend currently uses a **deterministic mock** (Phase 1). Real 
 
 ## Watch the System
 
+**[→ Enter Sovereign Interior — BOB's Game](https://snapkittywest.github.io/sov-kernel-monster/bobs-game/)**
+Walk the procedural chamber, recover its covenant evidence, verify the trust chain, unlock the terminal, and leave through the sealed door.
+
 **[→ Interactive Trajectory Hub](https://snapkittywest.github.io/sov-kernel-monster/)**
 The trajectory renderer visualizes stochastic density-matrix paths over a Bures manifold, with playback controls and WORM-attested execution state.
 
@@ -86,7 +95,7 @@ Two BOB agents — SnapKitty software and IBM hardware — shaking hands across 
 **[→ Sovereign Convergence Art](https://snapkittywest.github.io/sov-kernel-monster/sovereign_convergence.html)**
 Real-time visualization of the Jordan Spectral Transformer converging. Watch entropy fall as ρ* approaches the BPS fixed point — what you are seeing is Bekenstein-Hawking black hole entropy converging live.
 
-**[→ Sovereign Interior (3D Game)](https://snapkittywest.github.io/sov-kernel-monster/)** — A first-person 3D game where the win condition is a verified cryptographic hash chain. Three.js + Rapier3D physics. The save system IS the WORM chain.
+**[→ Sovereign Interior source](bobs%20game/)** — The complete dependency-free scaffold, game systems, procedural scene, and test suite.
 
 ---
 
@@ -153,7 +162,7 @@ MOCK BACKEND ⚠        Phase 2 planned
 | **Ed25519 signing** | Output attestation | ✅ IMPLEMENTED | `node_sk.bin` | `SOV_SK=... make monster` |
 | **WASM bridge** | Browser execution | ✅ IMPLEMENTED | wasm-pack | `make wasm` |
 | **SovKangarooShake** | K12∘SHAKE256 hash primitive | ✅ IMPLEMENTED | Haskell | `haskell/SovKangarooShake.hs` |
-| **3D Sovereign Game** | WORM-sealed game loop | ✅ IMPLEMENTED | Three.js + Rapier3D | `sovereign-home-interior/` |
+| **3D Sovereign Game** | WORM-sealed game loop | ✅ IMPLEMENTED | Three.js + Rapier3D | [`bobs game/`](bobs%20game/) |
 | **ARM64/SVE2 target** | Native ARM bare-metal | ✅ TARGET-SUPPORTED | flang-new-19 | `make monster` |
 | **RTX/CUDA target** | GPU inference | ✅ HARDWARE-TARGETED | CMake + CUDA | `cd rtx && cmake -DSOV_BUILD_CUDA=ON` |
 | **MLIR pipeline** | IR lowering and fusion | ✅ PRESENT | mlir-opt | `mlir/` |
@@ -167,7 +176,7 @@ MOCK BACKEND ⚠        Phase 2 planned
 ## Choose Your Entry Point
 
 ### 1. Watch It (No Setup)
-Open **[snapkittywest.github.io/sov-kernel-monster](https://snapkittywest.github.io/sov-kernel-monster/)** in any modern browser. No install required.
+Play **[Sovereign Interior](https://snapkittywest.github.io/sov-kernel-monster/bobs-game/)** or open the **[interactive research hub](https://snapkittywest.github.io/sov-kernel-monster/)** in any modern browser. No install required.
 
 ### 2. Build the Native Kernel
 ```bash
@@ -713,6 +722,7 @@ SOV_SK=path/to/node_sk.bin ./build_monster.sh
 
 ```
 sov-kernel-monster/
+├── bobs game/              Playable Sovereign Interior (Three.js + Rapier3D)
 ├── src/                    Fortran 2018 quantum kernel (22 modules)
 ├── lean/
 │   ├── SovMonster_Matrix_Closed.lean   Jordan commutativity (12 theorems, 0 sorry)
