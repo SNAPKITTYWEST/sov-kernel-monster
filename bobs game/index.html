@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#171916">
+  <title>Sovereign Interior</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+        "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/rapier.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main id="game" aria-label="Sovereign Interior game">
+    <div id="viewport"></div>
+
+    <div id="hud" hidden>
+      <section id="objective" class="hud-band" aria-live="polite">
+        <span class="hud-kicker">Trust Chain</span>
+        <strong id="objective-text">Inspect the sealed artwork</strong>
+        <span id="objective-progress">Step 1 of 4</span>
+      </section>
+
+      <div id="save-status" class="hud-band" aria-live="polite"></div>
+      <div id="reticle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div id="interaction-prompt" class="hud-band" aria-live="polite"></div>
+
+      <section id="player-status" class="hud-band">
+        <div class="status-row"><span>Stability</span><output id="stability-value">100</output></div>
+        <div class="meter"><i id="stability-fill"></i></div>
+        <div class="status-row secondary"><span id="stance">Standing</span><span id="movement-state"></span></div>
+      </section>
+
+      <section id="inventory-peek" class="hud-band">
+        <span class="hud-kicker">Evidence</span>
+        <strong><span id="inventory-count">0</span> / 8</strong>
+      </section>
+
+      <div id="seal">SNAPKITTY · WORM-SEALED · Ahmad Ali Parr</div>
+      <div id="toast" role="status" aria-live="polite"></div>
+
+      <div id="touch-controls" aria-label="Touch controls">
+        <div id="move-pad" aria-label="Move"><i id="move-knob"></i></div>
+        <button type="button" class="touch-button jump" data-touch-action="JUMP" aria-label="Jump">↑</button>
+        <button type="button" class="touch-button crouch" data-touch-action="CROUCH" aria-label="Crouch">C</button>
+        <button type="button" class="touch-button sprint" data-touch-action="SPRINT" aria-label="Sprint">»</button>
+        <button type="button" class="touch-button use" data-touch-action="INTERACT">Use</button>
+        <button type="button" class="touch-button bag" data-command="inventory" aria-label="Inventory">I</button>
+        <button type="button" class="touch-button pause" data-command="pause" aria-label="Pause">Ⅱ</button>
+      </div>
+    </div>
+
+    <section id="loading-screen" class="overlay active" aria-live="polite">
+      <div class="brand-lockup">
+        <p>SnapKitty presents</p>
+        <h1>Sovereign Interior</h1>
+        <div class="loading-line"><i></i></div>
+        <span id="loading-text">Initializing sovereign physics</span>
+      </div>
+    </section>
+
+    <section id="start-screen" class="overlay" hidden>
+      <div class="menu-panel start-panel">
+        <p class="eyebrow">Worm-sealed chamber 01</p>
+        <h1>Sovereign Interior</h1>
+        <p class="mission-copy">Recover the covenant evidence. Verify the trust chain. Leave no transition unsealed.</p>
+        <div class="menu-actions">
+          <button id="enter-game" class="primary" type="button">Enter Interior</button>
+          <button id="continue-game" type="button" hidden>Continue Sealed Session</button>
+        </div>
+        <p id="start-seal" class="receipt-line">Genesis seal verified</p>
+      </div>
+    </section>
+
+    <section id="pause-screen" class="overlay" hidden>
+      <div class="menu-panel">
+        <p class="eyebrow">Application state</p>
+        <h2>Paused</h2>
+        <div class="menu-actions compact">
+          <button id="resume-game" class="primary" type="button">Resume</button>
+          <button data-command="inventory" type="button">Inventory</button>
+          <button id="save-game" type="button">Save Session</button>
+          <button id="load-game" type="button">Load Session</button>
+          <button id="open-settings" type="button">Settings</button>
+          <button id="respawn-player" type="button">Respawn</button>
+        </div>
+        <p id="pause-receipt" class="receipt-line"></p>
+      </div>
+    </section>
+
+    <section id="settings-screen" class="overlay" hidden>
+      <div class="menu-panel settings-panel">
+        <p class="eyebrow">Local preferences</p>
+        <h2>Settings</h2>
+        <label>Look sensitivity <input id="setting-sensitivity" type="range" min="0.5" max="2" step="0.05" value="1"></label>
+        <label>Field of view <input id="setting-fov" type="range" min="65" max="90" step="1" value="75"></label>
+        <label>Master volume <input id="setting-volume" type="range" min="0" max="1" step="0.05" value="0.6"></label>
+        <label class="toggle"><input id="setting-invert" type="checkbox"><span>Invert vertical look</span></label>
+        <label class="toggle"><input id="setting-reduced-motion" type="checkbox"><span>Reduced camera motion</span></label>
+        <label class="toggle"><input id="setting-contrast" type="checkbox"><span>High contrast HUD</span></label>
+        <label>Shadow quality
+          <select id="setting-shadows">
+            <option value="high">High</option>
+            <option value="low">Low</option>
+            <option value="off">Off</option>
+          </select>
+        </label>
+        <button id="close-settings" class="primary" type="button">Back</button>
+      </div>
+    </section>
+
+    <section id="inventory-screen" class="overlay" hidden>
+      <div class="inventory-layout">
+        <header>
+          <div><p class="eyebrow">Evidence register</p><h2>Inventory</h2></div>
+          <button id="close-inventory" class="icon-button" type="button" aria-label="Close inventory">×</button>
+        </header>
+        <nav class="segments" aria-label="Inventory category">
+          <button class="active" type="button" data-category="all">All</button>
+          <button type="button" data-category="evidence">Evidence</button>
+          <button type="button" data-category="document">Documents</button>
+        </nav>
+        <div id="inventory-list" role="listbox" aria-label="Collected items"></div>
+        <article id="inventory-detail">
+          <p class="empty-state">No evidence collected.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="document-screen" class="overlay" hidden>
+      <article class="document-sheet">
+        <p class="document-class">Sovereign record · chamber copy</p>
+        <h2 id="document-title">Covenant Fragment</h2>
+        <div id="document-body"></div>
+        <footer>
+          <code id="document-seal"></code>
+          <div>
+            <button id="back-document" type="button">Back</button>
+            <button id="verify-document" class="primary" type="button">Verify Covenant</button>
+          </div>
+        </footer>
+      </article>
+    </section>
+
+    <section id="complete-screen" class="overlay" hidden>
+      <div class="menu-panel complete-panel">
+        <p class="eyebrow">Mission receipt sealed</p>
+        <h2>Trust Chain Restored</h2>
+        <p>The covenant is verified and the chamber has released its final state.</p>
+        <code id="completion-seal"></code>
+        <button id="continue-exploring" class="primary" type="button">Continue Exploring</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -49,7 +49,15 @@ See LICENSE and https://fsl.software for full terms.
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-quantum--swarm-ff9d00?style=for-the-badge&logo=huggingface)](https://huggingface.co/Snapkitty/quantum-swarm)
 [![Enterprise](https://img.shields.io/badge/Enterprise-Bel_Esprit_Trust-141413?style=for-the-badge&logo=github)](https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS)
 
-**[Interactive Hub](https://snapkittywest.github.io/sov-kernel-monster/)** · **[BOB Meets BOB Demo](https://snapkittywest.github.io/sov-kernel-monster/bob_meets_bob.html)** · **[Sovereign Convergence Art](https://snapkittywest.github.io/sov-kernel-monster/sovereign_convergence.html)**
+**[Play BOB's Game](https://snapkittywest.github.io/sov-kernel-monster/bobs-game/)** · **[Interactive Hub](https://snapkittywest.github.io/sov-kernel-monster/)** · **[BOB Meets BOB Demo](https://snapkittywest.github.io/sov-kernel-monster/bob_meets_bob.html)**
+
+<a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">
+<img src="docs/assets/readme/sovereign-interior.gif" alt="Animated Sovereign Interior gameplay: a first-person view moves through the procedural room toward the sealed artwork, couch, evidence table, and trust-chain objective." width="1100"/>
+</a>
+<br>
+<strong><a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">ENTER SOVEREIGN INTERIOR — BOB'S PLAYABLE WORM CHAIN</a></strong>
+<br>
+<sub>First-person Three.js + Rapier3D · inspect → collect → verify → unlock → seal</sub>
 
 </div>
 
@@ -128,6 +136,8 @@ They meet at the **Bifrost FFI Bridge** — 5 new kernel syscalls and `/dev/quan
 
 ```
 sov-kernel-monster/
+│
+├── bobs game/              ── PLAYABLE SOVEREIGN INTERIOR (Three.js + Rapier3D)
 │
 ├── src/                    ── QUANTUM EXECUTION ENGINE (Fortran 2018, 21 modules)
 │   ├── jordan_block.f90       Jordan Spectral Transformer: ρ'=φ⁻¹·UρU†+φ⁻²·ρ
