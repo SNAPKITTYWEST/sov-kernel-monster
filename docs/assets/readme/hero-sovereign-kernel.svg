@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <style>
+      @media (prefers-reduced-motion: reduce) {
+        .spin, .pulse, .flow, .blink { animation: none !important; }
+      }
+      .spin { animation: spin 20s linear infinite; }
+      .pulse { animation: pulse 3s ease-in-out infinite; }
+      .flow { animation: flow 4s linear infinite; }
+      .blink { animation: blink 2s step-end infinite; }
+      .orb-qataaum { animation: orbit 12s linear infinite; }
+      .orb-kernel  { animation: orbit 12s linear infinite -3s; }
+      .orb-verify  { animation: orbit 12s linear infinite -6s; }
+      .orb-sign    { animation: orbit 12s linear infinite -9s; }
+      .orb-worm    { animation: orbit2 16s linear infinite; }
+      @keyframes spin   { to { transform: rotate(360deg); } }
+      @keyframes pulse  { 0%,100%{opacity:.6} 50%{opacity:1} }
+      @keyframes flow   { from{stroke-dashoffset:120} to{stroke-dashoffset:0} }
+      @keyframes blink  { 50%{opacity:0} }
+      @keyframes orbit  {
+        from { transform: rotate(var(--start,0deg)) translateX(130px) rotate(calc(-1*var(--start,0deg))); }
+        to   { transform: rotate(calc(var(--start,0deg)+360deg)) translateX(130px) rotate(calc(-1*(var(--start,0deg)+360deg))); }
+      }
+      @keyframes orbit2 {
+        from { transform: rotate(var(--start,0deg)) translateX(175px) rotate(calc(-1*var(--start,0deg))); }
+        to   { transform: rotate(calc(var(--start,0deg)+360deg)) translateX(175px) rotate(calc(-1*(var(--start,0deg)+360deg))); }
+      }
+    </style>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%"   stop-color="#050d1a"/>
+      <stop offset="100%" stop-color="#000508"/>
+    </radialGradient>
+    <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#00e5ff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-strong">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#00e5ff" opacity="0.7"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" fill="url(#bg)"/>
+
+  <!-- Subtle grid -->
+  <g opacity="0.06" stroke="#00e5ff" stroke-width="0.5">
+    <line x1="0" y1="50"  x2="1200" y2="50"/>
+    <line x1="0" y1="100" x2="1200" y2="100"/>
+    <line x1="0" y1="150" x2="1200" y2="150"/>
+    <line x1="0" y1="200" x2="1200" y2="200"/>
+    <line x1="0" y1="250" x2="1200" y2="250"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="350" x2="1200" y2="350"/>
+    <line x1="100" y1="0"  x2="100" y2="400"/>
+    <line x1="200" y1="0"  x2="200" y2="400"/>
+    <line x1="300" y1="0"  x2="300" y2="400"/>
+    <line x1="400" y1="0"  x2="400" y2="400"/>
+    <line x1="500" y1="0"  x2="500" y2="400"/>
+    <line x1="600" y1="0"  x2="600" y2="400"/>
+    <line x1="700" y1="0"  x2="700" y2="400"/>
+    <line x1="800" y1="0"  x2="800" y2="400"/>
+    <line x1="900" y1="0"  x2="900" y2="400"/>
+    <line x1="1000" y1="0" x2="1000" y2="400"/>
+    <line x1="1100" y1="0" x2="1100" y2="400"/>
+  </g>
+
+  <!-- ── LEFT: Pipeline ── -->
+  <!-- INPUT -->
+  <rect x="30" y="70" width="120" height="36" rx="4" fill="#0a1628" stroke="#00e5ff" stroke-width="1" opacity="0.9"/>
+  <text x="90" y="93" font-family="monospace" font-size="11" fill="#00e5ff" text-anchor="middle" filter="url(#glow)">OpenQASM / Matrix</text>
+
+  <!-- Arrow -->
+  <line x1="150" y1="88" x2="180" y2="88" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7" marker-end="url(#arrow)">
+    <animate attributeName="stroke-dashoffset" from="18" to="0" dur="1.5s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- QATAAUM -->
+  <rect x="182" y="58" width="130" height="56" rx="4" fill="#0a1a2e" stroke="#ffd700" stroke-width="1.5"/>
+  <text x="247" y="82" font-family="monospace" font-size="11" fill="#ffd700" text-anchor="middle" filter="url(#glow)">QATAAUM</text>
+  <text x="247" y="98" font-family="monospace" font-size="9"  fill="#a0b0c0" text-anchor="middle">QUANTUM COMPILER</text>
+  <text x="247" y="110" font-family="monospace" font-size="8" fill="#607080" text-anchor="middle">Parse→IR→Route→Target</text>
+
+  <!-- Arrow -->
+  <line x1="312" y1="88" x2="342" y2="88" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.8" marker-end="url(#arrow)"/>
+
+  <!-- EXECUTION fork label -->
+  <text x="356" y="75" font-family="monospace" font-size="8" fill="#607080" text-anchor="middle">EXECUTE</text>
+
+  <!-- Execution targets — branch down -->
+  <!-- Fortran -->
+  <line x1="356" y1="88" x2="356" y2="130" stroke="#00ff88" stroke-width="1" opacity="0.6"/>
+  <line x1="356" y1="115" x2="320" y2="130" stroke="#00ff88" stroke-width="1" opacity="0.4"/>
+  <line x1="356" y1="115" x2="356" y2="130" stroke="#00ff88" stroke-width="1" opacity="0.4"/>
+  <line x1="356" y1="115" x2="392" y2="130" stroke="#00ff88" stroke-width="1" opacity="0.4"/>
+
+  <rect x="295" y="130" width="55" height="24" rx="3" fill="#051508" stroke="#00ff88" stroke-width="1" opacity="0.9"/>
+  <text x="322" y="146" font-family="monospace" font-size="8" fill="#00ff88" text-anchor="middle">Fortran</text>
+
+  <rect x="330" y="130" width="55" height="24" rx="3" fill="#051508" stroke="#00ff88" stroke-width="1" opacity="0.7"/>
+  <text x="357" y="146" font-family="monospace" font-size="8" fill="#00ff88" text-anchor="middle">ARM64</text>
+
+  <rect x="365" y="130" width="55" height="24" rx="3" fill="#051508" stroke="#00ff88" stroke-width="1" opacity="0.7"/>
+  <text x="392" y="146" font-family="monospace" font-size="8" fill="#00ff88" text-anchor="middle">WASM</text>
+
+  <!-- Arrow to verify -->
+  <line x1="356" y1="156" x2="356" y2="175" stroke="#00ff88" stroke-width="1.5" opacity="0.6" marker-end="url(#arrow)"/>
+
+  <!-- VERIFY -->
+  <rect x="296" y="176" width="120" height="36" rx="4" fill="#0a0a22" stroke="#8888ff" stroke-width="1.5"/>
+  <text x="356" y="196" font-family="monospace" font-size="10" fill="#8888ff" text-anchor="middle" filter="url(#glow)">LEAN 4 + AGDA</text>
+  <text x="356" y="207" font-family="monospace" font-size="8"  fill="#606080" text-anchor="middle">ZERO SORRY</text>
+
+  <!-- Arrow to sign -->
+  <line x1="356" y1="212" x2="356" y2="232" stroke="#8888ff" stroke-width="1.5" opacity="0.6" marker-end="url(#arrow)"/>
+
+  <!-- SIGN -->
+  <rect x="296" y="232" width="120" height="36" rx="4" fill="#1a0a0a" stroke="#ff6644" stroke-width="1.5"/>
+  <text x="356" y="252" font-family="monospace" font-size="10" fill="#ff6644" text-anchor="middle" filter="url(#glow)">Ed25519 SIGN</text>
+  <text x="356" y="263" font-family="monospace" font-size="8"  fill="#806060" text-anchor="middle">Blake3 + Node Key</text>
+
+  <!-- Arrow to WORM -->
+  <line x1="356" y1="268" x2="356" y2="288" stroke="#ff6644" stroke-width="1.5" opacity="0.6" marker-end="url(#arrow)"/>
+
+  <!-- WORM -->
+  <rect x="296" y="288" width="120" height="36" rx="4" fill="#0a1208" stroke="#44ff88" stroke-width="1.5"/>
+  <text x="356" y="308" font-family="monospace" font-size="10" fill="#44ff88" text-anchor="middle" filter="url(#glow)">WORM RECEIPT</text>
+  <text x="356" y="319" font-family="monospace" font-size="8"  fill="#406050" text-anchor="middle">Append-Only Chain</text>
+
+  <!-- ── CENTER: Kernel Orb ── -->
+  <g transform="translate(630,200)">
+    <!-- Glow -->
+    <circle r="155" fill="url(#core-glow)" class="pulse"/>
+    <!-- Outer ring -->
+    <circle r="140" fill="none" stroke="#00e5ff" stroke-width="0.5" opacity="0.15" class="spin" style="transform-origin:0 0"/>
+    <!-- Middle ring -->
+    <circle r="110" fill="none" stroke="#ffd700" stroke-width="0.5" opacity="0.15"/>
+    <!-- Inner ring -->
+    <circle r="80" fill="none" stroke="#00ff88" stroke-width="0.5" opacity="0.2"/>
+    <!-- Core -->
+    <circle r="52" fill="#050d1a" stroke="#00e5ff" stroke-width="2" filter="url(#glow-strong)"/>
+    <circle r="44" fill="#020810" stroke="#00e5ff" stroke-width="0.5" opacity="0.4"/>
+    <!-- Ω symbol -->
+    <text x="0" y="-6" font-family="serif" font-size="22" fill="#00e5ff" text-anchor="middle" filter="url(#glow)" class="pulse">Ω</text>
+    <!-- φ⁻¹ -->
+    <text x="0" y="16" font-family="monospace" font-size="10" fill="#ffd700" text-anchor="middle" opacity="0.9">φ⁻¹≈0.618</text>
+
+    <!-- Orbiting nodes -->
+    <g class="orb-qataaum" style="--start:0deg; transform-origin:0 0">
+      <circle cx="130" cy="0" r="18" fill="#0a1a2e" stroke="#ffd700" stroke-width="1.5"/>
+      <text x="130" y="5" font-family="monospace" font-size="8" fill="#ffd700" text-anchor="middle">QATAAUM</text>
+    </g>
+    <g class="orb-kernel" style="--start:90deg; transform-origin:0 0">
+      <circle cx="130" cy="0" r="18" fill="#051508" stroke="#00ff88" stroke-width="1.5"/>
+      <text x="130" y="5" font-family="monospace" font-size="8" fill="#00ff88" text-anchor="middle">KERNEL</text>
+    </g>
+    <g class="orb-verify" style="--start:180deg; transform-origin:0 0">
+      <circle cx="130" cy="0" r="18" fill="#0a0a22" stroke="#8888ff" stroke-width="1.5"/>
+      <text x="130" y="5" font-family="monospace" font-size="8" fill="#8888ff" text-anchor="middle">VERIFY</text>
+    </g>
+    <g class="orb-sign" style="--start:270deg; transform-origin:0 0">
+      <circle cx="130" cy="0" r="18" fill="#1a0a0a" stroke="#ff6644" stroke-width="1.5"/>
+      <text x="130" y="5" font-family="monospace" font-size="8" fill="#ff6644" text-anchor="middle">SIGN</text>
+    </g>
+    <g class="orb-worm" style="--start:45deg; transform-origin:0 0">
+      <circle cx="175" cy="0" r="16" fill="#0a1208" stroke="#44ff88" stroke-width="1.5"/>
+      <text x="175" y="5" font-family="monospace" font-size="8" fill="#44ff88" text-anchor="middle">WORM</text>
+    </g>
+  </g>
+
+  <!-- ── RIGHT: Title block ── -->
+  <text x="870" y="95" font-family="monospace" font-size="26" fill="#00e5ff" font-weight="bold" filter="url(#glow)">SOV-KERNEL-MONSTER</text>
+  <text x="870" y="122" font-family="monospace" font-size="13" fill="#ffd700" opacity="0.9">A sovereign compute stack that</text>
+  <text x="870" y="140" font-family="monospace" font-size="13" fill="#ffd700" opacity="0.9">compiles, executes, verifies,</text>
+  <text x="870" y="158" font-family="monospace" font-size="13" fill="#ffd700" opacity="0.9">signs, and remembers.</text>
+
+  <!-- Status pills -->
+  <rect x="870" y="175" width="100" height="20" rx="10" fill="#001a08" stroke="#00ff88" stroke-width="1"/>
+  <text x="920" y="189" font-family="monospace" font-size="9" fill="#00ff88" text-anchor="middle">ZERO SORRY</text>
+
+  <rect x="978" y="175" width="110" height="20" rx="10" fill="#1a0005" stroke="#ff6644" stroke-width="1"/>
+  <text x="1033" y="189" font-family="monospace" font-size="9" fill="#ff6644" text-anchor="middle">Ed25519 SIGNED</text>
+
+  <rect x="1096" y="175" width="90" height="20" rx="10" fill="#00050a" stroke="#00e5ff" stroke-width="1"/>
+  <text x="1141" y="189" font-family="monospace" font-size="9" fill="#00e5ff" text-anchor="middle">WORM SEALED</text>
+
+  <!-- Metrics row -->
+  <text x="870" y="225" font-family="monospace" font-size="10" fill="#607080">THEOREMS</text>
+  <text x="870" y="243" font-family="monospace" font-size="20" fill="#00e5ff" filter="url(#glow)" font-weight="bold">65+</text>
+
+  <text x="960" y="225" font-family="monospace" font-size="10" fill="#607080">LANGUAGES</text>
+  <text x="960" y="243" font-family="monospace" font-size="20" fill="#ffd700" filter="url(#glow)" font-weight="bold">30</text>
+
+  <text x="1050" y="225" font-family="monospace" font-size="10" fill="#607080">TESTS</text>
+  <text x="1050" y="243" font-family="monospace" font-size="20" fill="#00ff88" filter="url(#glow)" font-weight="bold">221</text>
+
+  <text x="1130" y="225" font-family="monospace" font-size="10" fill="#607080">SORRY</text>
+  <text x="1130" y="243" font-family="monospace" font-size="20" fill="#44ff88" filter="url(#glow)" font-weight="bold">0</text>
+
+  <!-- Tag line -->
+  <text x="870" y="285" font-family="monospace" font-size="11" fill="#304050" font-style="italic">LOCAL EXECUTION · MACHINE-CHECKED · SIGNED OUTPUT · APPEND-ONLY HISTORY</text>
+
+  <!-- Chain visualization -->
+  <rect x="870" y="305" width="60" height="28" rx="3" fill="#0a1208" stroke="#44ff88" stroke-width="1"/>
+  <text x="900" y="318" font-family="monospace" font-size="7" fill="#44ff88" text-anchor="middle">RECEIPT₀</text>
+  <text x="900" y="328" font-family="monospace" font-size="6" fill="#406050" text-anchor="middle">h:a3f9...</text>
+
+  <text x="937" y="322" font-family="monospace" font-size="14" fill="#00e5ff" opacity="0.6">→</text>
+
+  <rect x="948" y="305" width="60" height="28" rx="3" fill="#0a1208" stroke="#44ff88" stroke-width="1"/>
+  <text x="978" y="318" font-family="monospace" font-size="7" fill="#44ff88" text-anchor="middle">RECEIPT₁</text>
+  <text x="978" y="328" font-family="monospace" font-size="6" fill="#406050" text-anchor="middle">h:7c2e...</text>
+
+  <text x="1015" y="322" font-family="monospace" font-size="14" fill="#00e5ff" opacity="0.6">→</text>
+
+  <rect x="1026" y="305" width="60" height="28" rx="3" fill="#0a1208" stroke="#44ff88" stroke-width="1"/>
+  <text x="1056" y="318" font-family="monospace" font-size="7" fill="#44ff88" text-anchor="middle">RECEIPT₂</text>
+  <text x="1056" y="328" font-family="monospace" font-size="6" fill="#406050" text-anchor="middle">h:f1b8...</text>
+
+  <text x="1093" y="322" font-family="monospace" font-size="12" fill="#44ff88" opacity="0.8" class="blink">▮</text>
+
+  <!-- Bottom signature -->
+  <text x="870" y="370" font-family="monospace" font-size="10" fill="#203040">Ahmad Ali Parr · SnapKitty Collective · Bel Esprit D'Accord Trust</text>
+  <text x="1160" y="370" font-family="monospace" font-size="9" fill="#203040" text-anchor="end">EVIDENCE OR SILENCE</text>
+
+  <!-- Ω < φ⁻¹ bottom left -->
+  <text x="30" y="370" font-family="monospace" font-size="11" fill="#304050">Ω &lt; φ⁻¹ &lt; 1 · PROVED · ZERO SORRY</text>
+</svg>
