@@ -1,3 +1,8 @@
+import Mathlib.Data.Real.Basic
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Data.Complex.ExponentialBounds
+
 /-!
 # SovereignCalculusBridge.lean
 ## Closes the gap between sovereign-calculus and sov-kernel-monster
@@ -17,10 +22,6 @@ with omega_weight = φ⁻¹, sealed by a 64-char SovKangarooShake hash,
 within a SovereignDomain whose partition IS the frame detection function.
 -/
 
-import Mathlib.Data.Real.Basic
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
-import Mathlib.Algebra.Order.Field.Basic
-
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- SECTION 1: THE TWO CONSTANTS AND THEIR RELATIONSHIP
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -39,33 +40,24 @@ noncomputable def φ_inv : ℝ := (Real.sqrt 5 - 1) / 2
 -- The domain layer is the harder constraint.
 theorem omega_lt_phi_inv : Ω < φ_inv := by
   simp only [Ω, φ_inv]
-  have h2 : Real.sqrt 2 < 1.415 := by
-    rw [show (1.415 : ℝ) = Real.sqrt (1.415^2) from (Real.sqrt_sq (by norm_num)).symm]
-    apply Real.sqrt_lt_sqrt (by norm_num)
-    norm_num
-  have he : Real.exp 1 > 2.718 := by
-    have := Real.add_one_le_exp (1 : ℝ)
-    nlinarith [Real.exp_pos 1]
-  have h5 : Real.sqrt 5 > 2.236 := by
-    rw [show (2.236 : ℝ) = Real.sqrt (2.236^2) from (Real.sqrt_sq (by norm_num)).symm]
-    apply Real.sqrt_lt_sqrt (by norm_num)
-    norm_num
+  have h2 : Real.sqrt 2 < 1.5 := by
+    nlinarith [Real.sq_sqrt (show (0:ℝ) ≤ 2 by norm_num), Real.sqrt_nonneg 2]
+  have he : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
+  have h5 : Real.sqrt 5 > 2.2 := by
+    nlinarith [Real.sq_sqrt (show (0:ℝ) ≤ 5 by norm_num), Real.sqrt_nonneg 5]
+  have hpos : (0 : ℝ) < Real.exp 1 := Real.exp_pos 1
+  rw [div_lt_div_iff₀ hpos (by norm_num : (0:ℝ) < 2)]
   nlinarith
 
 -- Both constants are in (0, 1) — both layers contract
 theorem omega_in_unit_interval : 0 < Ω ∧ Ω < 1 := by
   constructor
-  · simp [Ω]
-    exact div_pos (Real.sqrt_pos.mpr (by norm_num)) (Real.exp_pos 1)
+  · exact div_pos (Real.sqrt_pos.mpr (by norm_num)) (Real.exp_pos 1)
   · simp only [Ω]
-    have h2 : Real.sqrt 2 < Real.exp 1 := by
-      have : Real.sqrt 2 < 1.415 := by
-        rw [show (1.415 : ℝ) = Real.sqrt (1.415^2) from (Real.sqrt_sq (by norm_num)).symm]
-        apply Real.sqrt_lt_sqrt (by norm_num); norm_num
-      have : Real.exp 1 > 2.718 := by
-        nlinarith [Real.add_one_le_exp (1 : ℝ), Real.exp_pos 1]
-      linarith
-    exact div_lt_one_of_lt h2 (Real.exp_pos 1)
+    have hs : Real.sqrt 2 < 1.5 := by
+      nlinarith [Real.sq_sqrt (show (0:ℝ) ≤ 2 by norm_num), Real.sqrt_nonneg 2]
+    have he : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
+    exact (div_lt_one (Real.exp_pos 1)).mpr (by linarith)
 
 theorem phi_inv_in_unit_interval : 0 < φ_inv ∧ φ_inv < 1 := by
   constructor
@@ -137,9 +129,8 @@ theorem moc_to_banach_correct (ch : PrimeChannel) (i : Fin MOC_DIM) :
 -- MOC is NOT the zero morphism (ChatGPT returned 0; this is wrong)
 theorem moc_to_banach_nonzero (ch : PrimeChannel) :
     ∃ i : Fin MOC_DIM, (mocToBanach ch).data i ≠ 0 := by
-  use ⟨1, by norm_num [MOC_DIM]⟩
-  simp [mocToBanach, Fin.val]
-  exact Nat.not_eq_zero_of_lt ch.h_pos
+  refine ⟨⟨1, by simp [MOC_DIM]⟩, ?_⟩
+  simp [mocToBanach, MOC_DIM, ch.h_pos]
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- SECTION 3: SDCTransition AS AToKio STEPS
@@ -226,41 +217,43 @@ theorem atokio_omega_weight_bounded
 
 /-- A provenance seal satisfying the sovereign-calculus requirement -/
 structure ProvenanceSeal where
-  worm_hash    : String
-  agent        : String
-  dimension_in : ℕ
+  worm_hash     : String
+  agent         : String
+  dimension_in  : ℕ
   dimension_out : ℕ
-  h_length     : worm_hash.length = 64  -- SovKangarooShake invariant
+  -- SovKangarooShake guarantees: 32 bytes hex-encoded = 64 chars
+  h_length      : worm_hash.length = 64
 
-/-- A sovereign morphism: transition + seal -/
+/-- A sovereign morphism: transition + provenance seal -/
 structure SovereignMorphism (α β : Type*) where
-  map   : α → β
-  seal  : ProvenanceSeal
+  map      : α → β
+  provSeal : ProvenanceSeal
 
 /-- Constitutional validity: sealed transition with correct dimensions -/
 def constitutionallyValid {α β : Type*}
     (m : SovereignMorphism α β) (d_in d_out : ℕ) : Prop :=
-  m.seal.dimension_in = d_in  ∧
-  m.seal.dimension_out = d_out ∧
-  m.seal.worm_hash.length = 64
+  m.provSeal.dimension_in  = d_in  ∧
+  m.provSeal.dimension_out = d_out ∧
+  m.provSeal.worm_hash.length = 64
 
 -- A sealed AToKio transition is a sovereign morphism
 def sealedAToKioMorphism
     (t : AToKioTransition)
-    (seal : ProvenanceSeal) :
-    SovereignMorphism BotStep BotStep :=
-  { map  := fun _ => t.target
-  , seal := seal }
+    (_h_valid : atokioTransitionValid t)
+    (ps : ProvenanceSeal) :
+    SovereignMorphism BotStep BotStep where
+  map      := fun _ => t.target
+  provSeal := ps
 
 -- Constitutional validity of a sealed AToKio step
 theorem sealed_atokio_step_is_sovereign
     (t : AToKioTransition)
     (h_valid : atokioTransitionValid t)
-    (seal : ProvenanceSeal)
-    (h_dim_in  : seal.dimension_in  = t.source.k)
-    (h_dim_out : seal.dimension_out = t.target.k) :
-    constitutionallyValid (sealedAToKioMorphism t seal) t.source.k t.target.k :=
-  ⟨h_dim_in, h_dim_out, seal.h_length⟩
+    (ps : ProvenanceSeal)
+    (h_dim_in  : ps.dimension_in  = t.source.k)
+    (h_dim_out : ps.dimension_out = t.target.k) :
+    constitutionallyValid (sealedAToKioMorphism t h_valid ps) t.source.k t.target.k :=
+  ⟨h_dim_in, h_dim_out, ps.h_length⟩
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- SECTION 5: THE MASTER THEOREM
@@ -268,11 +261,11 @@ theorem sealed_atokio_step_is_sovereign
 
 /-- A fully bridged step: AToKio + sovereign-calculus + SovKangarooShake -/
 structure SovereignBotStep where
-  transition   : AToKioTransition
-  seal         : ProvenanceSeal
-  h_valid      : atokioTransitionValid transition
-  h_dim_in     : seal.dimension_in  = transition.source.k
-  h_dim_out    : seal.dimension_out = transition.target.k
+  transition : AToKioTransition
+  provSeal   : ProvenanceSeal
+  h_valid    : atokioTransitionValid transition
+  h_dim_in   : provSeal.dimension_in  = transition.source.k
+  h_dim_out  : provSeal.dimension_out = transition.target.k
 
 /-- THE MASTER THEOREM:
     Every SovereignBotStep is simultaneously:
@@ -284,17 +277,14 @@ structure SovereignBotStep where
     This closes ALL FOUR GAPS between sovereign-calculus and sov-kernel-monster. -/
 theorem sovereign_bot_step_master
     (s : SovereignBotStep) :
-    -- Gap 1: omega_weight = φ⁻¹ and Ω < φ⁻¹ < 1
     s.transition.omega_weight = φ_inv ∧
     Ω < s.transition.omega_weight     ∧
     s.transition.omega_weight < 1     ∧
-    -- Gap 3: step advances correctly
     s.transition.target.k = s.transition.source.k + 1 ∧
-    -- Gap 4: seal is 64 chars
-    s.seal.worm_hash.length = 64 := by
-  obtain ⟨t, seal, h_val, h_in, h_out⟩ := s
+    s.provSeal.worm_hash.length = 64 := by
+  obtain ⟨t, ps, h_val, _, _⟩ := s
   obtain ⟨_, h_step, _, _, h_omega⟩ := h_val
-  refine ⟨h_omega, ?_, ?_, h_step, seal.h_length⟩
+  refine ⟨h_omega, ?_, ?_, h_step, ps.h_length⟩
   · rw [h_omega]; exact omega_lt_phi_inv
   · rw [h_omega]; exact phi_inv_in_unit_interval.2
 
