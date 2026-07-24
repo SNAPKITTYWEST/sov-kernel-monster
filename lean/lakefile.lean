@@ -1,8 +1,7 @@
 import Lake
 open Lake DSL
 
-package «sov-monster» where
-  name := "sov-monster"
+package «sovMonster» where
 
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4" @ "v4.14.0"
@@ -26,9 +25,16 @@ lean_lib «SovMonster_Matrix_Closed» where
 lean_lib «SovMonster_Gaps» where
   roots := #[`SovMonster_Gaps]
 
+-- Bridge: sovereign-calculus ↔ sov-kernel-monster (Ω, φ⁻¹, AToKio, WORM)
+lean_lib «SovereignCalculusBridge» where
+  roots := #[`SovereignCalculusBridge]
+
+-- Gap 2 closed: MOC 108-dim ↔ Jordan 10×10 roundtrip, zero sorry
+lean_lib «MOCJordanRoundtrip» where
+  roots := #[`MOCJordanRoundtrip]
+
 -- Link against the Fortran object (built by build_monster.sh)
 -- Run `build_monster.sh` first, then `lake build`
-@[defaultTarget]
 lean_exe «sov-monster» where
   root := `SovMonster
   moreLinkArgs := #[
