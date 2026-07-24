@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" width="1100" height="520">
+  <defs>
+    <filter id="g"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#00e5ff" opacity="0.8"/>
+    </marker>
+    <marker id="arr-gold" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#ffd700" opacity="0.8"/>
+    </marker>
+    <marker id="arr-green" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#44ff88" opacity="0.8"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="520" fill="#030810" rx="10"/>
+
+  <!-- Title -->
+  <text x="550" y="32" font-family="monospace" font-size="14" fill="#00e5ff" text-anchor="middle" font-weight="bold" filter="url(#g)">SOV-KERNEL-MONSTER — SYSTEM ARCHITECTURE</text>
+
+  <!-- INPUT -->
+  <rect x="430" y="50" width="240" height="40" rx="6" fill="#0a1628" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="550" y="66" font-family="monospace" font-size="10" fill="#00e5ff" text-anchor="middle" font-weight="bold">USER INPUT</text>
+  <text x="550" y="80" font-family="monospace" font-size="8"  fill="#607080" text-anchor="middle">OpenQASM · Mathematical Workload · Agent Task</text>
+
+  <!-- Arrow down to QATAAUM -->
+  <line x1="550" y1="90" x2="550" y2="115" stroke="#00e5ff" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- QATAAUM -->
+  <rect x="380" y="116" width="340" height="60" rx="6" fill="#0a1a2e" stroke="#ffd700" stroke-width="2"/>
+  <text x="550" y="138" font-family="monospace" font-size="12" fill="#ffd700" text-anchor="middle" font-weight="bold" filter="url(#g)">QATAAUM — QUANTUM COMPILER</text>
+  <text x="550" y="154" font-family="monospace" font-size="9"  fill="#a09060" text-anchor="middle">Parse → Semantic Analysis → SSA IR → Optimization Passes → Qubit Routing → Pulse</text>
+  <text x="550" y="167" font-family="monospace" font-size="8"  fill="#607080" text-anchor="middle">33K+ lines Rust · 221 tests · 31 Lean 4 theorems</text>
+
+  <!-- Arrow down to execution targets -->
+  <line x1="550" y1="176" x2="550" y2="200" stroke="#ffd700" stroke-width="2" marker-end="url(#arr-gold)"/>
+  <text x="555" y="193" font-family="monospace" font-size="8" fill="#ffd700">EXECUTE</text>
+
+  <!-- Execution targets row -->
+  <!-- Fortran -->
+  <rect x="40"  y="202" width="140" height="50" rx="5" fill="#051508" stroke="#00ff88" stroke-width="1.5"/>
+  <text x="110" y="223" font-family="monospace" font-size="10" fill="#00ff88" text-anchor="middle" font-weight="bold">Fortran 2018</text>
+  <text x="110" y="238" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">Bare-metal kernel</text>
+  <text x="110" y="248" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">9K+ LOC · Zero libc</text>
+
+  <!-- ARM64 -->
+  <rect x="200" y="202" width="140" height="50" rx="5" fill="#051508" stroke="#00ff88" stroke-width="1.2"/>
+  <text x="270" y="223" font-family="monospace" font-size="10" fill="#00ff88" text-anchor="middle" font-weight="bold">ARM64/SVE2</text>
+  <text x="270" y="238" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">Native LLVM target</text>
+  <text x="270" y="248" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">flang-new-19</text>
+
+  <!-- RTX -->
+  <rect x="360" y="202" width="140" height="50" rx="5" fill="#051508" stroke="#00ff88" stroke-width="1.2"/>
+  <text x="430" y="223" font-family="monospace" font-size="10" fill="#00ff88" text-anchor="middle" font-weight="bold">RTX/CUDA</text>
+  <text x="430" y="238" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">GPU target</text>
+  <text x="430" y="248" font-family="monospace" font-size="7"  fill="#ff8844" text-anchor="middle">HARDWARE-TARGETED</text>
+
+  <!-- WASM -->
+  <rect x="520" y="202" width="140" height="50" rx="5" fill="#051508" stroke="#00ff88" stroke-width="1.2"/>
+  <text x="590" y="223" font-family="monospace" font-size="10" fill="#00ff88" text-anchor="middle" font-weight="bold">WASM/Browser</text>
+  <text x="590" y="238" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">wasm-pack · Rust</text>
+  <text x="590" y="248" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">44KB compiled</text>
+
+  <!-- Haskell Sim -->
+  <rect x="680" y="202" width="160" height="50" rx="5" fill="#051508" stroke="#88ff88" stroke-width="1.2"/>
+  <text x="760" y="223" font-family="monospace" font-size="10" fill="#88ff88" text-anchor="middle" font-weight="bold">Haskell/AToKio</text>
+  <text x="760" y="238" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">Agent simulation</text>
+  <text x="760" y="248" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">7 Agda invariants · WORM</text>
+
+  <!-- IBM mock -->
+  <rect x="860" y="202" width="200" height="50" rx="5" fill="#1a0808" stroke="#ff6644" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <text x="960" y="223" font-family="monospace" font-size="10" fill="#ff6644" text-anchor="middle" font-weight="bold">IBM Quantum</text>
+  <text x="960" y="238" font-family="monospace" font-size="7"  fill="#806060" text-anchor="middle">MOCK BACKEND (Phase 1)</text>
+  <text x="960" y="248" font-family="monospace" font-size="7"  fill="#ff4444" text-anchor="middle">Real hardware: Phase 2</text>
+
+  <!-- Collect arrows to verification -->
+  <line x1="110" y1="252" x2="110" y2="300" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+  <line x1="270" y1="252" x2="270" y2="300" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+  <line x1="430" y1="252" x2="430" y2="300" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+  <line x1="590" y1="252" x2="590" y2="300" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+  <line x1="760" y1="252" x2="760" y2="300" stroke="#88ff88" stroke-width="1" opacity="0.5"/>
+  <line x1="110" y1="300" x2="760" y2="300" stroke="#00ff88" stroke-width="1" opacity="0.4"/>
+  <line x1="435" y1="300" x2="435" y2="320" stroke="#00ff88" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+  <!-- VERIFICATION BOUNDARY -->
+  <rect x="200" y="322" width="480" height="60" rx="6" fill="#0a0a22" stroke="#8888ff" stroke-width="2"/>
+  <text x="440" y="344" font-family="monospace" font-size="11" fill="#8888ff" text-anchor="middle" font-weight="bold" filter="url(#g)">VERIFICATION BOUNDARY</text>
+  <text x="440" y="360" font-family="monospace" font-size="8"  fill="#606080" text-anchor="middle">Lean 4 + Mathlib · Agda · Typed Haskell Invariants</text>
+  <text x="440" y="372" font-family="monospace" font-size="8"  fill="#404060" text-anchor="middle">65+ theorems · 0 sorry · AToKio 7-invariant gate</text>
+
+  <!-- Arrow to sign -->
+  <line x1="440" y1="382" x2="440" y2="402" stroke="#8888ff" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- CRYPTOGRAPHIC ATTESTATION -->
+  <rect x="200" y="404" width="480" height="50" rx="6" fill="#1a0a0a" stroke="#ff6644" stroke-width="2"/>
+  <text x="440" y="424" font-family="monospace" font-size="11" fill="#ff6644" text-anchor="middle" font-weight="bold" filter="url(#g)">CRYPTOGRAPHIC ATTESTATION</text>
+  <text x="440" y="440" font-family="monospace" font-size="8"  fill="#806060" text-anchor="middle">Blake3 Hash → Ed25519 Sign (node_sk.bin) → Seal</text>
+  <text x="440" y="450" font-family="monospace" font-size="7"  fill="#604040" text-anchor="middle">SovKangarooShake · 64-char ProvenanceSeal · ELF .note.sov section</text>
+
+  <!-- Arrow to WORM -->
+  <line x1="440" y1="454" x2="440" y2="472" stroke="#ff6644" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- WORM RECEIPT CHAIN -->
+  <rect x="200" y="474" width="480" height="36" rx="6" fill="#0a1208" stroke="#44ff88" stroke-width="2"/>
+  <text x="440" y="494" font-family="monospace" font-size="11" fill="#44ff88" text-anchor="middle" font-weight="bold" filter="url(#g)">WORM RECEIPT CHAIN · APPEND-ONLY · HASH-LINKED</text>
+  <text x="440" y="505" font-family="monospace" font-size="7"  fill="#406050" text-anchor="middle">Immutable audit trail · Blake3 · Ed25519 · No deletion</text>
+
+  <!-- Legend -->
+  <rect x="870" y="320" width="210" height="170" rx="6" fill="#020810" stroke="#304050" stroke-width="1"/>
+  <text x="975" y="340" font-family="monospace" font-size="9" fill="#607080" text-anchor="middle" font-weight="bold">LEGEND</text>
+  <rect x="882" y="350" width="12" height="8" rx="1" fill="#051508" stroke="#00ff88" stroke-width="1"/>
+  <text x="900" y="358" font-family="monospace" font-size="8" fill="#00ff88">IMPLEMENTED</text>
+  <rect x="882" y="365" width="12" height="8" rx="1" fill="#0a0a22" stroke="#8888ff" stroke-width="1"/>
+  <text x="900" y="373" font-family="monospace" font-size="8" fill="#8888ff">FORMALLY CHECKED</text>
+  <rect x="882" y="380" width="12" height="8" rx="1" fill="#0a1a2e" stroke="#ffd700" stroke-width="1"/>
+  <text x="900" y="388" font-family="monospace" font-size="8" fill="#ffd700">TESTED</text>
+  <rect x="882" y="395" width="12" height="8" rx="1" fill="#1a0808" stroke="#ff6644" stroke-width="1" stroke-dasharray="3,1"/>
+  <text x="900" y="403" font-family="monospace" font-size="8" fill="#ff6644">MOCK BACKEND</text>
+  <rect x="882" y="410" width="12" height="8" rx="1" fill="#051508" stroke="#ff8844" stroke-width="1"/>
+  <text x="900" y="418" font-family="monospace" font-size="8" fill="#ff8844">HARDWARE-TARGETED</text>
+  <rect x="882" y="425" width="12" height="8" rx="1" fill="#050f18" stroke="#44ff88" stroke-width="1"/>
+  <text x="900" y="433" font-family="monospace" font-size="8" fill="#44ff88">WORM SEALED</text>
+  <text x="975" y="480" font-family="monospace" font-size="7" fill="#203040" text-anchor="middle">Ahmad Ali Parr</text>
+  <text x="975" y="492" font-family="monospace" font-size="7" fill="#203040" text-anchor="middle">SnapKitty Collective</text>
+</svg>
