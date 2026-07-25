@@ -31,7 +31,7 @@ localProperTime :: RelativityField -> Vector -> Double -> Double -> Double
 localProperTime field pos velocity globalTime =
   let c = localSpeedOfLight field
       -- Gravitational time dilation: √(1 - Rs/r)
-      gravDilation = timeDilationFactor field pos
+      gravDilation = relativityTimeDilation field pos
       -- Kinetic time dilation: √(1 - v²/c²)
       beta = velocity / c
       beta_clamped = min 0.9999 (abs beta)  -- Clamp to avoid negative sqrt
@@ -130,7 +130,7 @@ futureLightConeBoundary (Vector center) radius c =
 schwarzschildField :: Double -> Double -> RelativityField
 schwarzschildField mass_kg rs = RelativityField
   { relativityFieldId = "schwarzschild-" ++ show mass_kg
-  , timeDilationFactor = \(Vector pos) ->
+  , relativityTimeDilation = \(Vector pos) ->
       let r = if length pos >= 3
               then sqrt (pos!!0*pos!!0 + pos!!1*pos!!1 + pos!!2*pos!!2)
               else 1e6
@@ -145,7 +145,7 @@ schwarzschildField mass_kg rs = RelativityField
 weakFieldRelativity :: Double -> RelativityField
 weakFieldRelativity phi0 = RelativityField
   { relativityFieldId = "weak-field"
-  , timeDilationFactor = \(Vector pos) ->
+  , relativityTimeDilation = \(Vector pos) ->
       let r = if length pos >= 3
               then sqrt (pos!!0*pos!!0 + pos!!1*pos!!1 + pos!!2*pos!!2)
               else 1e6
@@ -164,8 +164,8 @@ weakFieldRelativity phi0 = RelativityField
 -- ν_observer = ν_source * √(g_tt_observer / g_tt_source)
 gravitationalRedshift :: RelativityField -> Vector -> Vector -> Double -> Double
 gravitationalRedshift field posSource posObs freq =
-  let dilationSource = timeDilationFactor field posSource
-      dilationObs = timeDilationFactor field posObs
+  let dilationSource = relativityTimeDilation field posSource
+      dilationObs = relativityTimeDilation field posObs
   in freq * sqrt (dilationObs / max 0.01 dilationSource)
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -183,7 +183,7 @@ data RelativityObservation = RelativityObservation
 -- | WORM seal observation
 sealRelativityObservation :: Int -> Vector -> RelativityField -> RelativityObservation
 sealRelativityObservation step pos field =
-  let dilation = timeDilationFactor field pos
+  let dilation = relativityTimeDilation field pos
       properTime = localProperTime field pos 0.0 1.0  -- Unit global time
       seal = "WORM[relativity:step=" ++ show step
              ++ ":pos=" ++ vectorToString pos
@@ -203,7 +203,7 @@ vectorToString (Vector xs) = "[" ++ unwords (map (\x -> take 6 (show x)) xs) ++ 
 specialRelativity :: RelativityField
 specialRelativity = RelativityField
   { relativityFieldId = "special-relativity"
-  , timeDilationFactor = \_ -> 1.0  -- No gravity
+  , relativityTimeDilation = \_ -> 1.0  -- No gravity
   , localSpeedOfLight = 299792458.0
   , gravitationalTimeWarp = \_ -> 1.0
   , schwarzschildRadius = 0.0
@@ -213,7 +213,7 @@ specialRelativity = RelativityField
 sunField :: RelativityField
 sunField =
   let m_sun = 1.989e30  -- kg
-      G = 6.674e-11
+      g = 6.674e-11
       c = 299792458.0
-      rs = 2.0 * G * m_sun / (c * c)
+      rs = 2.0 * g * m_sun / (c * c)
   in schwarzschildField m_sun rs

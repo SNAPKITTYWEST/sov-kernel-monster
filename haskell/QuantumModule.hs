@@ -2,11 +2,11 @@
 
 module QuantumModule where
 
-import ManifoldGeometry
+import ManifoldGeometry hiding (decoherenceRate)
 import Data.List (nubBy)
 import Data.Function (on)
 import GHC.Generics (Generic)
-import System.Random
+import System.Random (RandomGen, StdGen, randomR, mkStdGen)
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Quantum Superposition & Decoherence
@@ -78,7 +78,7 @@ normalizeAmplitudes branches =
 
 -- | Sample from superposition (non-deterministic collapse)
 -- Probability of branch i = |ψ_i|²
-sampleSuperposition :: RandomGen -> QuantumSuperposition -> (QuantumBranch, RandomGen)
+sampleSuperposition :: StdGen -> QuantumSuperposition -> (QuantumBranch, StdGen)
 sampleSuperposition gen qs =
   let normalized = normalizeAmplitudes (branches qs)
       probs = map probability normalized
@@ -128,7 +128,7 @@ decoherence :: QuantumSuperposition -> Double -> QuantumSuperposition
 decoherence qs dt =
   let decayedBranches = map (\b ->
         let oldProb = probability b
-            decayFactor = exp (-decoherenceRate qs * dt)
+            decayFactor = exp (-(decoherenceRate qs) * dt)
             newProb = oldProb * decayFactor
             newAmplitude = let Complex r i = amplitude b
                                scaleFactor = sqrt decayFactor
@@ -159,7 +159,7 @@ tunnelingProbability barrierHeight particleEnergy barrierWidth =
   in min 1.0 prob
 
 -- | Stochastic tunnel attempt
-attemptTunneling :: RandomGen -> Vector -> Double -> IO (Vector, Bool)
+attemptTunneling :: StdGen -> Vector -> Double -> IO (Vector, Bool)
 attemptTunneling gen pos tunnelingProb = do
   let (r, _) = randomR (0.0, 1.0) gen
       didTunnel = r < tunnelingProb
@@ -191,19 +191,21 @@ unitaryEvolution qs dt =
 -- Quantum Region Configuration
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- | Helper to create quantum branch
+makeBranch :: Int -> Int -> Vector -> QuantumBranch
+makeBranch i numBranches center = QuantumBranch
+  { branchId = i
+  , branchLabel = "branch-" ++ show i
+  , amplitude = Complex (1.0 / sqrt (fromIntegral numBranches)) 0.0
+  , stateVector = vectorAdd center (Vector [sin (fromIntegral i), cos (fromIntegral i), 0])
+  , probability = 1.0 / fromIntegral numBranches
+  , decoherenceTime = 1.0 / fromIntegral (i + 1)
+  }
+
 -- | Initialize superposition in region
 initializeSuperposition :: String -> Int -> Vector -> QuantumSuperposition
 initializeSuperposition regionId numBranches center =
-  let initialBranches = [ QuantumBranch
-        { branchId = i
-        , branchLabel = "branch-" ++ show i
-        , amplitude = Complex (1.0 / sqrt (fromIntegral numBranches)) 0.0
-        , stateVector = vectorAdd center (Vector [sin (fromIntegral i), cos (fromIntegral i), 0])
-        , probability = 1.0 / fromIntegral numBranches
-        , decoherenceTime = 1.0 / fromIntegral (i + 1)  -- Different rates per branch
-        }
-      | i <- [0..numBranches-1]
-      ]
+  let initialBranches = [makeBranch i numBranches center | i <- [0..numBranches-1]]
   in QuantumSuperposition
     { superpositionId = regionId
     , branches = initialBranches

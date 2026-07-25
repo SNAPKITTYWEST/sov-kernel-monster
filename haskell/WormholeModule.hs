@@ -2,7 +2,7 @@
 
 module WormholeModule where
 
-import ManifoldGeometry
+import ManifoldGeometry hiding (traversalCost, position, connections, stabilityFactor)
 import GHC.Generics (Generic)
 import Data.List (find)
 
@@ -18,7 +18,7 @@ data WormholeEntry = WormholeEntry
   , stabilityFactor :: Double           -- 0-1: how stable is this wormhole?
   , traversalCost :: Double             -- Energy/resource cost
   , jitterRadius :: Double              -- Random scatter on exit
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 -- | Wormhole exit point
 data WormholeExit = WormholeExit
@@ -26,7 +26,7 @@ data WormholeExit = WormholeExit
   , exitPosition :: Vector
   , sourceEntryId :: String             -- Backreference to entry
   , exitStability :: Double
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 -- | Complete wormhole connection
 data WormholeConnection = WormholeConnection
@@ -36,7 +36,7 @@ data WormholeConnection = WormholeConnection
   , metricDistance :: Double            -- Euclidean distance
   , topologicalDistance :: Double       -- Through wormhole (always < metricDistance)
   , traversabilityScore :: Double       -- Can we go through? (0-1)
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Wormhole Topology (Collection of wormholes in a region)
@@ -137,15 +137,11 @@ isWormholeRemnant conn time =
 properDistance :: WormholeConnection -> Double
 properDistance conn = metricDistance conn
 
--- | Topological distance (through wormhole)
-topologicalDistance :: WormholeConnection -> Double
-topologicalDistance conn = WormholeModule.topologicalDistance conn
-
 -- | Time savings from using wormhole
 timeSavings :: WormholeConnection -> Double -> Double
 timeSavings conn speedOfLight =
   let proper_time = properDistance conn / speedOfLight
-      topo_time = WormholeModule.topologicalDistance conn / speedOfLight
+      topo_time = topologicalDistance conn / speedOfLight
   in proper_time - topo_time
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -158,7 +154,7 @@ data KaluzaKleinWormhole = KaluzaKleinWormhole
   , kk_exit :: WormholeExit
   , compactificationRadius :: Double   -- Size of extra dimension
   , excitationLevel :: Int              -- Kaluza-Klein mode (0, 1, 2, ...)
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 -- | Mass of Kaluza-Klein modes
 kaluzaKleinMass :: Double -> Int -> Double
@@ -271,14 +267,14 @@ createBinaryWormhole id entryPos exitPos =
     , entry = entry
     , exit = exit
     , metricDistance = metric
-    , WormholeModule.topologicalDistance = topo
+    , topologicalDistance = topo
     , traversabilityScore = 0.8
     }
 
 -- | Create wormhole ring (cyclic topology)
 createWormholeRing :: Int -> Double -> WormholeTopology
 createWormholeRing n radius =
-  let positions = [ Vector [radius * cos (2*pi*i/n), radius * sin (2*pi*i/n), 0]
+  let positions = [ Vector [radius * cos (2*pi*fromIntegral i/fromIntegral n), radius * sin (2*pi*fromIntegral i/fromIntegral n), 0]
                   | i <- [0..n-1]
                   ]
       connections = [ createBinaryWormhole ("ring-" ++ show i)

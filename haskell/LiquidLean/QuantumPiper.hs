@@ -25,7 +25,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
-import Data.Aeson (ToJSON, FromJSON, encode, decode, eitherDecode, object, (.=))
+import Data.Aeson (ToJSON, FromJSON, encode, decode, eitherDecode, object, (.=), withObject, (.:), Parser)
 import GHC.Generics (Generic)
 import Control.Monad.State.Strict
 import Control.Monad.Except
@@ -39,8 +39,9 @@ import qualified Data.Set as Set
 import Data.Word (Word64, Word32, Word16, Word8)
 import Data.Int (Int64)
 import Data.Bits (xor, shiftR, shiftL, (.&.))
-import Crypto.Hash (SHA3_256, hash)
-import Crypto.PubKey.Ed25519 (PublicKey, SecretKey, sign, verify, toPublic)
+import Crypto.Hash (SHA3_256, hash, Digest)
+import Crypto.PubKey.Ed25519 (PublicKey, SecretKey, sign, verify, toPublic, secretKey)
+import qualified Data.ByteArray as BA
 import Data.Time.Clock.POSIX (getPOSIXTime)
 import Data.Maybe (fromMaybe, catMaybes, mapMaybe)
 import System.FilePath ((</>), takeDirectory, takeFileName)
@@ -288,7 +289,22 @@ instance ToJSON PipelineStage where
   toJSON (StageCustom c) = object ["type" .= ("custom" :: Text), "config" .= c]
 
 instance FromJSON PipelineStage where
-  parseJSON = error "FromJSON PipelineStage: TODO"
+  parseJSON = withObject "PipelineStage" $ \v -> do
+    stageType <- v .: "type" :: Parser Text
+    config <- v .: "config"
+    case stageType of
+      "fortran" -> StageFortran <$> parseJSON config
+      "cmm" -> StageCmm <$> parseJSON config
+      "mlir" -> StageMLIR <$> parseJSON config
+      "llvm" -> StageLLVM <$> parseJSON config
+      "alive2" -> StageAlive2 <$> parseJSON config
+      "isabelle" -> StageIsabelle <$> parseJSON config
+      "quantum-verify" -> StageQuantumVerify <$> parseJSON config
+      "pulse-compile" -> StagePulseCompile <$> parseJSON config
+      "wasm" -> StageWASM <$> parseJSON config
+      "native" -> StageNative <$> parseJSON config
+      "custom" -> StageCustom <$> parseJSON config
+      _ -> fail $ "Unknown PipelineStage type: " ++ T.unpack stageType
 
 data FortranConfig = FortranConfig
   { fcSourceFiles :: [FilePath]
@@ -610,22 +626,31 @@ executeManifest runtime manifest = do
 
 initRuntime :: FilePath -> TeamID -> IO QPRuntime
 initRuntime root team = do
-  -- Initialize WORM chain
+  -- Initialize WORM chain with deterministic key from team ID
+  -- In production: load from secure keyfile or KMS (e.g., AWS Secrets Manager)
   wcHeadVar <- newTVarIO (BlockHeader 0 "" "" 0)
   wcStoreVar <- newTVarIO Map.empty
-  sk <- pure undefined  -- Would load Ed25519 key
-  let worm = WORMChain wcHeadVar wcStoreVar sk
 
-  -- Initialize workspace
-  artifactsVar <- newTVarIO Map.empty
-  capsVar <- newTVarIO Map.empty
+  -- Derive 32-byte seed from team ID hash (secure only for testing)
+  let teamStr = T.unpack team
+      teamHash = hash (BS.pack teamStr) :: Digest SHA3_256
+      seedBytes = BA.take 32 (BA.convert teamHash) :: ByteString
 
-  let ws = QWorkspace root team artifactsVar capsVar worm
+  case secretKey seedBytes of
+    Just sk -> do
+      let worm = WORMChain wcHeadVar wcStoreVar sk
 
-  -- Initialize runtime
-  imageStoreVar <- newTVarIO Map.empty
+      -- Initialize workspace
+      artifactsVar <- newTVarIO Map.empty
+      capsVar <- newTVarIO Map.empty
 
-  pure QPRuntime
-    { qprWorkspace = ws
-    , qprImageStore = imageStoreVar
-    }
+      let ws = QWorkspace root team artifactsVar capsVar worm
+
+      -- Initialize runtime
+      imageStoreVar <- newTVarIO Map.empty
+
+      pure QPRuntime
+        { qprWorkspace = ws
+        , qprImageStore = imageStoreVar
+        }
+    Nothing -> fail "initRuntime: Failed to derive Ed25519 key from team ID"

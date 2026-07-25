@@ -18,7 +18,7 @@ data MetricTensor = MetricTensor
   { metricType :: String              -- "euclidean" | "riemannian" | "lorentzian"
   , signature :: (Int, Int, Int)      -- (spatial, temporal, null) dimensions
   , components :: [[Double]]          -- n×n symmetric matrix
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 -- | A region is a connected area with uniform physics properties
 data Region
@@ -58,11 +58,11 @@ data Boundary = Boundary
   , boundaryType :: String            -- "hard-wall" | "soft-horizon" | "threshold"
   , position :: Vector
   , radius :: Double
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 -- | Vector type (n-dimensional)
 newtype Vector = Vector [Double]
-  deriving (Show, Generic)
+  deriving (Show, Generic, Eq)
 
 -- | Vector operations
 vectorDim :: Vector -> Int

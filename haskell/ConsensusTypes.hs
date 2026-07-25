@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveShow #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module ConsensusTypes where
 
@@ -46,7 +46,7 @@ data RegionType = RegionType
   , rtDensity :: Double
   , rtCurvature :: Double
   , rtAnomalyLevel :: Double
-  } deriving (Eq, Show, Generic)
+  } deriving (Eq, Show, Generic, Ord)
 
 instance Hashable RegionType
 
@@ -222,7 +222,7 @@ hasConsensus :: [Vote] -> Bool
 hasConsensus vs
   | null vs = False
   | otherwise = let score = consensusScore vs
-                    positiveVotes = length (filter (\v -> agreement v > 0.5) vs)
+                    positiveVotes = fromIntegral (length (filter (\v -> agreement v > 0.5) vs)) :: Double
                     ratioVotes = positiveVotes / fromIntegral (length vs)
                 in score > 0.33 && ratioVotes >= 0.66
 

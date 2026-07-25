@@ -147,9 +147,10 @@ detectConflictsBatch state conflictedGroups =
   map (\(obsId, obs, _, _, vots) ->
     let agents = map agentId obs
         measDiff = if length obs >= 2
-                   then let m1 = measurements (head obs)
-                             m2 = measurements (obs !! 1)
-                        in measurementDifference m1 m2
+                   then
+                     let m1 = measurements (head obs)
+                         m2 = measurements (obs !! 1)
+                     in measurementDifference m1 m2
                    else 0.0
     in Conflict obsId (RegionId 0) agents measDiff False
   ) conflictedGroups
@@ -171,14 +172,16 @@ resolveConflict state conflict =
 resolveConflictVia :: ConsensusState -> (ObservationId, [Observation], Double, Int, [Vote])
                    -> Conflict -> Observation
 resolveConflictVia state (obsId, obs, _, _, votes) conflict =
-  if null obs then error "No observations in conflict"
+  if null obs then error "resolveConflictVia: no observations in conflict group"
   else if null votes
        then head obs  -- No votes: return first observation
        else
          -- Find observation with highest average agreement
          let obsWithScores = [(o, averageDouble [agreement v | v <- votes, votedObsId v == obsId o]) | o <- obs]
-             (winningObs, _) = maximumBy (comparing snd) obsWithScores
-         in winningObs
+         in if null obsWithScores
+            then head obs  -- Fallback: no matching votes found
+            else let (winningObs, _) = maximumBy (comparing snd) obsWithScores
+                 in winningObs
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Multi-Agent Voting
@@ -227,12 +230,15 @@ updateWorldModelWithConsensus model consensusObs state =
       -- Frontier regions (low confidence, high anomaly)
       frontierIds = [RegionId i | (i, _) <- zip [0..] consensusObs, any (\a -> anomalySeverity a > 0.6) detectedAnomalies]
 
+      -- Extract confidence from observations
+      obsConfidenceValues = map (\o -> o.confidence) consensusObs
+
   in WorldModel
      { regionTypes = Map.union newRegionMap (regionTypes model)
      , agentPositions = Map.union newAgentPositions (agentPositions model)
      , anomalies = anomalies model ++ detectedAnomalies
      , frontierRegions = nub (frontierRegions model ++ frontierIds)
-     , modelConfidence = averageDouble (map confidence consensusObs)
+     , modelConfidence = averageDouble obsConfidenceValues
      , modelGeneration = modelGeneration model + 1
      }
 
