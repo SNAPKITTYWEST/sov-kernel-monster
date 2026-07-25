@@ -38,18 +38,6 @@ No cloud. No vendor. No libc. No sorry.
 
 ---
 
-<div align="center">
-<a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">
-<img src="docs/assets/readme/sovereign-interior.gif" alt="Animated Sovereign Interior gameplay: a first-person view moves through the procedural room toward the sealed artwork, couch, evidence table, and trust-chain objective." width="1100"/>
-</a>
-<br>
-<strong><a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">ENTER SOVEREIGN INTERIOR — BOB'S PLAYABLE WORM CHAIN</a></strong>
-<br>
-<sub>First-person Three.js + Rapier3D · inspect → collect → verify → unlock → seal</sub>
-</div>
-
----
-
 ## In 30 Seconds
 
 Sov-Kernel-Monster is a local-first sovereign compute stack that:

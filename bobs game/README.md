@@ -1,19 +1,113 @@
 # Sovereign Interior
 
-A procedural first-person Three.js and Rapier game set inside a WORM-sealed chamber. The playable loop is:
+A WORM-sealed first-person chamber. Walk it. Verify the trust chain. Leave through the sealed door.
 
-```text
-walk -> inspect artwork -> collect document -> verify evidence
-     -> activate terminal -> unlock door -> exit -> seal receipt
+<div align="center">
+<a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">
+<img src="../docs/assets/readme/sovereign-interior.gif" alt="First-person view through the sovereign chamber toward the sealed artwork, evidence table, and trust-chain terminal." width="900"/>
+</a>
+<br>
+<strong><a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">PLAY SOVEREIGN INTERIOR</a></strong>
+<br>
+<sub>Three.js + Rapier3D · no install · runs in any browser</sub>
+</div>
+
+---
+
+## QATAAUM State Machine
+
+The game loop is the compiler loop. Same state machine. Same receipt chain.
+
 ```
+                    ┌─────────────────────────────────────┐
+                    │         QATAAUM COMPILER             │
+     OpenQASM ──►  │  Parse → Validate → IR → Route       │
+     Matrix   ──►  │                                       │
+     Agent    ──►  │  ┌─────────────────────────────────┐ │
+                    │  │        IR FAMILY (9 levels)      │ │
+                    │  │  QASM → Gate → Pulse → Schedule  │ │
+                    │  │  → Routing → Native → WORM       │ │
+                    │  └──────────────┬──────────────────┘ │
+                    └─────────────────┼───────────────────┘
+                                      │
+              ┌───────────────────────┼───────────────────────┐
+              ▼                       ▼                        ▼
+         Fortran                 ARM64/SVE2               WASM/Browser
+         bare-metal              LLVM target              wasm-pack
+              │                       │                        │
+              └───────────────────────┼───────────────────────┘
+                                      │
+                          ┌───────────┴───────────┐
+                          ▼                        ▼
+                     RTX/CUDA              Haskell/AToKio
+                     GPU target            agent runtime
+                          │
+                          ▼ (Phase 2)
+                     IBM Quantum
+                     hardware backend
+                          │
+                          ▼
+              ┌───────────────────────────────────┐
+              │       VERIFICATION BOUNDARY        │
+              │  Lean 4 · Agda · Haskell types    │
+              │  65+ theorems · 0 sorry            │
+              └──────────────┬────────────────────┘
+                             │
+              ┌──────────────▼────────────────────┐
+              │     CRYPTOGRAPHIC ATTESTATION      │
+              │  Blake3 → Ed25519 → SovKangaroo    │
+              └──────────────┬────────────────────┘
+                             │
+              ┌──────────────▼────────────────────┐
+              │        WORM RECEIPT CHAIN          │
+              │  RECEIPT₀ → RECEIPT₁ → RECEIPTₙ   │
+              │  append-only · hash-linked         │
+              └───────────────────────────────────┘
+```
+
+**The game seals every quest transition into this chain.** Inspect artwork → collect document → verify → activate terminal → exit. Each step is a receipt. The chain is identical in structure to a quantum circuit execution log.
+
+---
+
+## Quest State Machine
+
+```
+GENESIS
+  │
+  ▼
+[INSPECT_ARTWORK]  ──► receipt_001 sealed
+  │
+  ▼
+[COLLECT_DOCUMENT] ──► receipt_002 sealed
+  │
+  ▼
+[VERIFY_EVIDENCE]  ──► receipt_003 sealed
+  │
+  ▼
+[ACTIVATE_TERMINAL] ─► receipt_004 sealed
+  │
+  ▼
+[UNLOCK_DOOR]      ──► receipt_005 sealed
+  │
+  ▼
+[EXIT_CHAMBER]     ──► MISSION RECEIPT sealed
+                       Blake3 hash · Ed25519 signed
+```
+
+Each receipt: `previousHash → payloadHash → stateHash → currentHash`
+
+---
 
 ## Run
 
 ```bash
 npm run dev
+# open http://127.0.0.1:4173
 ```
 
-Open `http://127.0.0.1:4173`, or play the published build at [snapkittywest.github.io/sov-kernel-monster/bobs-game](https://snapkittywest.github.io/sov-kernel-monster/bobs-game/). Three.js and Rapier are pinned CDN modules; there is no dependency installation or build step.
+No build step. Three.js and Rapier are pinned CDN modules.
+
+Live: [snapkittywest.github.io/sov-kernel-monster/bobs-game](https://snapkittywest.github.io/sov-kernel-monster/bobs-game/)
 
 ## Test
 
@@ -21,41 +115,34 @@ Open `http://127.0.0.1:4173`, or play the published build at [snapkittywest.gith
 npm test
 ```
 
-The tests cover quest ordering, authoritative state transitions, SHA-256 receipt chaining, tamper detection, save recovery, and version rejection.
+Covers: quest ordering, authoritative state transitions, SHA-256 receipt chaining, tamper detection, save recovery, version rejection.
 
 ## Controls
 
-| Action | Keyboard and mouse | Gamepad |
-| --- | --- | --- |
-| Move | `WASD` or arrows | Left stick |
+| Action | Keys | Gamepad |
+|--------|------|---------|
+| Move | `WASD` / arrows | Left stick |
 | Look | Mouse | Right stick |
 | Interact | `E` | X / Square |
 | Jump | `Space` | A / Cross |
 | Sprint | `Shift` | Left-stick press |
-| Crouch | `C` or `Ctrl` | B / Circle |
-| Inventory | `I` or `Tab` | Y / Triangle |
-| Pause | `Esc` or `P` | Menu |
-| Respawn | `R` | Pause menu |
+| Crouch | `C` / `Ctrl` | B / Circle |
+| Inventory | `I` / `Tab` | Y / Triangle |
+| Pause | `Esc` / `P` | Menu |
 
-Touch devices receive a movement stick, drag-to-look, and dedicated action controls.
+Touch: movement stick, drag-to-look, action buttons.
 
 ## Architecture
 
-- `src/core`: fixed game loop, event bus, authoritative store, animation, ledger, save/load.
-- `src/physics`: Rapier world, architectural colliders, kinematic player, triggers, dynamic chairs.
-- `src/player` and `src/input`: camera rig, movement states, gravity, stance, abstract device actions.
-- `src/interaction`: centered camera ray and metadata-driven object actions.
-- `src/gameplay`: inventory, commands, quest conditions, item definitions.
-- `src/world` and `src/rendering`: procedural level, PBR materials, lighting, quality controls.
-- `src/audio`: generated footsteps, UI tones, and positional lamp hum.
-- `src/ui`: HUD, pause, settings, inventory, document reader, and completion state.
+| Layer | Module | Role |
+|-------|--------|------|
+| Core | `src/core/` | game loop, event bus, authoritative store, ledger, save/load |
+| Physics | `src/physics/` | Rapier world, colliders, kinematic player, triggers |
+| Player | `src/player/`, `src/input/` | camera rig, movement, gravity, stance |
+| Interaction | `src/interaction/` | camera ray, metadata-driven object actions |
+| Gameplay | `src/gameplay/` | inventory, quest conditions, item definitions |
+| World | `src/world/`, `src/rendering/` | procedural level, PBR materials, lighting |
+| Audio | `src/audio/` | footsteps, UI tones, positional lamp hum |
+| UI | `src/ui/` | HUD, pause, inventory, document reader, completion |
 
-Durable gameplay events are chained as:
-
-```text
-previousHash -> payloadHash -> stateHash -> currentHash
-```
-
-Camera motion is deliberately excluded. Saves use verified primary and backup `localStorage` slots and include versioned player, inventory, world, quest, event, and seal data.
-
-The receipt chain is a local, tamper-evident checksum. It detects accidental edits and unsophisticated save manipulation, but it is not an authenticated signature or MAC and cannot establish player identity against a hostile client.
+Receipt chain is tamper-evident, not authenticated. Detects accidental edits — not a MAC or signature against a hostile client.
