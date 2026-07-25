@@ -470,12 +470,19 @@ footer a { color: var(--orange); text-decoration: none; }
 </footer>
 
 <script>
-// ─── Quantum State ───────────────────────────────────────────────────────────
 const TAU = Math.PI * 2;
+const INV_SQRT2 = 1 / Math.sqrt(2);
+const PHI_INV  = (Math.sqrt(5) - 1) / 2;
+const PHI_INV2 = PHI_INV * PHI_INV;
+
 let alpha = {re:1, im:0}, beta = {re:0, im:0};
 let circuit = [];
-let rotX = 0.4, rotY = -0.6;
+let rotX = 0.5, rotY = -0.7;
 let dragging = false, lastMX = 0, lastMY = 0;
+let autoSpin = true;
+let animFrame = null;
+// trail of past tip positions for motion blur
+let trail = [];
 
 function norm(a, b) {
   const n = Math.sqrt(a.re**2+a.im**2+b.re**2+b.im**2);
@@ -485,12 +492,10 @@ function norm(a, b) {
 }
 
 function blochCoords() {
-  // θ = 2 * arccos(|α|), φ = arg(β) - arg(α)
   const aAbs = Math.sqrt(alpha.re**2 + alpha.im**2);
-  const bAbs = Math.sqrt(beta.re**2  + beta.im**2);
   const theta = 2 * Math.acos(Math.min(1, aAbs));
   const phiA  = Math.atan2(alpha.im, alpha.re);
-  const phiB  = Math.atan2(beta.im,  beta.re);
+  const phiB  = Math.atan2(beta.im, beta.re);
   const phi   = phiB - phiA;
   return {
     x: Math.sin(theta) * Math.cos(phi),
@@ -500,11 +505,6 @@ function blochCoords() {
   };
 }
 
-// ─── Gate Matrices ───────────────────────────────────────────────────────────
-const INV_SQRT2 = 1 / Math.sqrt(2);
-const PHI_INV   = (Math.sqrt(5) - 1) / 2;   // φ⁻¹ ≈ 0.618
-const PHI_INV2  = PHI_INV * PHI_INV;         // φ⁻² ≈ 0.382
-
 function applyGate(name) {
   let a = {...alpha}, b = {...beta};
   switch(name) {
@@ -512,285 +512,280 @@ function applyGate(name) {
       alpha = {re: INV_SQRT2*(a.re+b.re), im: INV_SQRT2*(a.im+b.im)};
       beta  = {re: INV_SQRT2*(a.re-b.re), im: INV_SQRT2*(a.im-b.im)};
       break;
-    case 'X':
-      alpha = {...b}; beta = {...a};
-      break;
+    case 'X': alpha={...b}; beta={...a}; break;
     case 'Y':
-      alpha = {re: b.im,  im: -b.re};
-      beta  = {re: -a.im, im:  a.re};
-      break;
-    case 'Z':
-      beta = {re: -b.re, im: -b.im};
-      break;
-    case 'S':
-      beta = {re: -b.im, im: b.re};  // multiply β by i
-      break;
-    case 'T': {
-      const c = Math.cos(Math.PI/4), s = Math.sin(Math.PI/4);
-      beta = {re: b.re*c - b.im*s, im: b.re*s + b.im*c};
-      break;
-    }
-    case 'Rx': {
-      const c = Math.cos(Math.PI/8), s = Math.sin(Math.PI/8);
-      alpha = {re: a.re*c + b.im*s, im: a.im*c + b.re*s};  // Rx(π/4)
-      beta  = {re: b.re*c + a.im*s, im: b.im*c + a.re*s};
-      break;
-    }
-    case 'Ry': {
-      const c = Math.cos(Math.PI/8), s = Math.sin(Math.PI/8);
-      alpha = {re: a.re*c - b.re*s, im: a.im*c - b.im*s};
-      beta  = {re: b.re*c + a.re*s, im: b.im*c + a.im*s};
-      break;
-    }
-    case 'Rz': {
-      const c = Math.cos(Math.PI/8), s = Math.sin(Math.PI/8);
-      alpha = {re: a.re*c - a.im*s, im: a.re*s + a.im*c};
-      beta  = {re: b.re*c + b.im*s, im: -b.re*s + b.im*c};
-      break;
-    }
+      alpha={re:b.im,im:-b.re}; beta={re:-a.im,im:a.re}; break;
+    case 'Z': beta={re:-b.re,im:-b.im}; break;
+    case 'S': beta={re:-b.im,im:b.re}; break;
+    case 'T': { const c=Math.cos(Math.PI/4),s=Math.sin(Math.PI/4);
+      beta={re:b.re*c-b.im*s,im:b.re*s+b.im*c}; break; }
+    case 'Rx': { const c=Math.cos(Math.PI/8),s=Math.sin(Math.PI/8);
+      alpha={re:a.re*c+b.im*s,im:a.im*c+b.re*s};
+      beta ={re:b.re*c+a.im*s,im:b.im*c+a.re*s}; break; }
+    case 'Ry': { const c=Math.cos(Math.PI/8),s=Math.sin(Math.PI/8);
+      alpha={re:a.re*c-b.re*s,im:a.im*c-b.im*s};
+      beta ={re:b.re*c+a.re*s,im:b.im*c+a.im*s}; break; }
+    case 'Rz': { const c=Math.cos(Math.PI/8),s=Math.sin(Math.PI/8);
+      alpha={re:a.re*c-a.im*s,im:a.re*s+a.im*c};
+      beta ={re:b.re*c+b.im*s,im:-b.re*s+b.im*c}; break; }
     case 'Jordan': {
-      // T(ρ) = φ⁻¹·UρU† + φ⁻²·ρ  — apply as Jordan step on state vector
-      // Implemented as: |ψ'⟩ = √(φ⁻¹)·H|ψ⟩ + √(φ⁻²)·|ψ⟩ then renormalize
-      const sqPhi1 = Math.sqrt(PHI_INV), sqPhi2 = Math.sqrt(PHI_INV2);
-      const ha = {re: INV_SQRT2*(a.re+b.re), im: INV_SQRT2*(a.im+b.im)};
-      const hb = {re: INV_SQRT2*(a.re-b.re), im: INV_SQRT2*(a.im-b.im)};
-      alpha = {re: sqPhi1*ha.re + sqPhi2*a.re, im: sqPhi1*ha.im + sqPhi2*a.im};
-      beta  = {re: sqPhi1*hb.re + sqPhi2*b.re, im: sqPhi1*hb.im + sqPhi2*b.im};
-      break;
-    }
+      const sq1=Math.sqrt(PHI_INV), sq2=Math.sqrt(PHI_INV2);
+      const ha={re:INV_SQRT2*(a.re+b.re),im:INV_SQRT2*(a.im+b.im)};
+      const hb={re:INV_SQRT2*(a.re-b.re),im:INV_SQRT2*(a.im-b.im)};
+      alpha={re:sq1*ha.re+sq2*a.re,im:sq1*ha.im+sq2*a.im};
+      beta ={re:sq1*hb.re+sq2*b.re,im:sq1*hb.im+sq2*b.im}; break; }
   }
   norm(alpha, beta);
+  trail = [];
 }
 
 function doMeasure() {
   const p0 = alpha.re**2 + alpha.im**2;
   const result = Math.random() < p0 ? 0 : 1;
-  if (result === 0) { alpha={re:1,im:0}; beta={re:0,im:0}; }
-  else              { alpha={re:0,im:0}; beta={re:1,im:0}; }
+  if (result===0){alpha={re:1,im:0};beta={re:0,im:0};}
+  else           {alpha={re:0,im:0};beta={re:1,im:0};}
   document.getElementById('measure-result').textContent =
     `COLLAPSE → |${result}⟩  (P(0)=${p0.toFixed(3)}  P(1)=${(1-p0).toFixed(3)})`;
-  circuit.push({name:'M', measured:true});
-  renderCircuit();
-  draw();
-  updateReadout();
+  circuit.push({name:'M',measured:true});
+  trail=[];
+  renderCircuit(); updateReadout();
 }
 
-// ─── Canvas Draw ─────────────────────────────────────────────────────────────
+// ── Canvas ──────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('bloch-canvas');
 const ctx    = canvas.getContext('2d');
-const W = canvas.width, H = canvas.height;
-const CX = W/2, CY = H/2, R = 185;
+const W=canvas.width, H=canvas.height, CX=W/2, CY=H/2, R=200;
 
-function project3d(x, y, z) {
-  const cx = Math.cos(rotX), sx = Math.sin(rotX);
-  const cy = Math.cos(rotY), sy = Math.sin(rotY);
-  // rotate around Y then X
-  const x1 = cy*x + sy*z, z1 = -sy*x + cy*z;
-  const y2 = cx*y - sx*z1, z2 = sx*y + cx*z1;
-  const scale = 0.7 + 0.3*(z2+1)/2;
-  return { px: CX + x1*R, py: CY - y2*R, depth: z2, scale };
+function project(x,y,z) {
+  const cx=Math.cos(rotX),sx=Math.sin(rotX);
+  const cy=Math.cos(rotY),sy=Math.sin(rotY);
+  const x1=cy*x+sy*z, z1=-sy*x+cy*z;
+  const y2=cx*y-sx*z1, z2=sx*y+cx*z1;
+  return {px:CX+x1*R, py:CY-y2*R, depth:z2};
 }
 
-function drawCircle3d(nx, ny, nz, segs=64) {
-  // Draw great circle with normal (nx,ny,nz)
-  const u = {x: -ny||1, y: nx, z: 0};
-  const uLen = Math.sqrt(u.x**2+u.y**2+u.z**2);
-  if (uLen < 1e-9) return;
-  u.x/=uLen; u.y/=uLen; u.z/=uLen;
-  const v = {
-    x: ny*u.z - nz*u.y,
-    y: nz*u.x - nx*u.z,
-    z: nx*u.y - ny*u.x
-  };
-  ctx.beginPath();
-  for (let i=0; i<=segs; i++) {
-    const t = (i/segs)*TAU;
-    const px3 = Math.cos(t)*u.x + Math.sin(t)*v.x;
-    const py3 = Math.cos(t)*u.y + Math.sin(t)*v.y;
-    const pz3 = Math.cos(t)*u.z + Math.sin(t)*v.z;
-    const {px, py} = project3d(px3, py3, pz3);
-    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+// draw a great circle with depth-based color
+function greatCircle(nx,ny,nz, colorFn, lw=1, segs=80) {
+  const u={x:-ny||1,y:nx,z:0};
+  const ul=Math.sqrt(u.x**2+u.y**2+u.z**2);
+  if(ul<1e-9) return;
+  u.x/=ul; u.y/=ul; u.z/=ul;
+  const v={x:ny*u.z-nz*u.y, y:nz*u.x-nx*u.z, z:nx*u.y-ny*u.x};
+  for(let i=0;i<segs;i++){
+    const t0=(i/segs)*TAU, t1=((i+1)/segs)*TAU;
+    const x0=Math.cos(t0)*u.x+Math.sin(t0)*v.x;
+    const y0=Math.cos(t0)*u.y+Math.sin(t0)*v.y;
+    const z0=Math.cos(t0)*u.z+Math.sin(t0)*v.z;
+    const x1=Math.cos(t1)*u.x+Math.sin(t1)*v.x;
+    const y1=Math.cos(t1)*u.y+Math.sin(t1)*v.y;
+    const z1=Math.cos(t1)*u.z+Math.sin(t1)*v.z;
+    const p0=project(x0,y0,z0), p1=project(x1,y1,z1);
+    const depth=(p0.depth+p1.depth)/2;
+    ctx.strokeStyle=colorFn(depth);
+    ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.moveTo(p0.px,p0.py); ctx.lineTo(p1.px,p1.py); ctx.stroke();
   }
-  ctx.stroke();
+}
+
+// latitude rings at various heights
+function latitudeRing(yLevel, colorFn, lw=0.7, segs=64) {
+  const r=Math.sqrt(Math.max(0,1-yLevel*yLevel));
+  for(let i=0;i<segs;i++){
+    const t0=(i/segs)*TAU, t1=((i+1)/segs)*TAU;
+    const p0=project(r*Math.cos(t0),yLevel,r*Math.sin(t0));
+    const p1=project(r*Math.cos(t1),yLevel,r*Math.sin(t1));
+    const d=(p0.depth+p1.depth)/2;
+    ctx.strokeStyle=colorFn(d);
+    ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.moveTo(p0.px,p0.py); ctx.lineTo(p1.px,p1.py); ctx.stroke();
+  }
 }
 
 function draw() {
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#0d0d0b';
-  ctx.fillRect(0, 0, W, H);
+  ctx.clearRect(0,0,W,H);
+
+  // Background radial gradient
+  const bg=ctx.createRadialGradient(CX,CY,0,CX,CY,R*1.3);
+  bg.addColorStop(0,'#131310'); bg.addColorStop(1,'#0a0a08');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // Sphere surface gradient (faint)
+  const sg=ctx.createRadialGradient(CX-R*0.3,CY-R*0.3,0,CX,CY,R);
+  sg.addColorStop(0,'rgba(155,109,255,0.04)');
+  sg.addColorStop(0.5,'rgba(106,155,204,0.02)');
+  sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg;
+  ctx.beginPath(); ctx.arc(CX,CY,R,0,TAU); ctx.fill();
 
   // Sphere outline
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(CX, CY, R, 0, TAU);
-  ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.08)';
+  ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(CX,CY,R,0,TAU); ctx.stroke();
 
-  // Latitude/longitude circles
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  ctx.lineWidth = 0.8;
-  drawCircle3d(1,0,0);  // YZ plane
-  drawCircle3d(0,1,0);  // XZ plane
-  drawCircle3d(0,0,1);  // XY plane
+  // Latitude rings — depth-colored (back=dim, front=brighter)
+  const latColor = d => `rgba(106,155,204,${(0.04+0.10*(d+1)/2).toFixed(3)})`;
+  for(const y of [-0.866,-0.5,0,0.5,0.866]) latitudeRing(y,latColor,0.7);
 
-  // Equatorial ring highlight
-  ctx.strokeStyle = 'rgba(106,155,204,0.12)';
-  ctx.lineWidth = 1.2;
-  drawCircle3d(0,1,0);
+  // Great circles (meridians) depth-colored
+  const meridColor = d => `rgba(155,109,255,${(0.04+0.08*(d+1)/2).toFixed(3)})`;
+  greatCircle(1,0,0,meridColor,0.7);
+  greatCircle(0,0,1,meridColor,0.7);
 
-  // Axes
-  const axisPoints = [
-    {p:[0, 1, 0], label:'|0⟩', color:'rgba(255,255,255,0.5)'},
-    {p:[0,-1, 0], label:'|1⟩', color:'rgba(255,255,255,0.3)'},
-    {p:[1, 0, 0], label:'|+⟩', color:'rgba(106,155,204,0.4)'},
-    {p:[-1,0, 0], label:'|−⟩', color:'rgba(106,155,204,0.3)'},
-    {p:[0, 0, 1], label:'|i⟩', color:'rgba(155,109,255,0.4)'},
-    {p:[0, 0,-1], label:'|−i⟩',color:'rgba(155,109,255,0.3)'},
+  // Equatorial ring — blue, brighter
+  const equColor = d => `rgba(106,155,204,${(0.10+0.20*(d+1)/2).toFixed(3)})`;
+  greatCircle(0,1,0,equColor,1.2);
+
+  // Axis lines + labels
+  const axes=[
+    {p:[0,1,0],  label:'|0⟩', cr:[255,255,255], ca:0.7},
+    {p:[0,-1,0], label:'|1⟩', cr:[255,255,255], ca:0.35},
+    {p:[1,0,0],  label:'|+⟩', cr:[106,155,204], ca:0.6},
+    {p:[-1,0,0], label:'|−⟩',cr:[106,155,204],ca:0.35},
+    {p:[0,0,1],  label:'|i⟩', cr:[155,109,255], ca:0.6},
+    {p:[0,0,-1], label:'|−i⟩',cr:[155,109,255],ca:0.35},
   ];
-  axisPoints.forEach(({p,label,color}) => {
-    const {px,py} = project3d(...p);
-    const o = project3d(0,0,0);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 0.8;
-    ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.moveTo(o.px,o.py); ctx.lineTo(px,py); ctx.stroke();
+  const orig=project(0,0,0);
+  axes.forEach(({p,label,cr,ca})=>{
+    const {px,py,depth}=project(...p);
+    const alpha_a=ca*(0.5+0.5*(depth+1)/2);
+    ctx.strokeStyle=`rgba(${cr[0]},${cr[1]},${cr[2]},${alpha_a.toFixed(3)})`;
+    ctx.lineWidth=0.8; ctx.setLineDash([3,5]);
+    ctx.beginPath(); ctx.moveTo(orig.px,orig.py); ctx.lineTo(px,py); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = color;
-    ctx.font = '11px var(--mono, monospace)';
-    ctx.fillText(label, px+5, py+4);
+    ctx.fillStyle=`rgba(${cr[0]},${cr[1]},${cr[2]},${Math.min(1,(ca+0.1)).toFixed(3)})`;
+    ctx.font='bold 12px monospace';
+    ctx.fillText(label,px+6,py+4);
   });
 
-  // State vector arrow
-  const bc = blochCoords();
-  const tip = project3d(bc.x, bc.y, bc.z);
-  const orig = project3d(0,0,0);
-
-  ctx.strokeStyle = '#d97757';
-  ctx.lineWidth = 2.5;
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.moveTo(orig.px, orig.py);
-  ctx.lineTo(tip.px, tip.py);
-  ctx.stroke();
-
-  // Arrowhead
-  const dx = tip.px - orig.px, dy = tip.py - orig.py;
-  const len = Math.sqrt(dx*dx+dy*dy);
-  if (len > 1) {
-    const ux = dx/len, uy = dy/len;
-    const AH = 10;
-    ctx.fillStyle = '#d97757';
-    ctx.beginPath();
-    ctx.moveTo(tip.px, tip.py);
-    ctx.lineTo(tip.px - AH*ux + AH*0.4*uy, tip.py - AH*uy - AH*0.4*ux);
-    ctx.lineTo(tip.px - AH*ux - AH*0.4*uy, tip.py - AH*uy + AH*0.4*ux);
-    ctx.closePath();
-    ctx.fill();
+  // Trail
+  const bc=blochCoords();
+  trail.push({x:bc.x,y:bc.y,z:bc.z});
+  if(trail.length>60) trail.shift();
+  for(let i=1;i<trail.length;i++){
+    const p0=project(trail[i-1].x,trail[i-1].y,trail[i-1].z);
+    const p1=project(trail[i].x,trail[i].y,trail[i].z);
+    const t=i/trail.length;
+    ctx.strokeStyle=`rgba(217,119,87,${(t*0.4).toFixed(3)})`;
+    ctx.lineWidth=1+t*1.5;
+    ctx.beginPath(); ctx.moveTo(p0.px,p0.py); ctx.lineTo(p1.px,p1.py); ctx.stroke();
   }
 
-  // Tip dot
-  ctx.fillStyle = '#d4af37';
-  ctx.beginPath();
-  ctx.arc(tip.px, tip.py, 5, 0, TAU);
-  ctx.fill();
+  // State vector — gradient from orange (origin) to gold (tip)
+  const tip=project(bc.x,bc.y,bc.z);
+  const grad=ctx.createLinearGradient(orig.px,orig.py,tip.px,tip.py);
+  grad.addColorStop(0,'rgba(217,119,87,0.5)');
+  grad.addColorStop(1,'#d4af37');
+  ctx.strokeStyle=grad; ctx.lineWidth=3; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(orig.px,orig.py); ctx.lineTo(tip.px,tip.py); ctx.stroke();
 
-  // Projection onto equatorial plane (dotted line down)
-  const equTip = project3d(bc.x, 0, bc.z);
-  ctx.strokeStyle = 'rgba(217,119,87,0.25)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([3,4]);
-  ctx.beginPath();
-  ctx.moveTo(tip.px, tip.py);
-  ctx.lineTo(equTip.px, equTip.py);
-  ctx.stroke();
+  // Arrowhead
+  const dx=tip.px-orig.px, dy=tip.py-orig.py;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  if(len>2){
+    const ux=dx/len,uy=dy/len,AH=13;
+    ctx.fillStyle='#d4af37';
+    ctx.beginPath();
+    ctx.moveTo(tip.px,tip.py);
+    ctx.lineTo(tip.px-AH*ux+AH*0.4*uy, tip.py-AH*uy-AH*0.4*ux);
+    ctx.lineTo(tip.px-AH*ux-AH*0.4*uy, tip.py-AH*uy+AH*0.4*ux);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Tip glow
+  const glow=ctx.createRadialGradient(tip.px,tip.py,0,tip.px,tip.py,18);
+  glow.addColorStop(0,'rgba(212,175,55,0.6)');
+  glow.addColorStop(1,'rgba(212,175,55,0)');
+  ctx.fillStyle=glow;
+  ctx.beginPath(); ctx.arc(tip.px,tip.py,18,0,TAU); ctx.fill();
+
+  ctx.fillStyle='#d4af37';
+  ctx.beginPath(); ctx.arc(tip.px,tip.py,5,0,TAU); ctx.fill();
+
+  // Equatorial projection shadow
+  const eqTip=project(bc.x,0,bc.z);
+  ctx.strokeStyle='rgba(217,119,87,0.18)'; ctx.lineWidth=1; ctx.setLineDash([3,5]);
+  ctx.beginPath(); ctx.moveTo(tip.px,tip.py); ctx.lineTo(eqTip.px,eqTip.py); ctx.stroke();
   ctx.setLineDash([]);
+
+  // Tip label
+  ctx.fillStyle='rgba(212,175,55,0.7)'; ctx.font='11px monospace';
+  ctx.fillText(`|ψ⟩`,tip.px+8,tip.py-8);
 }
 
 function updateReadout() {
-  const aAbs = Math.sqrt(alpha.re**2 + alpha.im**2);
-  const bAbs = Math.sqrt(beta.re**2 + beta.im**2);
-  const bc = blochCoords();
-  const fmt = v => v.toFixed(3);
-  const fmtC = (v) => `${fmt(v.re)} ${v.im>=0?'+':'-'} ${fmt(Math.abs(v.im))}i`;
-  document.getElementById('r-alpha').textContent = fmtC(alpha);
-  document.getElementById('r-beta').textContent  = fmtC(beta);
-  document.getElementById('r-p0').textContent    = fmt(aAbs**2);
-  document.getElementById('r-p1').textContent    = fmt(bAbs**2);
-  document.getElementById('r-theta').textContent = fmt(bc.theta) + ' rad';
-  document.getElementById('r-phi').textContent   = fmt(((bc.phi % TAU) + TAU) % TAU) + ' rad';
+  const aAbs=Math.sqrt(alpha.re**2+alpha.im**2);
+  const bAbs=Math.sqrt(beta.re**2+beta.im**2);
+  const bc=blochCoords();
+  const fmt=v=>v.toFixed(3);
+  const fmtC=v=>`${fmt(v.re)} ${v.im>=0?'+':'-'} ${fmt(Math.abs(v.im))}i`;
+  document.getElementById('r-alpha').textContent=fmtC(alpha);
+  document.getElementById('r-beta').textContent =fmtC(beta);
+  document.getElementById('r-p0').textContent   =fmt(aAbs**2);
+  document.getElementById('r-p1').textContent   =fmt(bAbs**2);
+  document.getElementById('r-theta').textContent=fmt(bc.theta)+' rad';
+  document.getElementById('r-phi').textContent  =fmt(((bc.phi%TAU)+TAU)%TAU)+' rad';
 }
 
-// ─── Circuit ─────────────────────────────────────────────────────────────────
 function renderCircuit() {
-  const el = document.getElementById('circuit-display');
-  if (circuit.length === 0) {
-    el.innerHTML = '<span style="color:var(--dim)">circuit empty — select a gate above</span>';
-    return;
-  }
-  el.innerHTML = circuit.map(g =>
-    `<span class="circuit-gate${g.measured?' measured':''}">${g.name}</span>`
-  ).join(' → ');
+  const el=document.getElementById('circuit-display');
+  if(!circuit.length){el.innerHTML='<span style="color:var(--dim)">circuit empty — select a gate above</span>';return;}
+  el.innerHTML=circuit.map(g=>`<span class="circuit-gate${g.measured?' measured':''}">${g.name}</span>`).join(' → ');
 }
 
-// ─── Events ──────────────────────────────────────────────────────────────────
-document.querySelectorAll('.gate-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const g = btn.dataset.gate;
-    applyGate(g);
-    circuit.push({name: g === 'Jordan' ? 'J(φ⁻¹)' : g});
-    renderCircuit();
-    draw();
-    updateReadout();
-    document.getElementById('measure-result').textContent = '';
+// ── Auto-spin loop ───────────────────────────────────────────────────────────
+function loop() {
+  if(autoSpin){ rotY += 0.007; }
+  draw(); updateReadout();
+  animFrame=requestAnimationFrame(loop);
+}
+
+// ── Events ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.gate-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    applyGate(btn.dataset.gate);
+    circuit.push({name:btn.dataset.gate==='Jordan'?'J(φ⁻¹)':btn.dataset.gate});
+    renderCircuit(); updateReadout();
+    document.getElementById('measure-result').textContent='';
   });
 });
 
-document.getElementById('measure-btn').addEventListener('click', doMeasure);
-
-document.getElementById('clear-btn').addEventListener('click', () => {
-  alpha = {re:1,im:0}; beta={re:0,im:0};
-  circuit = [];
-  renderCircuit();
-  draw();
-  updateReadout();
-  document.getElementById('measure-result').textContent = '';
+document.getElementById('measure-btn').addEventListener('click',doMeasure);
+document.getElementById('clear-btn').addEventListener('click',()=>{
+  alpha={re:1,im:0}; beta={re:0,im:0}; circuit=[]; trail=[];
+  renderCircuit(); updateReadout();
+  document.getElementById('measure-result').textContent='';
 });
 
-// Drag to rotate
-canvas.addEventListener('mousedown', e => { dragging=true; lastMX=e.clientX; lastMY=e.clientY; });
-window.addEventListener('mousemove', e => {
-  if (!dragging) return;
-  rotY += (e.clientX - lastMX) * 0.01;
-  rotX += (e.clientY - lastMY) * 0.01;
+canvas.addEventListener('mousedown',e=>{dragging=true;autoSpin=false;lastMX=e.clientX;lastMY=e.clientY;});
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  rotY+=(e.clientX-lastMX)*0.012; rotX+=(e.clientY-lastMY)*0.012;
   lastMX=e.clientX; lastMY=e.clientY;
-  draw();
 });
-window.addEventListener('mouseup', () => dragging=false);
+window.addEventListener('mouseup',()=>dragging=false);
 
-canvas.addEventListener('touchstart', e => { e.preventDefault(); dragging=true; lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY; }, {passive:false});
-canvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  if (!dragging) return;
-  rotY += (e.touches[0].clientX - lastMX) * 0.012;
-  rotX += (e.touches[0].clientY - lastMY) * 0.012;
+canvas.addEventListener('touchstart',e=>{e.preventDefault();dragging=true;autoSpin=false;lastMX=e.touches[0].clientX;lastMY=e.touches[0].clientY;},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault(); if(!dragging)return;
+  rotY+=(e.touches[0].clientX-lastMX)*0.014; rotX+=(e.touches[0].clientY-lastMY)*0.014;
   lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY;
-  draw();
-}, {passive:false});
-canvas.addEventListener('touchend', () => dragging=false);
+},{passive:false});
+canvas.addEventListener('touchend',()=>dragging=false);
+
+// double-click canvas to resume spin
+canvas.addEventListener('dblclick',()=>{ autoSpin=true; });
 
 // Nav scroll spy
-const sections = document.querySelectorAll('section[id]');
-const navLinks  = document.querySelectorAll('nav a');
-window.addEventListener('scroll', () => {
-  let cur = '';
-  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
-  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
-}, {passive:true});
+const navLinks=document.querySelectorAll('nav a');
+document.querySelectorAll('section[id]');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  document.querySelectorAll('section[id]').forEach(s=>{if(window.scrollY>=s.offsetTop-80)cur=s.id;});
+  navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+},{passive:true});
 
-// Init
-draw();
-updateReadout();
 renderCircuit();
+loop();
 </script>
 </body>
 </html>
