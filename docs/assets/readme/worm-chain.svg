@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 160" width="900" height="160">
+  <defs>
+    <style>
+      @media (prefers-reduced-motion: reduce) { .flow { animation: none !important; } }
+      .flow { animation: flow 3s linear infinite; }
+      @keyframes flow { from{stroke-dashoffset:40} to{stroke-dashoffset:0} }
+    </style>
+    <filter id="glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="900" height="160" fill="#030810" rx="8"/>
+
+  <!-- GENESIS -->
+  <rect x="20" y="45" width="110" height="70" rx="6" fill="#050f18" stroke="#ffd700" stroke-width="1.5"/>
+  <text x="75" y="68" font-family="monospace" font-size="9" fill="#ffd700" text-anchor="middle" filter="url(#glow)">GENESIS</text>
+  <text x="75" y="83" font-family="monospace" font-size="7" fill="#607080" text-anchor="middle">prev: null</text>
+  <text x="75" y="96" font-family="monospace" font-size="7" fill="#44ff88" text-anchor="middle">h: a3f9b2c1...</text>
+  <text x="75" y="109" font-family="monospace" font-size="7" fill="#ff6644" text-anchor="middle">sig: ed25519...</text>
+
+  <!-- Arrow 1 -->
+  <line x1="130" y1="80" x2="165" y2="80" stroke="#00e5ff" stroke-width="2" stroke-dasharray="8,4" class="flow" filter="url(#glow)"/>
+  <text x="148" y="73" font-family="monospace" font-size="7" fill="#00e5ff" text-anchor="middle">hash</text>
+
+  <!-- RECEIPT 1 -->
+  <rect x="167" y="45" width="130" height="70" rx="6" fill="#050f18" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="232" y="68" font-family="monospace" font-size="9" fill="#00e5ff" text-anchor="middle" filter="url(#glow)">RECEIPT 001</text>
+  <text x="232" y="83" font-family="monospace" font-size="7" fill="#607080" text-anchor="middle">prev: a3f9b2c1</text>
+  <text x="232" y="96" font-family="monospace" font-size="7" fill="#44ff88" text-anchor="middle">h: 7c2ef445...</text>
+  <text x="232" y="109" font-family="monospace" font-size="7" fill="#ff6644" text-anchor="middle">sig: ed25519...</text>
+
+  <!-- Arrow 2 -->
+  <line x1="297" y1="80" x2="332" y2="80" stroke="#00e5ff" stroke-width="2" stroke-dasharray="8,4" class="flow" filter="url(#glow)"/>
+  <text x="314" y="73" font-family="monospace" font-size="7" fill="#00e5ff" text-anchor="middle">hash</text>
+
+  <!-- RECEIPT 2 -->
+  <rect x="334" y="45" width="130" height="70" rx="6" fill="#050f18" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="399" y="68" font-family="monospace" font-size="9" fill="#00e5ff" text-anchor="middle" filter="url(#glow)">RECEIPT 002</text>
+  <text x="399" y="83" font-family="monospace" font-size="7" fill="#607080" text-anchor="middle">prev: 7c2ef445</text>
+  <text x="399" y="96" font-family="monospace" font-size="7" fill="#44ff88" text-anchor="middle">h: f1b83a92...</text>
+  <text x="399" y="109" font-family="monospace" font-size="7" fill="#ff6644" text-anchor="middle">sig: ed25519...</text>
+
+  <!-- Arrow 3 -->
+  <line x1="464" y1="80" x2="499" y2="80" stroke="#00e5ff" stroke-width="2" stroke-dasharray="8,4" class="flow" filter="url(#glow)"/>
+  <text x="481" y="73" font-family="monospace" font-size="7" fill="#00e5ff" text-anchor="middle">hash</text>
+
+  <!-- RECEIPT N -->
+  <rect x="501" y="45" width="130" height="70" rx="6" fill="#050f18" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="566" y="68" font-family="monospace" font-size="9" fill="#00e5ff" text-anchor="middle" filter="url(#glow)">RECEIPT N</text>
+  <text x="566" y="83" font-family="monospace" font-size="7" fill="#607080" text-anchor="middle">prev: f1b83a92</text>
+  <text x="566" y="96" font-family="monospace" font-size="7" fill="#44ff88" text-anchor="middle">h: 2d9c7f01...</text>
+  <text x="566" y="109" font-family="monospace" font-size="7" fill="#ff6644" text-anchor="middle">sig: ed25519...</text>
+
+  <!-- Dots -->
+  <text x="648" y="84" font-family="monospace" font-size="20" fill="#00e5ff" opacity="0.5">···</text>
+
+  <!-- Properties panel -->
+  <rect x="710" y="20" width="175" height="120" rx="6" fill="#020810" stroke="#44ff88" stroke-width="1"/>
+  <text x="797" y="40" font-family="monospace" font-size="9" fill="#44ff88" text-anchor="middle" font-weight="bold">WORM PROPERTIES</text>
+  <text x="720" y="58" font-family="monospace" font-size="8" fill="#00ff88">✓ Append-only</text>
+  <text x="720" y="72" font-family="monospace" font-size="8" fill="#00ff88">✓ Hash-linked</text>
+  <text x="720" y="86" font-family="monospace" font-size="8" fill="#00ff88">✓ Ed25519 signed</text>
+  <text x="720" y="100" font-family="monospace" font-size="8" fill="#00ff88">✓ Tamper-evident</text>
+  <text x="720" y="114" font-family="monospace" font-size="8" fill="#00ff88">✓ Deterministic replay</text>
+  <text x="720" y="128" font-family="monospace" font-size="8" fill="#ff4444">✗ No deletion</text>
+
+  <!-- Bottom label -->
+  <text x="450" y="148" font-family="monospace" font-size="8" fill="#304050" text-anchor="middle">Every execution is sealed. History cannot be altered.</text>
+</svg>
