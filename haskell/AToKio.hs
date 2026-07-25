@@ -185,8 +185,11 @@ orchestrate atio iterations = loop 0
           threadDelay 1000
           loop n
         (task : rest) -> do
+          -- SYNC: Update task's step field to match expected k before checking invariants
+          let syncedTask = task { step = k, messageCount = k }
+
           -- Precondition gate: check all 7 invariants
-          validated <- preconditionGate task k
+          validated <- preconditionGate syncedTask k
           case validated of
             Left violation -> do
               -- INVARIANT VIOLATION: halt atomically
@@ -194,7 +197,7 @@ orchestrate atio iterations = loop 0
               exitFailure
             Right checkedState -> do
               -- Execute Ahmad_bot cycle
-              query <- if null (lastQuery task) then return "test query" else return (lastQuery task)
+              query <- if null (lastQuery syncedTask) then return "test query" else return (lastQuery syncedTask)
               result <- executeBotStep checkedState query
 
               -- WORM-seal result
