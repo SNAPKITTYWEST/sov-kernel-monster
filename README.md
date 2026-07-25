@@ -38,6 +38,16 @@ No cloud. No vendor. No libc. No sorry.
 
 ---
 
+<div align="center">
+<a href="https://snapkittywest.github.io/sov-kernel-monster/">
+<img src="docs/assets/readme/bloch-spin.svg" width="420" alt="QATAAUM quantum state machine — Bloch sphere spinning, state vector rotating, Jordan contraction live"/>
+</a>
+<br>
+<sub><strong><a href="https://snapkittywest.github.io/sov-kernel-monster/">Interactive state machine</a></strong> · drag · apply gates · measure · Jordan φ⁻¹ step</sub>
+</div>
+
+---
+
 ## In 30 Seconds
 
 Sov-Kernel-Monster is a local-first sovereign compute stack that:
