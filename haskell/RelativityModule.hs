@@ -12,7 +12,7 @@ import GHC.Generics (Generic)
 -- | Relativity field (observer-dependent time + light cones)
 data RelativityField = RelativityField
   { relativityFieldId :: String
-  , timeDilationFactor :: Vector -> Double   -- Returns factor < 1 near gravity
+  , relativityTimeDilation :: Vector -> Double   -- Returns factor < 1 near gravity
   , localSpeedOfLight :: Double              -- Default 299792458 m/s
   , gravitationalTimeWarp :: Double -> Double  -- f(potential) -> time dilation
   , schwarzschildRadius :: Double            -- For event horizon

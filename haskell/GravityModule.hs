@@ -79,11 +79,11 @@ newtype Velocity = Velocity Vector
 geodesicStep :: GravityField -> Vector -> Velocity -> Double -> (Vector, Velocity)
 geodesicStep field pos (Velocity vel) dt =
   let accel = accelerationAtPoint field pos
-      newPos = pos `vectorAdd` (vel `vectorScale` dt) `vectorAdd` (accel `vectorScale` (0.5 * dt * dt))
+      newPos = pos `vectorAdd` vectorScale dt vel `vectorAdd` vectorScale (0.5 * dt * dt) accel
       -- v(t+dt) = v(t) + a(t)*dt
       newAccel = accelerationAtPoint field newPos
-      avgAccel = accel `vectorAdd` newAccel `vectorScale` 0.5
-      newVel = vel `vectorAdd` (avgAccel `vectorScale` dt)
+      avgAccel = vectorScale 0.5 (accel `vectorAdd` newAccel)
+      newVel = vel `vectorAdd` vectorScale dt avgAccel
   in (newPos, Velocity newVel)
 
 -- | Predict trajectory over N steps

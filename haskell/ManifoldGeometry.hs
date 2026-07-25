@@ -30,7 +30,7 @@ data Region
     }
   | RelativityRegion
     { relId :: String
-    , timeDilation :: Double -> Double
+    , timeDilationFactor :: Double       -- simplified: single factor, not function
     , speedOfLight :: Double
     }
   | QuantumRegion
@@ -103,7 +103,7 @@ data CoordinateSystem
   | Polar                             -- r, theta
   | Spherical                         -- r, theta, phi
   | LorentzCoords                     -- t, x, y, z
-  deriving (Show, Generic)
+  deriving (Show, Eq, Generic)
 
 -- | Transformation matrix (identity for now, extended for full GR)
 transformationMatrix :: CoordinateSystem -> CoordinateSystem -> [[Double]]
@@ -126,11 +126,11 @@ transformCoordinates from to pos
 geodesicDistance :: MetricTensor -> Vector -> Vector -> Double
 geodesicDistance metric p1 p2 =
   let diff = vectorSub p1 p2
-      (Vector components) = diff
-      n = length components
-      metric_matrix = take n $ components metric
+      (Vector diff_components) = diff
+      n = length diff_components
+      metric_matrix = take n (components metric)
       -- Simplified: ds^2 = g_ij dx^i dx^j
-      contracted = sum [metric_matrix !! i !! j * components !! i * components !! j
+      contracted = sum [metric_matrix !! i !! j * diff_components !! i * diff_components !! j
                        | i <- [0..n-1], j <- [0..n-1]]
   in sqrt (max 0 contracted)  -- max 0 to handle numerical issues
 
