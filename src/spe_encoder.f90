@@ -64,7 +64,7 @@ module spe_encoder
 contains
 
   ! ── Internal: Blake3 update for one complex(dp) value ─────────────
-  pure subroutine update_complex(state, z)
+  subroutine update_complex(state, z)
     type(blake3_state), intent(inout) :: state
     complex(dp),        intent(in)    :: z
     integer(i8) :: bytes(16)
@@ -100,6 +100,7 @@ contains
     complex(dp), pointer :: density(:,:), signal(:,:), frame_arr(:,:,:)
     complex(dp), allocatable :: coeffs(:), rho(:,:)
     real(dp) :: max_coeff, sum_exp, trace_val
+    complex(dp) :: s
 
     r = frame%rank
     d = frame%dim
@@ -116,7 +117,7 @@ contains
     ! ── STEP 1: Frame analysis — cᵢ = ⟨signal, ψᵢ⟩_HS = tr(ψᵢ† signal) ──
     !$omp parallel do default(none) shared(signal,frame_arr,coeffs,r,d) private(i,j,k)
     do i = 1, r
-      complex(dp) :: s; s = czero
+      s = czero
       do j = 1, d
         do k = 1, d
           s = s + conjg(frame_arr(i,j,k)) * signal(j,k)
@@ -142,7 +143,7 @@ contains
     !$omp parallel do collapse(2) default(none) shared(rho,frame_arr,eigenvalues,r,d) private(i,j,k)
     do j = 1, d
       do k = 1, d
-        complex(dp) :: s; s = czero
+        s = czero
         do i = 1, r
           s = s + eigenvalues(i) * frame_arr(i,j,k)
         end do
@@ -182,6 +183,7 @@ contains
     integer(c_int64_t) :: r, d, i, j, k
     complex(dp), pointer :: density(:,:), signal(:,:), frame_arr(:,:,:)
     real(dp),    allocatable :: eigenvalues(:)
+    complex(dp) :: s
 
     r = frame%rank; d = frame%dim
     if (r > MAX_RANK .or. d > MAX_DIM .or. r /= d) call sov_fault(201)
@@ -201,7 +203,7 @@ contains
       call c_f_pointer(frame%frame_ptr, frame_arr, [r, d, d])
       !$omp parallel do default(none) shared(density,frame_arr,eigenvalues,r,d) private(i,j,k)
       do i = 1, r
-        complex(dp) :: s; s = czero
+        s = czero
         do j = 1, d
           do k = 1, d
             s = s + conjg(frame_arr(i,j,k)) * density(j,k)
@@ -214,7 +216,7 @@ contains
       call c_f_pointer(frame%dual_frame_ptr, frame_arr, [r, d, d])
       !$omp parallel do default(none) shared(density,frame_arr,eigenvalues,r,d) private(i,j,k)
       do i = 1, r
-        complex(dp) :: s; s = czero
+        s = czero
         do j = 1, d
           do k = 1, d
             s = s + conjg(frame_arr(i,j,k)) * density(j,k)
@@ -231,7 +233,7 @@ contains
     !$omp parallel do collapse(2) default(none) shared(signal,frame_arr,eigenvalues,r,d) private(i,j,k)
     do j = 1, d
       do k = 1, d
-        complex(dp) :: s; s = czero
+        s = czero
         do i = 1, r
           s = s + eigenvalues(i) * frame_arr(i,j,k)
         end do
@@ -261,7 +263,8 @@ contains
     complex(dp), allocatable :: cov(:,:), eigvecs(:,:)
     real(dp),    allocatable :: eigvals(:)
     type(blake3_state) :: bstate
-    integer(i8) :: hash_bytes(32)
+    integer(i8), target :: hash_bytes(32)
+    complex(dp) :: s
 
     N = corpus_count; d = corpus_dim; r = target_rank
     if (d > MAX_DIM .or. r > MAX_RANK .or. r > d) call sov_fault(301)
@@ -283,7 +286,7 @@ contains
       !$omp parallel do collapse(2) default(none) shared(cov,corpus,n_idx,d) private(i,j,k) reduction(+:cov)
       do i = 1, d
         do j = 1, d
-          complex(dp) :: s; s = czero
+          s = czero
           do k = 1, d
             s = s + corpus(n_idx,i,k) * conjg(corpus(n_idx,j,k))
           end do
@@ -323,7 +326,7 @@ contains
     if (frame%is_tight == 0) then
       frame%dual_frame_ptr = c_loc(frame_arr)  ! dual = r * pᵢ (set by caller)
     else
-      frame%dual_frame_ptr = c_null_ptr()
+      frame%dual_frame_ptr = c_null_ptr
     end if
 
     ! ── Hash frame ──
@@ -360,6 +363,8 @@ contains
     logical :: herm_ok, ortho_ok, tight_ok, idemp_ok
     real(dp) :: tol, frob_diff, trace_ij
     complex(dp) :: sum_tight(1,1)
+    complex(dp) :: tij
+    complex(dp) :: s
 
     r = frame%rank; d = frame%dim
     if (r > MAX_RANK .or. d > MAX_DIM .or. frame%magic /= FRAME_MAGIC) then
@@ -380,7 +385,7 @@ contains
     ortho_ok = .true.
     outer: do i = 1, r
       do j = 1, r
-        complex(dp) :: tij; tij = czero
+        tij = czero
         do k = 1, d
           do l = 1, d
             tij = tij + frame_arr(i,k,l) * frame_arr(j,l,k)
@@ -399,7 +404,7 @@ contains
     tight_ok = .true.
     do j = 1, d
       do k = 1, d
-        complex(dp) :: s; s = czero
+        s = czero
         do i = 1, r; s = s + frame_arr(i,j,k); end do
         if (j == k) then
           if (abs(real(s) - 1.0_dp) > tol .or. abs(aimag(s)) > tol) then
@@ -438,7 +443,7 @@ contains
        bind(C, name="spe_frame_info")
     type(spe_frame_t), intent(in)  :: frame
     type(c_ptr),       intent(out) :: info_ptr
-    info_ptr = c_null_ptr()
+    info_ptr = c_null_ptr
   end subroutine
 
 end module spe_encoder

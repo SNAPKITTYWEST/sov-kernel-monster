@@ -1,0 +1,43 @@
+CORPUS SEB_KERNELS
+
+RECORD KERNEL ROUTER
+FIELD INPUT = "normalized_record_stream"
+FIELD OUTPUT = "job_route_plan"
+FIELD STATUS = "active"
+FIELD ENGINE = "datalog_souffle"
+FIELD POLICY_FILE = "seb/runtime/src/seb_policy.dl"
+FIELD PARTITION_COUNT = "1024"
+FIELD HASH_FUNCTION = "phash2"
+
+// Routing logic (delegates to seb_partition_mgr.erl + seb_datalog_bridge.erl)
+// 1. Parse event type from normalized_record_stream
+// 2. Lookup agent competency via Datalog kernel_authorize
+// 3. Assign partition via phash2(agent_id, competency)
+// 4. Check constitution_denied — if set, route to DENIED
+// 5. If FISCAL_SETTLE or SOVEREIGN_ROOT, route to HUMAN_REVIEW first
+// 6. Otherwise route to WORM_GATE
+FIELD STEP_1 = "classify: event_type from record stream"
+FIELD STEP_2 = "authorize: kernel_authorize(agent, offset) via seb_policy.dl"
+FIELD STEP_3 = "partition: phash2(agent_id, competency) mod 1024"
+FIELD STEP_4 = "gate_check: constitution_denied -> DENIED | else -> continue"
+FIELD STEP_5 = "weight_check: FISCAL_SETTLE|SOVEREIGN_ROOT -> HUMAN_REVIEW | else -> WORM_GATE"
+END
+
+RECORD POLICY ROUTER_POLICY
+// Actor → capability → SEB event type → partition range
+// (from seb_policy.dl base.dl actor/capability facts)
+FIELD BOB_ROUTES       = "execute,write -> INFRA_PROVISION,CONFIG_DEPLOY -> partitions[0:255]"
+FIELD METATRON_ROUTES  = "read,verify -> ARCH_DECISION -> partitions[256:511]"
+FIELD EDAULC_ROUTES    = "observe -> PROBLEM_SOLVED,ATTACK_DETECTED -> partitions[512:767]"
+FIELD AUTONOMOUS_ROUTES = "vacuum_collapse -> SOVEREIGN_ROOT -> partitions[768:1023]"
+END
+
+RECORD ROUTE ROUTER_DESTINATIONS
+FIELD WORM_GATE    = "kernels/worm_gate.rbg: standard sealed append"
+FIELD HUMAN_REVIEW = "seb/human_touch/src/review_queue.rs: PendingChange queue"
+FIELD DENIED       = "seb_datalog_bridge:denied_log + convergence_log negative delta"
+FIELD ATTACK       = "seb_pnp_bridge:seal_entry + universeSum negative + verify_chain halt"
+END
+
+SEAL SHA256
+END

@@ -1,0 +1,7 @@
+{
+  "id": "borrow_chain_scheduler_v1",
+  "version": "1.0.0",
+  "memoryRef": "mem_genesis_borrow",
+  "provides": ["scheduleBorrows"],
+  "requires": ["topoSort"]
+}

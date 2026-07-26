@@ -1,0 +1,415 @@
+"""
+SEB Python Contract Template
+Generated from: SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION.xml
+Version: 1.0.0
+Target: Python Client Library
+"""
+
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any, Union, Literal
+from datetime import datetime
+from enum import Enum
+import json
+import hashlib
+from ulid import ULID
+from pydantic import BaseModel, Field, validator
+
+
+class NetworkPolicy(str, Enum):
+    """Network access policy"""
+    ALLOW = "allow"
+    DENY = "deny"
+    RESTRICTED = "restricted"
+
+
+class FilesystemPolicy(str, Enum):
+    """Filesystem access policy"""
+    READONLY = "readonly"
+    READWRITE = "readwrite"
+    DENY = "deny"
+
+
+class ExecutionStatus(str, Enum):
+    """Execution result status"""
+    SUCCESS = "success"
+    FAILURE = "failure"
+    TIMEOUT = "timeout"
+    DENIED = "denied"
+
+
+class Constraints(BaseModel):
+    """Execution constraints"""
+    network: NetworkPolicy
+    max_runtime_ms: int = Field(gt=0)
+    max_memory_bytes: int = Field(gt=0)
+    filesystem: FilesystemPolicy
+
+    class Config:
+        use_enum_values = True
+
+
+class Intent(BaseModel):
+    """Structured intent describing the requested action"""
+    action: str = Field(min_length=1)
+    subject: str = Field(min_length=1)
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+
+class Context(BaseModel):
+    """Execution context including environment and constraints"""
+    environment: str = Field(min_length=1)
+    constraints: Constraints
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class Credentials(BaseModel):
+    """Authority credentials"""
+    credential_type: str = Field(min_length=1)
+    value: str = Field(min_length=1)
+    signature: Optional[str] = None
+
+
+class Authority(BaseModel):
+    """Authority scope and credentials for the requesting principal"""
+    principal: str = Field(min_length=1)
+    credentials: Credentials
+    scope: List[str] = Field(default_factory=list)
+
+
+class Continuation(BaseModel):
+    """Continuation data for multi-step workflows"""
+    step: int = Field(gt=0)
+    total_steps: int = Field(gt=0)
+    state: Dict[str, Any] = Field(default_factory=dict)
+
+    @validator('step')
+    def step_must_not_exceed_total(cls, v, values):
+        if 'total_steps' in values and v > values['total_steps']:
+            raise ValueError('step cannot exceed total_steps')
+        return v
+
+
+class Evidence(BaseModel):
+    """Cryptographic evidence from prior steps"""
+    evidence_type: str = Field(min_length=1)
+    hash: str = Field(min_length=1)
+    signature: str = Field(min_length=1)
+    timestamp: datetime
+
+
+class Seal(BaseModel):
+    """Cryptographic seal (added by WORM sealer after execution)"""
+    hash: str = Field(min_length=1)
+    signature: str = Field(min_length=1)
+    public_key: str = Field(min_length=1)
+    timestamp: datetime
+    algorithm: str = Field(min_length=1)
+
+
+class EventEnvelope(BaseModel):
+    """Event envelope structure following the SEB specification"""
+    type: str = Field(min_length=1, alias="type")
+    version: str = Field(default="1.0.0")
+    id: str = Field(default_factory=lambda: str(ULID()))
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    intent: Intent
+    context: Context
+    authority: Authority
+    continuation: Optional[Continuation] = None
+    evidence: List[Evidence] = Field(default_factory=list)
+    seal: Optional[Seal] = None
+
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+    def compute_hash(self) -> str:
+        """
+        Compute Blake3 hash of the envelope (excluding seal)
+        
+        Note: In production, use actual Blake3 implementation.
+        This is a placeholder using SHA-256.
+        """
+        envelope_dict = self.dict(exclude={'seal'}, by_alias=True)
+        json_str = json.dumps(envelope_dict, sort_keys=True, default=str)
+        return hashlib.sha256(json_str.encode()).hexdigest()
+
+    def to_json(self) -> str:
+        """Serialize envelope to JSON"""
+        return self.json(by_alias=True, exclude_none=True)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> 'EventEnvelope':
+        """Deserialize envelope from JSON"""
+        return cls.parse_raw(json_str)
+
+
+class PolicyDecision:
+    """Base class for policy decisions"""
+    pass
+
+
+class AllowDecision(PolicyDecision):
+    """Policy allows the action"""
+    def __init__(self):
+        self.type = "allow"
+
+
+class DenyDecision(PolicyDecision):
+    """Policy denies the action"""
+    def __init__(self, reason: str):
+        self.type = "deny"
+        self.reason = reason
+
+
+class RequireEvidenceDecision(PolicyDecision):
+    """Policy requires additional evidence"""
+    def __init__(self, required: List[str]):
+        self.type = "require_evidence"
+        self.required = required
+
+
+class PolicyError(Exception):
+    """Policy evaluation error"""
+    def __init__(self, message: str, code: str):
+        super().__init__(message)
+        self.code = code
+
+
+class PolicyGate:
+    """Policy gate for pre-execution verification"""
+    
+    async def evaluate(self, envelope: EventEnvelope) -> PolicyDecision:
+        """
+        Evaluate policy for the given envelope
+        
+        Args:
+            envelope: The event envelope to evaluate
+            
+        Returns:
+            PolicyDecision indicating allow, deny, or require evidence
+            
+        Raises:
+            PolicyError: If policy evaluation fails
+        """
+        raise NotImplementedError("Subclasses must implement evaluate()")
+
+
+class RouteDestination:
+    """Base class for route destinations"""
+    pass
+
+
+class AdapterDestination(RouteDestination):
+    """Route to an execution adapter"""
+    def __init__(self, adapter_id: str):
+        self.type = "adapter"
+        self.adapter_id = adapter_id
+
+
+class QueueDestination(RouteDestination):
+    """Route to a queue"""
+    def __init__(self, queue_name: str):
+        self.type = "queue"
+        self.queue_name = queue_name
+
+
+class RejectDestination(RouteDestination):
+    """Reject the event"""
+    def __init__(self, reason: str):
+        self.type = "reject"
+        self.reason = reason
+
+
+class RoutingError(Exception):
+    """Routing error"""
+    def __init__(self, message: str, code: str):
+        super().__init__(message)
+        self.code = code
+
+
+class RoutingEngine:
+    """Routing engine for event dispatch"""
+    
+    async def route(self, envelope: EventEnvelope) -> RouteDestination:
+        """
+        Route the envelope to appropriate destination
+        
+        Args:
+            envelope: The event envelope to route
+            
+        Returns:
+            RouteDestination indicating where to send the event
+            
+        Raises:
+            RoutingError: If routing fails
+        """
+        raise NotImplementedError("Subclasses must implement route()")
+
+
+class ExecutionMetrics(BaseModel):
+    """Execution metrics"""
+    duration_ms: int = Field(ge=0)
+    memory_used_bytes: int = Field(ge=0)
+    network_calls: int = Field(ge=0)
+    filesystem_operations: int = Field(ge=0)
+
+
+class ExecutionResult(BaseModel):
+    """Execution result"""
+    status: ExecutionStatus
+    output: Any
+    evidence: List[Evidence] = Field(default_factory=list)
+    metrics: ExecutionMetrics
+
+    class Config:
+        use_enum_values = True
+
+
+class ExecutionError(Exception):
+    """Execution error"""
+    def __init__(self, message: str, code: str, recoverable: bool = False):
+        super().__init__(message)
+        self.code = code
+        self.recoverable = recoverable
+
+
+class ExecutionAdapter:
+    """Execution adapter interface"""
+    
+    async def execute(self, envelope: EventEnvelope) -> ExecutionResult:
+        """
+        Execute the envelope
+        
+        Args:
+            envelope: The event envelope to execute
+            
+        Returns:
+            ExecutionResult with status, output, evidence, and metrics
+            
+        Raises:
+            ExecutionError: If execution fails
+        """
+        raise NotImplementedError("Subclasses must implement execute()")
+    
+    def capabilities(self) -> List[str]:
+        """Return list of capabilities this adapter provides"""
+        raise NotImplementedError("Subclasses must implement capabilities()")
+    
+    def constraints(self) -> Constraints:
+        """Return execution constraints for this adapter"""
+        raise NotImplementedError("Subclasses must implement constraints()")
+
+
+class SEBClient:
+    """SEB Client for interacting with the Sovereign Event Bus"""
+    
+    def __init__(self, endpoint: str, api_key: str):
+        """
+        Initialize SEB client
+        
+        Args:
+            endpoint: SEB API endpoint URL
+            api_key: API key for authentication
+        """
+        self.endpoint = endpoint.rstrip('/')
+        self.api_key = api_key
+    
+    async def submit(self, envelope: EventEnvelope) -> str:
+        """
+        Submit an event envelope to the bus
+        
+        Args:
+            envelope: The event envelope to submit
+            
+        Returns:
+            Event ID
+            
+        Raises:
+            Exception: If submission fails
+        """
+        import aiohttp
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.endpoint}/events",
+                json=envelope.dict(by_alias=True, exclude_none=True),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
+                }
+            ) as response:
+                if response.status != 200:
+                    error = await response.text()
+                    raise Exception(f"Failed to submit event: {error}")
+                
+                result = await response.json()
+                return result["id"]
+    
+    async def get_status(self, event_id: str) -> ExecutionResult:
+        """
+        Query event status
+        
+        Args:
+            event_id: The event ID to query
+            
+        Returns:
+            ExecutionResult with current status
+            
+        Raises:
+            Exception: If query fails
+        """
+        import aiohttp
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"{self.endpoint}/events/{event_id}",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                }
+            ) as response:
+                if response.status != 200:
+                    error = await response.text()
+                    raise Exception(f"Failed to get status: {error}")
+                
+                result = await response.json()
+                return ExecutionResult(**result)
+
+
+def create_example_envelope() -> EventEnvelope:
+    """Create an example event envelope"""
+    return EventEnvelope(
+        type="snapkitty.intent.verify_proof",
+        intent=Intent(
+            action="verify_proof",
+            subject="bundle:01J...",
+            parameters={}
+        ),
+        context=Context(
+            environment="production",
+            constraints=Constraints(
+                network=NetworkPolicy.DENY,
+                max_runtime_ms=5000,
+                max_memory_bytes=1024 * 1024,
+                filesystem=FilesystemPolicy.READONLY
+            ),
+            metadata={}
+        ),
+        authority=Authority(
+            principal="user:alice",
+            credentials=Credentials(
+                credential_type="api_key",
+                value="sk_..."
+            ),
+            scope=["read", "verify"]
+        )
+    )
+
+
+if __name__ == "__main__":
+    # Example usage
+    envelope = create_example_envelope()
+    print(envelope.to_json())
+    print(f"Hash: {envelope.compute_hash()}")

@@ -23,7 +23,7 @@
 !=====================================================================
 module boolean_spectral_lens
   use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, &
-       c_size_t, c_loc, c_null_ptr, c_associated, c_char
+       c_size_t, c_loc, c_null_ptr, c_associated, c_char, c_null_char
   use, intrinsic :: iso_fortran_env, only: int64, real64, int8, error_unit
   use sov_monster_kernel, only: dp, ci, czero, &
        sov_blake3_hash_matrix, sov_bifrost_sign, &
@@ -66,20 +66,20 @@ contains
   ! 1. BOOLEAN → SPECTRAL
   !    Maps bool vector to eigenvalues (sum=1) then reconstructs density
   !═══════════════════════════════════════════════════════════════════
-  subroutine boolean_to_spectral(bool_ptr, bool_len, frame, &
-       eigenvalues_ptr, density_ptr, plasma_ok) &
+  subroutine boolean_to_spectral(bool_ptr, bool_len, frame, eigenvalues_ptr, density_ptr, plasma_ok) &
        bind(C, name="boolean_to_spectral")
     type(c_ptr),        intent(in),  value :: bool_ptr
     integer(c_size_t),  intent(in),  value :: bool_len
     type(spe_frame_t),  intent(in)         :: frame
     type(c_ptr),        intent(in),  value :: eigenvalues_ptr, density_ptr
     integer(c_int64_t), intent(out)        :: plasma_ok
-
     integer(c_int64_t) :: r, d, i, j, k
     integer(c_int64_t), pointer :: bool_vec(:)
     real(dp),    pointer :: eigenvalues(:)
     complex(dp), pointer :: density(:,:), frame_arr(:,:,:)
     real(dp) :: s
+        complex(dp) :: acc
+
 
     r = frame%rank; d = frame%dim
     call c_f_pointer(bool_ptr,       bool_vec,    [int(bool_len)])
@@ -102,7 +102,7 @@ contains
     !$omp parallel do collapse(2) default(none) shared(density,frame_arr,eigenvalues,r,d) private(i,j,k)
     do j = 1, d
       do k = 1, d
-        complex(dp) :: acc; acc = czero
+    acc = czero
         do i = 1, r; acc = acc + eigenvalues(i)*frame_arr(i,j,k); end do
         density(j,k) = acc
       end do
@@ -117,16 +117,15 @@ contains
   !═══════════════════════════════════════════════════════════════════
   ! 2. SPECTRAL → BOOLEAN  (threshold measurement — "word forms" here)
   !═══════════════════════════════════════════════════════════════════
-  subroutine spectral_to_boolean(eigenvalues_ptr, rank, threshold, &
-       bool_out_ptr) &
+  subroutine spectral_to_boolean(eigenvalues_ptr, rank, threshold, bool_out_ptr) &
        bind(C, name="spectral_to_boolean")
     type(c_ptr),        intent(in),  value :: eigenvalues_ptr, bool_out_ptr
     integer(c_int64_t), intent(in),  value :: rank
     real(dp),           intent(in),  value :: threshold
-
     real(dp),           pointer :: eigenvalues(:)
     integer(c_int64_t), pointer :: bool_out(:)
     integer(c_int64_t) :: i
+
 
     call c_f_pointer(eigenvalues_ptr, eigenvalues, [rank])
     call c_f_pointer(bool_out_ptr,    bool_out,    [rank])
@@ -209,12 +208,12 @@ contains
     integer(c_int64_t),    intent(in),   value :: max_steps
     type(c_ptr),           intent(in),   value :: sk_ptr
     integer(c_int64_t),    intent(out)   :: plasma_ok
-
     integer(c_int64_t) :: r, d, step, i
     real(dp),    pointer :: eigenvalues(:)
     complex(dp), pointer :: density(:,:)
     type(spe_frame_t), pointer :: frame
     real(dp) :: trace_sum, trace_err
+
 
     r = lens%rank
     d = r
@@ -258,12 +257,12 @@ contains
     real(dp),              intent(in)        :: eigenvalues(lens%rank)
     complex(dp),           intent(in)        :: density(lens%rank, lens%rank)
     real(dp),              intent(in), value :: trace_sum
-
     character(len=:), allocatable :: sexpr
     character(len=32) :: step_str, trace_str, eig_str
     integer(c_int64_t) :: i, r
     character(c_char), pointer :: buf(:)
     integer :: slen
+
 
     r = lens%rank
     if (.not. c_associated(lens%lisp_output_ptr)) return

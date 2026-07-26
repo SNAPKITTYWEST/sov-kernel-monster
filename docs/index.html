@@ -3,185 +3,308 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Parr Papers — Sovereign Convergence</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>The Parr Papers — Sovereign Compute</title>
 <style>
 :root {
-  --dark:#141413; --light:#faf9f5; --gray:#b0aea5; --lgray:#e8e6dc;
-  --orange:#d97757; --blue:#6a9bcc; --green:#788c5d; --gold:#d4af37;
-  --purple:#8a2be2; --cream:#f5f3ee;
+  --bg: #0d0d0b;
+  --surface: #131310;
+  --border: rgba(255,255,255,0.07);
+  --text: #e8e6dc;
+  --dim: #7a786e;
+  --orange: #d97757;
+  --gold: #d4af37;
+  --blue: #6a9bcc;
+  --green: #788c5d;
+  --purple: #9b6dff;
+  --mono: 'Share Tech Mono', 'Courier New', monospace;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Poppins',sans-serif;background:var(--dark);color:var(--light);line-height:1.6}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'IBM Plex Mono', var(--mono); background: var(--bg); color: var(--text); line-height: 1.6; font-size: 14px; }
 
-/* ── Header ── */
-.hero{
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:60px 24px;text-align:center;
-  background:radial-gradient(ellipse at 50% 30%, #0a0820 0%, #04040a 70%);
-  position:relative;overflow:hidden;
+/* HEADER */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 32px 40px 28px;
+  display: flex; align-items: baseline; gap: 32px; flex-wrap: wrap;
 }
-.hero::before{
-  content:'';position:absolute;inset:0;
-  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d97757' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+header .sub { color: var(--dim); font-size: 12px; }
+header .seal { margin-left: auto; font-size: 11px; color: var(--purple); border: 1px solid rgba(155,109,255,0.3); padding: 4px 12px; border-radius: 3px; }
+
+/* NAV */
+nav { border-bottom: 1px solid var(--border); padding: 0 40px; display: flex; gap: 0; overflow-x: auto; }
+nav a { color: var(--dim); text-decoration: none; font-size: 12px; padding: 14px 20px; border-bottom: 2px solid transparent; white-space: nowrap; }
+nav a:hover { color: var(--text); }
+nav a.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+/* LAYOUT */
+main { max-width: 1200px; margin: 0 auto; padding: 48px 40px; }
+section { margin-bottom: 72px; }
+.section-kicker { font-size: 10px; letter-spacing: 3px; color: var(--orange); margin-bottom: 10px; text-transform: uppercase; }
+h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.lead { color: var(--dim); font-size: 13px; max-width: 680px; margin-bottom: 36px; line-height: 1.8; }
+
+/* HERO IDENTITY LINE */
+.identity {
+  font-family: var(--mono);
+  font-size: clamp(15px, 2.5vw, 22px);
+  color: var(--gold);
+  padding: 28px 0 8px;
+  letter-spacing: 1px;
 }
-.hero-badge{
-  display:inline-block;font-family:'Share Tech Mono',monospace;font-size:11px;
-  color:var(--purple);border:1px solid var(--purple);padding:4px 12px;border-radius:20px;
-  margin-bottom:24px;letter-spacing:2px;
+.identity-sub { font-size: 12px; color: var(--dim); margin-bottom: 40px; }
+
+/* CTA ROW */
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 56px; }
+.btn { padding: 9px 22px; border-radius: 4px; font-size: 12px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; font-family: var(--mono); letter-spacing: 0.5px; transition: opacity .15s; display: inline-block; }
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: var(--orange); color: #fff; }
+.btn-ghost { background: transparent; color: var(--blue); border: 1px solid rgba(106,155,204,0.4); }
+.btn-gold { background: transparent; color: var(--gold); border: 1px solid rgba(212,175,55,0.4); }
+
+/* BLOCH SPHERE CANVAS */
+#bloch-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 40px;
 }
-.hero h1{font-family:'Lora',serif;font-size:clamp(36px,6vw,72px);font-weight:400;margin-bottom:12px;
-  background:linear-gradient(135deg,#fff 30%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero .subtitle{font-size:clamp(14px,2vw,18px);color:var(--gray);max-width:700px;margin:0 auto 40px}
-.hero .meta{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gray);line-height:2;margin-bottom:48px}
-.hero .meta span{color:var(--orange)}
+#bloch-wrap h3 { font-size: 13px; color: var(--dim); margin-bottom: 16px; letter-spacing: 1px; }
+#bloch-canvas { display: block; border: 1px solid var(--border); border-radius: 4px; cursor: crosshair; }
+.bloch-controls { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+.bloch-controls label { font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 8px; }
+.bloch-controls input[type=range] { width: 120px; accent-color: var(--orange); }
+.bloch-controls select { background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-family: var(--mono); font-size: 11px; border-radius: 3px; }
+.state-readout {
+  margin-top: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+.state-readout span { color: var(--dim); }
+.state-readout strong { color: var(--gold); }
 
-.worm-seal{
-  display:inline-flex;align-items:center;gap:10px;
-  background:rgba(138,43,226,0.08);border:1px solid rgba(138,43,226,0.3);
-  border-radius:8px;padding:10px 20px;font-family:'Share Tech Mono',monospace;font-size:11px;
-  color:var(--purple);margin-bottom:48px;
+/* GATE TIMELINE */
+#gate-timeline {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 40px;
+}
+#gate-timeline h3 { font-size: 13px; color: var(--dim); margin-bottom: 16px; letter-spacing: 1px; }
+.gate-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.gate-btn {
+  background: var(--bg); color: var(--text); border: 1px solid var(--border);
+  padding: 7px 14px; border-radius: 3px; font-family: var(--mono); font-size: 12px;
+  cursor: pointer; transition: border-color .15s;
+}
+.gate-btn:hover { border-color: var(--orange); color: var(--orange); }
+.gate-btn.active { border-color: var(--gold); color: var(--gold); }
+#clear-btn { background: transparent; color: var(--dim); border: 1px solid var(--border); padding: 7px 14px; border-radius: 3px; font-family: var(--mono); font-size: 11px; cursor: pointer; }
+#clear-btn:hover { color: var(--orange); border-color: var(--orange); }
+#circuit-display {
+  min-height: 48px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--dim);
+}
+.circuit-gate {
+  background: rgba(217,119,87,0.12);
+  border: 1px solid rgba(217,119,87,0.35);
+  color: var(--orange);
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.circuit-gate.measured { border-color: rgba(212,175,55,0.5); background: rgba(212,175,55,0.08); color: var(--gold); }
+#measure-btn {
+  background: rgba(212,175,55,0.1); color: var(--gold); border: 1px solid rgba(212,175,55,0.4);
+  padding: 7px 18px; border-radius: 3px; font-family: var(--mono); font-size: 12px; cursor: pointer;
+}
+#measure-btn:hover { background: rgba(212,175,55,0.18); }
+#measure-result {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 22px;
+  color: var(--gold);
+  letter-spacing: 1px;
 }
 
-.cta-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
-.btn{
-  padding:12px 28px;border-radius:8px;font-size:14px;font-weight:500;
-  text-decoration:none;cursor:pointer;border:none;transition:all 0.2s;font-family:'Poppins',sans-serif;
+/* THEOREM BLOCKS */
+.thm {
+  border-left: 3px solid var(--orange);
+  background: rgba(217,119,87,0.05);
+  border-radius: 0 5px 5px 0;
+  padding: 18px 22px;
+  margin: 20px 0;
 }
-.btn-primary{background:var(--orange);color:#fff}
-.btn-primary:hover{background:#c86641;transform:translateY(-2px)}
-.btn-secondary{background:transparent;color:var(--blue);border:1px solid var(--blue)}
-.btn-secondary:hover{background:rgba(106,155,204,0.1);transform:translateY(-2px)}
-.btn-gold{background:transparent;color:var(--gold);border:1px solid var(--gold)}
-.btn-gold:hover{background:rgba(212,175,55,0.1);transform:translateY(-2px)}
+.thm-label { font-size: 10px; letter-spacing: 2px; color: var(--orange); margin-bottom: 8px; }
+.thm-body { font-size: 13px; line-height: 1.9; }
+.thm-body code { font-family: var(--mono); color: var(--gold); font-size: 12px; }
+.thm.purple { border-left-color: var(--purple); background: rgba(155,109,255,0.05); }
+.thm.purple .thm-label { color: var(--purple); }
 
-/* ── Section ── */
-section{padding:80px 24px;max-width:1100px;margin:0 auto}
-.section-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--orange);letter-spacing:3px;margin-bottom:12px}
-h2{font-family:'Lora',serif;font-size:clamp(24px,4vw,40px);font-weight:400;margin-bottom:16px}
-.lead{color:var(--gray);font-size:16px;max-width:700px;margin-bottom:48px;line-height:1.8}
-
-/* ── Cards ── */
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
-.card{
-  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
-  border-radius:12px;padding:28px;transition:all 0.25s;position:relative;overflow:hidden;
+/* CARD GRID */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  padding: 22px; transition: border-color .2s;
 }
-.card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.25s;
-  background:radial-gradient(circle at 50% 0%,rgba(217,119,87,0.06) 0%,transparent 70%)}
-.card:hover{border-color:rgba(217,119,87,0.25);transform:translateY(-4px)}
-.card:hover::before{opacity:1}
-.card-icon{font-size:28px;margin-bottom:14px}
-.card h3{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--light)}
-.card p{font-size:13px;color:var(--gray);line-height:1.7;margin-bottom:16px}
-.card-tag{
-  display:inline-block;font-family:'Share Tech Mono',monospace;font-size:10px;
-  padding:3px 8px;border-radius:4px;margin-right:6px;margin-bottom:4px;
+.card:hover { border-color: rgba(217,119,87,0.25); }
+.card-icon { font-size: 22px; margin-bottom: 12px; }
+.card h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.card p { font-size: 12px; color: var(--dim); line-height: 1.7; margin-bottom: 14px; }
+.tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 3px; margin: 2px; }
+.tag-proved { background: rgba(120,140,93,0.15); color: var(--green); border: 1px solid rgba(120,140,93,0.3); }
+.tag-novel { background: rgba(217,119,87,0.12); color: var(--orange); border: 1px solid rgba(217,119,87,0.25); }
+.tag-worm { background: rgba(155,109,255,0.12); color: var(--purple); border: 1px solid rgba(155,109,255,0.25); }
+.tag-art { background: rgba(106,155,204,0.12); color: var(--blue); border: 1px solid rgba(106,155,204,0.25); }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; padding: 9px 14px; color: var(--orange); font-size: 10px; letter-spacing: 2px; border-bottom: 1px solid var(--border); }
+td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--dim); vertical-align: top; }
+td:first-child { font-family: var(--mono); color: var(--gold); white-space: nowrap; }
+td:nth-child(2) { color: var(--text); }
+tr:hover td { background: rgba(255,255,255,0.015); }
+
+/* ART LINKS */
+.art-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 700px; }
+@media(max-width:600px){ .art-row { grid-template-columns: 1fr; } }
+.art-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  padding: 24px; text-decoration: none; transition: border-color .2s; display: block;
 }
-.tag-proved{background:rgba(120,140,93,0.15);color:var(--green);border:1px solid rgba(120,140,93,0.3)}
-.tag-novel{background:rgba(217,119,87,0.12);color:var(--orange);border:1px solid rgba(217,119,87,0.25)}
-.tag-worm{background:rgba(138,43,226,0.12);color:var(--purple);border:1px solid rgba(138,43,226,0.25)}
-.tag-art{background:rgba(106,155,204,0.12);color:var(--blue);border:1px solid rgba(106,155,204,0.25)}
+.art-card:hover { border-color: rgba(217,119,87,0.3); }
+.art-card-icon { font-size: 28px; margin-bottom: 10px; }
+.art-card-name { font-size: 12px; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px; }
+.art-card-desc { font-size: 11px; color: var(--dim); line-height: 1.6; margin-bottom: 12px; }
+.art-card-link { font-size: 11px; color: var(--orange); }
 
-/* ── Art embeds ── */
-.art-section{background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);padding:80px 24px}
-.art-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:1100px;margin:0 auto}
-@media(max-width:768px){.art-grid{grid-template-columns:1fr}}
-.art-frame{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative}
-.art-label{padding:12px 20px;background:rgba(255,255,255,0.03);font-size:12px;color:var(--gray);font-family:'Share Tech Mono',monospace;border-bottom:1px solid rgba(255,255,255,0.06)}
-.art-frame iframe{width:100%;height:560px;border:none;display:block}
-
-/* ── Prior art table ── */
-.prior-table{width:100%;border-collapse:collapse;font-size:13px}
-.prior-table th{text-align:left;padding:10px 14px;color:var(--orange);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.1);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px}
-.prior-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--gray);vertical-align:top}
-.prior-table td:first-child{font-family:'Share Tech Mono',monospace;color:var(--gold);font-size:11px;white-space:nowrap}
-.prior-table td:nth-child(2){color:var(--light)}
-.prior-table tr:hover td{background:rgba(255,255,255,0.02)}
-
-/* ── Theorem block ── */
-.theorem-box{
-  background:rgba(217,119,87,0.06);border-left:3px solid var(--orange);
-  border-radius:0 8px 8px 0;padding:20px 24px;margin:24px 0;
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 36px 40px;
+  font-size: 11px; color: var(--dim);
+  line-height: 2.2;
 }
-.theorem-box .thm-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--orange);letter-spacing:2px;margin-bottom:8px}
-.theorem-box .thm-body{font-family:'Lora',serif;font-size:15px;color:var(--light);line-height:1.8}
-.theorem-box .thm-body .math{font-family:'Share Tech Mono',monospace;color:var(--gold);font-size:13px}
-
-/* ── Phi equation ── */
-.phi-block{text-align:center;padding:48px 24px;background:rgba(0,0,0,0.2)}
-.phi-eq{font-family:'Share Tech Mono',monospace;font-size:clamp(16px,3vw,28px);color:var(--gold);margin-bottom:12px}
-.phi-sub{font-size:13px;color:var(--gray)}
-
-/* ── Footer ── */
-footer{
-  text-align:center;padding:48px 24px;border-top:1px solid rgba(255,255,255,0.06);
-  font-size:12px;color:var(--gray);font-family:'Share Tech Mono',monospace;line-height:2.2;
-}
-footer a{color:var(--orange);text-decoration:none}
-
-/* ── Divider ── */
-.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(217,119,87,0.3),transparent);margin:0 auto;max-width:600px}
+footer a { color: var(--orange); text-decoration: none; }
+.divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(217,119,87,0.2), transparent); margin: 72px 0; }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<!-- ═══════════════ HERO ═══════════════ -->
-<div class="hero">
-  <div class="hero-badge">WORM-SEALED · PAR-001–019 · 2026-07-21</div>
-  <h1>The Parr Papers</h1>
-  <p class="subtitle">
-    Jordan Spectral Transformer · LiquidLean · Jacobian Conjecture ·
-    Sovereign Convergence · Living Rewrite · J-Space
-  </p>
-  <div class="meta">
-    <span>Ahmad Ali Parr</span> · SnapKitty Collective ·
-    Bel Esprit D'Accord Irrevocable Trust · <span>EIN 42-697643</span><br>
-    Sovereign Source License v3.0 · <span>43 pages</span> · All results machine-checked
+<header>
+  <div>
+    <h1>The Parr Papers</h1>
+    <div class="sub">Ahmad Ali Parr · SnapKitty Collective · Bel Esprit D'Accord Irrevocable Trust</div>
   </div>
+  <div class="seal">⬡ WORM-SEALED · PAR-001–019</div>
+</header>
 
-  <div class="worm-seal">
-    ⬡ &nbsp; Blake3 + Ed25519 · github.com/SNAPKITTYWEST/sov-kernel-monster &nbsp; ⬡
-  </div>
+<nav>
+  <a href="#machine" class="active">State Machine</a>
+  <a href="#theorem">Theorem</a>
+  <a href="#contributions">Contributions</a>
+  <a href="#prior-art">Prior Art</a>
+  <a href="#art">Art</a>
+  <a href="#docs">Docs</a>
+</nav>
 
+<main>
+
+<!-- HERO -->
+<section id="hero" style="padding-bottom:0">
+  <div class="identity">ρ' = φ⁻¹ · UρU† + φ⁻² · ρ</div>
+  <div class="identity-sub">The Jordan step · φ⁻¹ + φ⁻² = 1 · unique self-similar contraction · proved zero sorry · Lean 4</div>
   <div class="cta-row">
     <a class="btn btn-primary" href="bobs-game/">Enter Sovereign Interior</a>
-    <a class="btn btn-primary" href="parr_paper.pdf" target="_blank">↓ Download PDF (43pp)</a>
-    <a class="btn btn-secondary" href="sovereign_convergence.html" target="_blank">Art: Sovereign Convergence</a>
-    <a class="btn btn-secondary" href="living_rewrite.html" target="_blank">Art: Living Rewrite</a>
+    <a class="btn btn-primary" href="parr_paper.pdf" target="_blank">↓ PDF (43pp)</a>
+    <a class="btn btn-ghost" href="sovereign_convergence.html">Sovereign Convergence</a>
+    <a class="btn btn-ghost" href="living_rewrite.html">Living Rewrite</a>
     <a class="btn btn-gold" href="https://github.com/SNAPKITTYWEST/sov-kernel-monster" target="_blank">GitHub</a>
   </div>
-</div>
+</section>
 
-<!-- ═══════════════ PHI IDENTITY ═══════════════ -->
-<div class="phi-block">
-  <div class="phi-eq">ρ' = φ⁻¹ · UρU† + φ⁻² · ρ</div>
-  <div class="phi-sub">The Jordan step · φ⁻¹ + φ⁻² = 1 · unique self-similar contraction · proved zero sorry</div>
-</div>
+<!-- BLOCH SPHERE INTERACTIVE STATE MACHINE -->
+<section id="machine">
+  <div class="section-kicker">Interactive</div>
+  <h2>QATAAUM Quantum State Machine</h2>
+  <p class="lead">Apply gates. Watch the Bloch sphere evolve. Measure. Every transition mirrors the actual QATAAUM compiler IR pipeline.</p>
 
-<!-- ═══════════════ KEY THEOREM ═══════════════ -->
-<section>
-  <div class="section-label">THE DISCOVERY</div>
-  <h2>The Algebraic Bridge</h2>
-  <p class="lead">
-    The Jordan fixed-point equation T(ρ*)=ρ* implies [U,ρ*]=0 — purely algebraically,
-    using only the golden ratio identity φ⁻¹+φ⁻²=1. This bypasses 87 years of
-    analytic obstruction in the Jacobian Conjecture.
-  </p>
-
-  <div class="theorem-box">
-    <div class="thm-label">THEOREM (Parr 2026) — Machine-checked Lean 4, zero sorry</div>
-    <div class="thm-body">
-      For T(ρ) = φ⁻¹·UρU† + φ⁻²·ρ, any fixed point ρ* satisfies:<br>
-      <span class="math">T(ρ*) = ρ*  ⟹  Uρ*U† = ρ*  ⟹  [U, ρ*] = 0</span><br>
-      Proof uses only: φ⁻¹·Uρ*U† = (1−φ⁻²)·ρ* = φ⁻¹·ρ* ⟹ divide by φ⁻¹ ≠ 0.
+  <div id="bloch-wrap">
+    <h3>BLOCH SPHERE · drag to rotate · |ψ⟩ = α|0⟩ + β|1⟩</h3>
+    <canvas id="bloch-canvas" width="480" height="480"></canvas>
+    <div class="state-readout" id="state-readout">
+      <div><span>α </span><strong id="r-alpha">1.000 + 0.000i</strong></div>
+      <div><span>β </span><strong id="r-beta">0.000 + 0.000i</strong></div>
+      <div><span>|α|² </span><strong id="r-p0">1.000</strong></div>
+      <div><span>|β|² </span><strong id="r-p1">0.000</strong></div>
+      <div><span>θ </span><strong id="r-theta">0.000 rad</strong></div>
+      <div><span>φ </span><strong id="r-phi">0.000 rad</strong></div>
     </div>
   </div>
 
-  <div class="theorem-box" style="border-left-color:var(--purple)">
-    <div class="thm-label" style="color:var(--purple)">COROLLARY — The Jacobian Bridge</div>
+  <div id="gate-timeline">
+    <h3>GATE SEQUENCER · build your circuit</h3>
+    <div class="gate-row">
+      <button class="gate-btn" data-gate="H">H</button>
+      <button class="gate-btn" data-gate="X">X</button>
+      <button class="gate-btn" data-gate="Y">Y</button>
+      <button class="gate-btn" data-gate="Z">Z</button>
+      <button class="gate-btn" data-gate="S">S</button>
+      <button class="gate-btn" data-gate="T">T</button>
+      <button class="gate-btn" data-gate="Rx">Rx(π/4)</button>
+      <button class="gate-btn" data-gate="Ry">Ry(π/4)</button>
+      <button class="gate-btn" data-gate="Rz">Rz(π/4)</button>
+      <button class="gate-btn" data-gate="Jordan" style="border-color:rgba(212,175,55,0.4);color:#d4af37">Jordan φ⁻¹</button>
+      <button id="measure-btn">⊗ Measure</button>
+      <button id="clear-btn">✕ Clear</button>
+    </div>
+    <div id="circuit-display">circuit empty — select a gate above</div>
+    <div id="measure-result"></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- THEOREM -->
+<section id="theorem">
+  <div class="section-kicker">The Discovery</div>
+  <h2>The Algebraic Bridge</h2>
+  <p class="lead">The Jordan fixed-point equation T(ρ*)=ρ* implies [U,ρ*]=0 — purely algebraically, using only φ⁻¹+φ⁻²=1. Bypasses 87 years of analytic obstruction in the Jacobian Conjecture.</p>
+
+  <div class="thm">
+    <div class="thm-label">THEOREM (Parr 2026) — Machine-checked Lean 4, zero sorry</div>
     <div class="thm-body">
-      <span class="math">det(J_F)=c ⟹ polynomial H ⟹ [U,ρ*]=0 ⟹ ρ*∈ℂ[U,U†] ⟹ F⁻¹ polynomial</span><br>
+      For <code>T(ρ) = φ⁻¹·UρU† + φ⁻²·ρ</code>, any fixed point ρ* satisfies:<br>
+      <code>T(ρ*)=ρ*  ⟹  Uρ*U†=ρ*  ⟹  [U,ρ*]=0</code><br>
+      Proof: <code>φ⁻¹·Uρ*U† = (1−φ⁻²)·ρ* = φ⁻¹·ρ*  ⟹  divide by φ⁻¹ ≠ 0</code>
+    </div>
+  </div>
+
+  <div class="thm purple">
+    <div class="thm-label">COROLLARY — The Jacobian Bridge</div>
+    <div class="thm-body">
+      <code>det(JF)=c ⟹ polynomial H ⟹ [U,ρ*]=0 ⟹ ρ*∈ℂ[U,U†] ⟹ F⁻¹ polynomial</code><br>
       No entire function theory. No Osgood–Picard. Pure algebra via Jordan contraction.
     </div>
   </div>
@@ -189,118 +312,74 @@ footer a{color:var(--orange);text-decoration:none}
 
 <div class="divider"></div>
 
-<!-- ═══════════════ CONTRIBUTIONS ═══════════════ -->
-<section>
-  <div class="section-label">CONTRIBUTIONS</div>
+<!-- CONTRIBUTIONS -->
+<section id="contributions">
+  <div class="section-kicker">Contributions</div>
   <h2>What Was Built</h2>
   <p class="lead">19 prior art claims. All machine-checked or formally specified. All timestamped to public git.</p>
 
-  <div class="card-grid">
+  <div class="cards">
     <div class="card">
       <div class="card-icon">⟨ρ⟩</div>
       <h3>Jordan Spectral Transformer</h3>
       <p>Neural architecture replacing softmax with Born-rule quantum measurement. φ⁻¹-decay Fibonacci-Banach convergence. SPE tokenizer with Parseval round-trip.</p>
-      <span class="card-tag tag-proved">zero sorry</span>
-      <span class="card-tag tag-novel">PAR-011</span>
-      <span class="card-tag tag-worm">Fortran 2018</span>
+      <span class="tag tag-proved">zero sorry</span><span class="tag tag-novel">PAR-011</span><span class="tag tag-worm">Fortran 2018</span>
     </div>
-
     <div class="card">
       <div class="card-icon">∂/∂x</div>
       <h3>LiquidLean</h3>
       <p>Original formal verification framework for the Jacobian Conjecture. HOC language, Thermal Monad, exact arithmetic. Claim level 8/9. The Parr Conjecture named.</p>
-      <span class="card-tag tag-proved">Lean 4</span>
-      <span class="card-tag tag-novel">PAR-014</span>
-      <span class="card-tag tag-worm">Haskell</span>
+      <span class="tag tag-proved">Lean 4</span><span class="tag tag-novel">PAR-014</span><span class="tag tag-worm">Haskell</span>
     </div>
-
     <div class="card">
       <div class="card-icon">φ</div>
       <h3>Fibonacci-Banach Theorem</h3>
-      <p>Machine-checked proof that φ⁻ᴺ→0 monotonically. Fixed point theorem via golden ratio identity. Commutant algebraic bridge — the 87-year obstruction bypassed.</p>
-      <span class="card-tag tag-proved">zero sorry</span>
-      <span class="card-tag tag-novel">PAR-013</span>
+      <p>Machine-checked proof that φ⁻ᴺ→0 monotonically. Fixed point via golden ratio identity. Commutant algebraic bridge — the 87-year obstruction bypassed.</p>
+      <span class="tag tag-proved">zero sorry</span><span class="tag tag-novel">PAR-013</span>
     </div>
-
     <div class="card">
       <div class="card-icon">⬡</div>
       <h3>Phase 8 Negative Certificate</h3>
-      <p>Three algebraic strategies formally proved impossible. Crux precisely identified as étale+proper bridge. JSON certificate + TikZ DAG + dual-path formalization.</p>
-      <span class="card-tag tag-worm">WORM-sealed</span>
-      <span class="card-tag tag-novel">novel</span>
+      <p>Three algebraic strategies formally proved impossible. Crux: étale+proper bridge. JSON certificate + TikZ DAG + dual-path formalization.</p>
+      <span class="tag tag-worm">WORM-sealed</span><span class="tag tag-novel">novel</span>
     </div>
-
     <div class="card">
       <div class="card-icon">∑λ=1</div>
       <h3>J-Space / Boolean Spectral Lens</h3>
-      <p>Independent prior formulation of Anthropic's J-Lens (July 6, 2026). WatchSumOne→TracePreserved. "Watch the sum 1 before it word forms." 107 bits shadow entropy.</p>
-      <span class="card-tag tag-novel">PAR-012</span>
-      <span class="card-tag tag-art">prior to J-Lens paper</span>
+      <p>Independent prior formulation of Anthropic's J-Lens (July 6, 2026). WatchSumOne→TracePreserved. 107 bits shadow entropy.</p>
+      <span class="tag tag-novel">PAR-012</span><span class="tag tag-art">prior to J-Lens paper</span>
     </div>
-
     <div class="card">
       <div class="card-icon">⟳</div>
       <h3>Adaptive Verified Runtime</h3>
-      <p>Self-evolving kernels with Lean-guarded invariants. Atomic FFI hot-swap. WORM ledger. 6 rewrite types. Formally verified: monotonicity, hot-swap atomicity, rollback safety.</p>
-      <span class="card-tag tag-proved">zero sorry</span>
-      <span class="card-tag tag-novel">PAR-017</span>
+      <p>Self-evolving kernels with Lean-guarded invariants. Atomic FFI hot-swap. WORM ledger. 6 rewrite types. Monotonicity, atomicity, rollback — all zero sorry.</p>
+      <span class="tag tag-proved">zero sorry</span><span class="tag tag-novel">PAR-017</span>
     </div>
-
     <div class="card">
       <div class="card-icon">⊕</div>
       <h3>Living Rewrite</h3>
-      <p>Self-modifying code governed by formally-proven contraction. Source text rewrites under Jordan steps. Fixed point = the theorem. First in history where self-modification IS the proof.</p>
-      <span class="card-tag tag-art">p5.js + SVG</span>
-      <span class="card-tag tag-novel">PAR-019</span>
+      <p>Self-modifying code governed by formally-proven contraction. Fixed point = the theorem. First in history where self-modification IS the proof.</p>
+      <span class="tag tag-art">p5.js</span><span class="tag tag-novel">PAR-019</span>
     </div>
-
     <div class="card">
-      <div class="card-icon">🌀</div>
+      <div class="card-icon">◎</div>
       <h3>Sovereign Convergence</h3>
       <p>Generative art where every particle IS a Jordan step. Golden-angle attractors. WORM trail accumulation. Born-rule collapse events. φ-decay color encoding.</p>
-      <span class="card-tag tag-art">p5.js interactive</span>
-      <span class="card-tag tag-novel">PAR-018</span>
+      <span class="tag tag-art">p5.js interactive</span><span class="tag tag-novel">PAR-018</span>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- ═══════════════ LIVE ART ═══════════════ -->
-<div class="art-section">
-  <div style="max-width:1100px;margin:0 auto">
-    <div class="section-label">LIVE ALGORITHMS</div>
-    <h2 style="color:var(--light);margin-bottom:16px">The Art Is the Math</h2>
-    <p style="color:var(--gray);font-size:15px;margin-bottom:40px">Both run the actual Jordan contraction. Open in full screen.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:800px">
-      <a href="sovereign_convergence.html"
-         style="display:block;background:rgba(217,119,87,0.08);border:1px solid rgba(217,119,87,0.3);border-radius:12px;padding:32px 24px;text-decoration:none;transition:border-color .2s">
-        <div style="font-size:32px;margin-bottom:12px">◎</div>
-        <div style="color:#d97757;font-family:Share Tech Mono,monospace;font-size:13px;font-weight:600;margin-bottom:8px">SOVEREIGN CONVERGENCE</div>
-        <div style="color:#b0aea5;font-size:13px;line-height:1.6">φ⁻¹ Jordan contraction · golden angle attractors · Born collapse · WORM trails</div>
-        <div style="margin-top:16px;color:#d97757;font-family:Share Tech Mono,monospace;font-size:11px">→ Open interactive art</div>
-      </a>
-      <a href="living_rewrite.html"
-         style="display:block;background:rgba(106,155,204,0.08);border:1px solid rgba(106,155,204,0.3);border-radius:12px;padding:32px 24px;text-decoration:none;transition:border-color .2s">
-        <div style="font-size:32px;margin-bottom:12px">⟳</div>
-        <div style="color:#6a9bcc;font-family:Share Tech Mono,monospace;font-size:13px;font-weight:600;margin-bottom:8px">LIVING REWRITE</div>
-        <div style="color:#b0aea5;font-size:13px;line-height:1.6">Self-modifying code · density matrix evolution · fixed point = theorem</div>
-        <div style="margin-top:16px;color:#6a9bcc;font-family:Share Tech Mono,monospace;font-size:11px">→ Open interactive demo</div>
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════ PRIOR ART ═══════════════ -->
-<section>
-  <div class="section-label">PRIOR ART REGISTRY</div>
+<!-- PRIOR ART -->
+<section id="prior-art">
+  <div class="section-kicker">Prior Art Registry</div>
   <h2>19 Claims</h2>
-  <p class="lead">All anchored to public git timestamps. Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643 · SSL v3.0.</p>
+  <p class="lead">Anchored to public git timestamps. Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643 · SSL v3.0.</p>
 
-  <table class="prior-table">
-    <thead>
-      <tr><th>ID</th><th>Object</th><th>Repo</th></tr>
-    </thead>
+  <table>
+    <thead><tr><th>ID</th><th>Object</th><th>Repo</th></tr></thead>
     <tbody>
       <tr><td>PAR-001–003</td><td>GKN I₄ quartic invariant — degree-4, E₇ Weyl invariance, zero sorry</td><td>gkn-i4-e7-lean</td></tr>
       <tr><td>PAR-004</td><td>Gates Normalization Constraint — Lean 4</td><td>sov-kernel-monster</td></tr>
@@ -308,74 +387,410 @@ footer a{color:var(--orange);text-decoration:none}
       <tr><td>PAR-006–007</td><td>Plasma gate architecture · Sovereign APL fused kernel (Fortran + MLIR)</td><td>sov-kernel-monster</td></tr>
       <tr><td>PAR-008–009</td><td>DeeCall49 Binomial/Apotome duality · Al-Hamid constant</td><td>the-49th-call</td></tr>
       <tr><td>PAR-010</td><td>SovLM — KN + BM25 + QRNG sovereign language model</td><td>sov-kernel-monster</td></tr>
-      <tr><td><strong>PAR-011</strong></td><td><strong>Jordan Spectral Transformer — ρ'=φ⁻¹UρU†+φ⁻²ρ</strong></td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-011</td><td><strong>Jordan Spectral Transformer — ρ'=φ⁻¹UρU†+φ⁻²ρ</strong></td><td>sov-kernel-monster</td></tr>
       <tr><td>PAR-012</td><td>Sovereign Piper Encoder — tight frame Parseval round-trip</td><td>sov-kernel-monster</td></tr>
       <tr><td>PAR-013</td><td>Fibonacci-Banach contraction theorem — Lean 4 machine-checked</td><td>sov-kernel-monster</td></tr>
       <tr><td>PAR-014</td><td>LiquidLean HOC language — original constraint language</td><td>liquidlean</td></tr>
       <tr><td>PAR-015</td><td>Thermal Monad with φ-decay energy — exact symbolic arithmetic</td><td>liquidlean</td></tr>
-      <tr><td>PAR-016</td><td>Genus-0 forcing pipeline · <strong>The Parr Conjecture</strong></td><td>liquidlean</td></tr>
+      <tr><td>PAR-016</td><td>Genus-0 forcing pipeline · The Parr Conjecture</td><td>liquidlean</td></tr>
       <tr><td>PAR-017</td><td>Adaptive Verified Runtime — self-evolving Lean-guarded kernels</td><td>sov-kernel-monster</td></tr>
       <tr><td>PAR-018</td><td>Sovereign Convergence — generative art algorithm</td><td>sov-kernel-monster</td></tr>
-      <tr><td><strong>PAR-019</strong></td><td><strong>Living Rewrite — self-modifying code with formally-proven fixed point</strong></td><td>sov-kernel-monster</td></tr>
+      <tr><td>PAR-019</td><td><strong>Living Rewrite — self-modifying code with formally-proven fixed point</strong></td><td>sov-kernel-monster</td></tr>
     </tbody>
   </table>
 </section>
 
 <div class="divider"></div>
 
-<!-- ═══════════════ DOCUMENTS ═══════════════ -->
-<section>
-  <div class="section-label">DOCUMENTS</div>
+<!-- ART -->
+<section id="art">
+  <div class="section-kicker">Live Algorithms</div>
+  <h2>The Art Is the Math</h2>
+  <p class="lead">Both run the actual Jordan contraction.</p>
+  <div class="art-row">
+    <a class="art-card" href="sovereign_convergence.html">
+      <div class="art-card-icon">◎</div>
+      <div class="art-card-name" style="color:var(--orange)">SOVEREIGN CONVERGENCE</div>
+      <div class="art-card-desc">φ⁻¹ Jordan contraction · golden angle attractors · Born collapse · WORM trails</div>
+      <div class="art-card-link">→ Open interactive art</div>
+    </a>
+    <a class="art-card" href="living_rewrite.html">
+      <div class="art-card-icon">⟳</div>
+      <div class="art-card-name" style="color:var(--blue)">LIVING REWRITE</div>
+      <div class="art-card-desc">Self-modifying code · density matrix evolution · fixed point = theorem</div>
+      <div class="art-card-link" style="color:var(--blue)">→ Open interactive demo</div>
+    </a>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DOCS -->
+<section id="docs">
+  <div class="section-kicker">Documents</div>
   <h2>Full Stack</h2>
-  <div class="card-grid">
+  <div class="cards">
     <div class="card">
       <div class="card-icon">📄</div>
       <h3>The Parr Papers (PDF)</h3>
-      <p>43-page LaTeX paper. Cover art, prior art table, all theorems, Jacobian attack, J-Space comparison, Living Rewrite section, historical context. Nemotron-audited.</p>
-      <a class="btn btn-primary" href="parr_paper.pdf" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">Download PDF</a>
+      <p>43-page LaTeX. All theorems, Jacobian attack, J-Space comparison, Living Rewrite, historical context. Nemotron-audited.</p>
+      <a class="btn btn-primary" href="parr_paper.pdf" target="_blank" style="font-size:11px;padding:7px 16px">Download PDF</a>
     </div>
     <div class="card">
       <div class="card-icon">📐</div>
       <h3>Mathlib Gap Analysis</h3>
-      <p>5 remaining sorries with exact Mathlib PR targets. Spectral theory, CP maps, HS frame reconstruction. Full strategy for closing all gaps.</p>
-      <a class="btn btn-secondary" href="https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/lean/SovMonster_Gaps.lean" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">View Lean</a>
+      <p>5 remaining sorries with exact Mathlib PR targets. Spectral theory, CP maps, HS frame reconstruction.</p>
+      <a class="btn btn-ghost" href="https://github.com/SNAPKITTYWEST/sov-kernel-monster/blob/main/lean/SovMonster_Gaps.lean" target="_blank" style="font-size:11px;padding:7px 16px">View Lean</a>
     </div>
-    <div class="card">
-      <div class="card-icon">🎨</div>
-      <h3>Sovereign Convergence</h3>
-      <p>Interactive p5.js: Jordan contraction particles, golden-angle attractors, WORM trail accumulation, Born collapse events. Seed 6877532.</p>
-      <a class="btn btn-secondary" href="sovereign_convergence.html" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">Open Art</a>
-    </div>
-    <div class="card">
-      <div class="card-icon">⟳</div>
-      <h3>Living Rewrite</h3>
-      <p>Self-modifying code demo. Source rewrites under Jordan steps. Fixed point = theorem. Historical first: self-modification IS the proof.</p>
-      <a class="btn btn-secondary" href="living_rewrite.html" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">Open Demo</a>
-    </div>
-
     <div class="card">
       <div class="card-icon">⚛</div>
       <h3>Quantum Swarm</h3>
-      <p>32-byte vacuum entropy seeds 1–300 parallel agents via HKDF. φ⁻¹-weighted routing. Born-collapse normalization → one sovereign answer. Live on HuggingFace.</p>
-      <span class="card-tag tag-worm">Born collapse</span>
-      <span class="card-tag tag-art">HuggingFace</span>
-      <a class="btn btn-secondary" href="https://huggingface.co/Snapkitty/quantum-swarm" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 18px;font-size:12px">View Model</a>
+      <p>32-byte vacuum entropy seeds 1–300 parallel agents via HKDF. φ⁻¹-weighted routing. Born-collapse → one sovereign answer.</p>
+      <a class="btn btn-ghost" href="https://huggingface.co/Snapkitty/quantum-swarm" target="_blank" style="font-size:11px;padding:7px 16px">HuggingFace</a>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎮</div>
+      <h3>Sovereign Interior</h3>
+      <p>WORM-sealed first-person game. Walk the chamber, verify the chain, seal the receipt. Three.js + Rapier3D.</p>
+      <a class="btn btn-primary" href="bobs-game/" style="font-size:11px;padding:7px 16px">Enter Interior</a>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ FOOTER ═══════════════ -->
+</main>
+
 <footer>
-  <div style="margin-bottom:16px;font-size:20px">⬡</div>
-  <strong style="color:var(--light)">Ahmad Ali Parr</strong><br>
+  <strong style="color:var(--text)">Ahmad Ali Parr</strong><br>
   SnapKitty Collective · Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643<br>
   <a href="mailto:ahmedparr93@gmail.com">ahmedparr93@gmail.com</a> ·
   <a href="https://github.com/SNAPKITTYWEST/sov-kernel-monster">github.com/SNAPKITTYWEST/sov-kernel-monster</a><br><br>
   <span style="color:var(--purple)">WORM-sealed · Blake3 + Ed25519 · append-only</span><br>
   Sovereign Source License v3.0 · Not MIT · Not Apache<br><br>
-  <em style="color:rgba(255,255,255,0.3)">"Evidence or Silence. Nothing in between."</em>
+  <em style="color:rgba(255,255,255,0.25)">"Evidence or Silence."</em>
 </footer>
 
+<script>
+// ─── Quantum State ───────────────────────────────────────────────────────────
+const TAU = Math.PI * 2;
+let alpha = {re:1, im:0}, beta = {re:0, im:0};
+let circuit = [];
+let rotX = 0.4, rotY = -0.6;
+let dragging = false, lastMX = 0, lastMY = 0;
+
+function norm(a, b) {
+  const n = Math.sqrt(a.re**2+a.im**2+b.re**2+b.im**2);
+  if (n < 1e-12) return;
+  alpha = {re:a.re/n, im:a.im/n};
+  beta  = {re:b.re/n, im:b.im/n};
+}
+
+function blochCoords() {
+  // θ = 2 * arccos(|α|), φ = arg(β) - arg(α)
+  const aAbs = Math.sqrt(alpha.re**2 + alpha.im**2);
+  const bAbs = Math.sqrt(beta.re**2  + beta.im**2);
+  const theta = 2 * Math.acos(Math.min(1, aAbs));
+  const phiA  = Math.atan2(alpha.im, alpha.re);
+  const phiB  = Math.atan2(beta.im,  beta.re);
+  const phi   = phiB - phiA;
+  return {
+    x: Math.sin(theta) * Math.cos(phi),
+    y: Math.cos(theta),
+    z: Math.sin(theta) * Math.sin(phi),
+    theta, phi
+  };
+}
+
+// ─── Gate Matrices ───────────────────────────────────────────────────────────
+const INV_SQRT2 = 1 / Math.sqrt(2);
+const PHI_INV   = (Math.sqrt(5) - 1) / 2;   // φ⁻¹ ≈ 0.618
+const PHI_INV2  = PHI_INV * PHI_INV;         // φ⁻² ≈ 0.382
+
+function applyGate(name) {
+  let a = {...alpha}, b = {...beta};
+  switch(name) {
+    case 'H':
+      alpha = {re: INV_SQRT2*(a.re+b.re), im: INV_SQRT2*(a.im+b.im)};
+      beta  = {re: INV_SQRT2*(a.re-b.re), im: INV_SQRT2*(a.im-b.im)};
+      break;
+    case 'X':
+      alpha = {...b}; beta = {...a};
+      break;
+    case 'Y':
+      alpha = {re: b.im,  im: -b.re};
+      beta  = {re: -a.im, im:  a.re};
+      break;
+    case 'Z':
+      beta = {re: -b.re, im: -b.im};
+      break;
+    case 'S':
+      beta = {re: -b.im, im: b.re};  // multiply β by i
+      break;
+    case 'T': {
+      const c = Math.cos(Math.PI/4), s = Math.sin(Math.PI/4);
+      beta = {re: b.re*c - b.im*s, im: b.re*s + b.im*c};
+      break;
+    }
+    case 'Rx': {
+      const c = Math.cos(Math.PI/8), s = Math.sin(Math.PI/8);
+      alpha = {re: a.re*c + b.im*s, im: a.im*c + b.re*s};  // Rx(π/4)
+      beta  = {re: b.re*c + a.im*s, im: b.im*c + a.re*s};
+      break;
+    }
+    case 'Ry': {
+      const c = Math.cos(Math.PI/8), s = Math.sin(Math.PI/8);
+      alpha = {re: a.re*c - b.re*s, im: a.im*c - b.im*s};
+      beta  = {re: b.re*c + a.re*s, im: b.im*c + a.im*s};
+      break;
+    }
+    case 'Rz': {
+      const c = Math.cos(Math.PI/8), s = Math.sin(Math.PI/8);
+      alpha = {re: a.re*c - a.im*s, im: a.re*s + a.im*c};
+      beta  = {re: b.re*c + b.im*s, im: -b.re*s + b.im*c};
+      break;
+    }
+    case 'Jordan': {
+      // T(ρ) = φ⁻¹·UρU† + φ⁻²·ρ  — apply as Jordan step on state vector
+      // Implemented as: |ψ'⟩ = √(φ⁻¹)·H|ψ⟩ + √(φ⁻²)·|ψ⟩ then renormalize
+      const sqPhi1 = Math.sqrt(PHI_INV), sqPhi2 = Math.sqrt(PHI_INV2);
+      const ha = {re: INV_SQRT2*(a.re+b.re), im: INV_SQRT2*(a.im+b.im)};
+      const hb = {re: INV_SQRT2*(a.re-b.re), im: INV_SQRT2*(a.im-b.im)};
+      alpha = {re: sqPhi1*ha.re + sqPhi2*a.re, im: sqPhi1*ha.im + sqPhi2*a.im};
+      beta  = {re: sqPhi1*hb.re + sqPhi2*b.re, im: sqPhi1*hb.im + sqPhi2*b.im};
+      break;
+    }
+  }
+  norm(alpha, beta);
+}
+
+function doMeasure() {
+  const p0 = alpha.re**2 + alpha.im**2;
+  const result = Math.random() < p0 ? 0 : 1;
+  if (result === 0) { alpha={re:1,im:0}; beta={re:0,im:0}; }
+  else              { alpha={re:0,im:0}; beta={re:1,im:0}; }
+  document.getElementById('measure-result').textContent =
+    `COLLAPSE → |${result}⟩  (P(0)=${p0.toFixed(3)}  P(1)=${(1-p0).toFixed(3)})`;
+  circuit.push({name:'M', measured:true});
+  renderCircuit();
+  draw();
+  updateReadout();
+}
+
+// ─── Canvas Draw ─────────────────────────────────────────────────────────────
+const canvas = document.getElementById('bloch-canvas');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const CX = W/2, CY = H/2, R = 185;
+
+function project3d(x, y, z) {
+  const cx = Math.cos(rotX), sx = Math.sin(rotX);
+  const cy = Math.cos(rotY), sy = Math.sin(rotY);
+  // rotate around Y then X
+  const x1 = cy*x + sy*z, z1 = -sy*x + cy*z;
+  const y2 = cx*y - sx*z1, z2 = sx*y + cx*z1;
+  const scale = 0.7 + 0.3*(z2+1)/2;
+  return { px: CX + x1*R, py: CY - y2*R, depth: z2, scale };
+}
+
+function drawCircle3d(nx, ny, nz, segs=64) {
+  // Draw great circle with normal (nx,ny,nz)
+  const u = {x: -ny||1, y: nx, z: 0};
+  const uLen = Math.sqrt(u.x**2+u.y**2+u.z**2);
+  if (uLen < 1e-9) return;
+  u.x/=uLen; u.y/=uLen; u.z/=uLen;
+  const v = {
+    x: ny*u.z - nz*u.y,
+    y: nz*u.x - nx*u.z,
+    z: nx*u.y - ny*u.x
+  };
+  ctx.beginPath();
+  for (let i=0; i<=segs; i++) {
+    const t = (i/segs)*TAU;
+    const px3 = Math.cos(t)*u.x + Math.sin(t)*v.x;
+    const py3 = Math.cos(t)*u.y + Math.sin(t)*v.y;
+    const pz3 = Math.cos(t)*u.z + Math.sin(t)*v.z;
+    const {px, py} = project3d(px3, py3, pz3);
+    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0d0d0b';
+  ctx.fillRect(0, 0, W, H);
+
+  // Sphere outline
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, TAU);
+  ctx.stroke();
+
+  // Latitude/longitude circles
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 0.8;
+  drawCircle3d(1,0,0);  // YZ plane
+  drawCircle3d(0,1,0);  // XZ plane
+  drawCircle3d(0,0,1);  // XY plane
+
+  // Equatorial ring highlight
+  ctx.strokeStyle = 'rgba(106,155,204,0.12)';
+  ctx.lineWidth = 1.2;
+  drawCircle3d(0,1,0);
+
+  // Axes
+  const axisPoints = [
+    {p:[0, 1, 0], label:'|0⟩', color:'rgba(255,255,255,0.5)'},
+    {p:[0,-1, 0], label:'|1⟩', color:'rgba(255,255,255,0.3)'},
+    {p:[1, 0, 0], label:'|+⟩', color:'rgba(106,155,204,0.4)'},
+    {p:[-1,0, 0], label:'|−⟩', color:'rgba(106,155,204,0.3)'},
+    {p:[0, 0, 1], label:'|i⟩', color:'rgba(155,109,255,0.4)'},
+    {p:[0, 0,-1], label:'|−i⟩',color:'rgba(155,109,255,0.3)'},
+  ];
+  axisPoints.forEach(({p,label,color}) => {
+    const {px,py} = project3d(...p);
+    const o = project3d(0,0,0);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.8;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(o.px,o.py); ctx.lineTo(px,py); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = color;
+    ctx.font = '11px var(--mono, monospace)';
+    ctx.fillText(label, px+5, py+4);
+  });
+
+  // State vector arrow
+  const bc = blochCoords();
+  const tip = project3d(bc.x, bc.y, bc.z);
+  const orig = project3d(0,0,0);
+
+  ctx.strokeStyle = '#d97757';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(orig.px, orig.py);
+  ctx.lineTo(tip.px, tip.py);
+  ctx.stroke();
+
+  // Arrowhead
+  const dx = tip.px - orig.px, dy = tip.py - orig.py;
+  const len = Math.sqrt(dx*dx+dy*dy);
+  if (len > 1) {
+    const ux = dx/len, uy = dy/len;
+    const AH = 10;
+    ctx.fillStyle = '#d97757';
+    ctx.beginPath();
+    ctx.moveTo(tip.px, tip.py);
+    ctx.lineTo(tip.px - AH*ux + AH*0.4*uy, tip.py - AH*uy - AH*0.4*ux);
+    ctx.lineTo(tip.px - AH*ux - AH*0.4*uy, tip.py - AH*uy + AH*0.4*ux);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Tip dot
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath();
+  ctx.arc(tip.px, tip.py, 5, 0, TAU);
+  ctx.fill();
+
+  // Projection onto equatorial plane (dotted line down)
+  const equTip = project3d(bc.x, 0, bc.z);
+  ctx.strokeStyle = 'rgba(217,119,87,0.25)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3,4]);
+  ctx.beginPath();
+  ctx.moveTo(tip.px, tip.py);
+  ctx.lineTo(equTip.px, equTip.py);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function updateReadout() {
+  const aAbs = Math.sqrt(alpha.re**2 + alpha.im**2);
+  const bAbs = Math.sqrt(beta.re**2 + beta.im**2);
+  const bc = blochCoords();
+  const fmt = v => v.toFixed(3);
+  const fmtC = (v) => `${fmt(v.re)} ${v.im>=0?'+':'-'} ${fmt(Math.abs(v.im))}i`;
+  document.getElementById('r-alpha').textContent = fmtC(alpha);
+  document.getElementById('r-beta').textContent  = fmtC(beta);
+  document.getElementById('r-p0').textContent    = fmt(aAbs**2);
+  document.getElementById('r-p1').textContent    = fmt(bAbs**2);
+  document.getElementById('r-theta').textContent = fmt(bc.theta) + ' rad';
+  document.getElementById('r-phi').textContent   = fmt(((bc.phi % TAU) + TAU) % TAU) + ' rad';
+}
+
+// ─── Circuit ─────────────────────────────────────────────────────────────────
+function renderCircuit() {
+  const el = document.getElementById('circuit-display');
+  if (circuit.length === 0) {
+    el.innerHTML = '<span style="color:var(--dim)">circuit empty — select a gate above</span>';
+    return;
+  }
+  el.innerHTML = circuit.map(g =>
+    `<span class="circuit-gate${g.measured?' measured':''}">${g.name}</span>`
+  ).join(' → ');
+}
+
+// ─── Events ──────────────────────────────────────────────────────────────────
+document.querySelectorAll('.gate-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const g = btn.dataset.gate;
+    applyGate(g);
+    circuit.push({name: g === 'Jordan' ? 'J(φ⁻¹)' : g});
+    renderCircuit();
+    draw();
+    updateReadout();
+    document.getElementById('measure-result').textContent = '';
+  });
+});
+
+document.getElementById('measure-btn').addEventListener('click', doMeasure);
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  alpha = {re:1,im:0}; beta={re:0,im:0};
+  circuit = [];
+  renderCircuit();
+  draw();
+  updateReadout();
+  document.getElementById('measure-result').textContent = '';
+});
+
+// Drag to rotate
+canvas.addEventListener('mousedown', e => { dragging=true; lastMX=e.clientX; lastMY=e.clientY; });
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastMX) * 0.01;
+  rotX += (e.clientY - lastMY) * 0.01;
+  lastMX=e.clientX; lastMY=e.clientY;
+  draw();
+});
+window.addEventListener('mouseup', () => dragging=false);
+
+canvas.addEventListener('touchstart', e => { e.preventDefault(); dragging=true; lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY; }, {passive:false});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!dragging) return;
+  rotY += (e.touches[0].clientX - lastMX) * 0.012;
+  rotX += (e.touches[0].clientY - lastMY) * 0.012;
+  lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY;
+  draw();
+}, {passive:false});
+canvas.addEventListener('touchend', () => dragging=false);
+
+// Nav scroll spy
+const sections = document.querySelectorAll('section[id]');
+const navLinks  = document.querySelectorAll('nav a');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
+  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
+}, {passive:true});
+
+// Init
+draw();
+updateReadout();
+renderCircuit();
+</script>
 </body>
 </html>
-<!-- cache-bust 1784686255 -->

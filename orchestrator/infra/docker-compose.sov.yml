@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  sov-git-server:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.gitea
+    container_name: sov-git-server
+    restart: unless-stopped
+    networks:
+      - sov-internal
+    volumes:
+      - sov-git-data:/data
+      - ./hooks:/data/gitea/custom/hooks:ro
+      - ../.sov/keys:/keys:ro
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__SERVER__DOMAIN=localhost
+      - GITEA__SERVER__ROOT_URL=http://localhost:3000/
+      - GITEA__SERVER__SSH_DOMAIN=localhost
+      - GITEA__SERVER__SSH_PORT=2222
+      - GITEA__SERVER__OFFLINE_MODE=true
+      - GITEA__SECURITY__INSTALL_LOCK=true
+      - GITEA__LOG__MODE=file
+      - GITEA__LOG__LEVEL=Warn
+
+  sov-registry-proxy:
+    image: registry:2
+    container_name: sov-registry-proxy
+    restart: unless-stopped
+    networks:
+      - sov-internal
+    volumes:
+      - ./certs:/certs:ro
+      - sov-registry-data:/var/lib/registry:rw
+    environment:
+      - REGISTRY_HTTP_ADDR=127.0.0.1:5000
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry
+
+  hauki-fn-ops:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.hauki
+    container_name: hauki-fn-ops
+    restart: unless-stopped
+    networks:
+      - sov-internal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../.sov/prolog:/prolog/rules:ro
+    environment:
+      - TRIGGER_SOURCE=github_webhook
+      - VERIFICATION_LOGIC=prolog
+      - DEPLOY_TARGET=local_sov_swarm
+
+networks:
+  sov-internal:
+    internal: true
+
+volumes:
+  sov-git-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/sov/worm/git-storage
+  sov-registry-data:
+    driver: local

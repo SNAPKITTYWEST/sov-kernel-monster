@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" width="520" height="520" style="background:#0d0d0b">
+  <defs>
+    <radialGradient id="sphereGlow" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#9b6dff" stop-opacity="0.07"/>
+      <stop offset="50%" stop-color="#6a9bcc" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#0d0d0b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tipGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d4af37" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vecGrad" x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#d97757" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#d4af37"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- sphere surface -->
+  <circle cx="260" cy="260" r="200" fill="url(#sphereGlow)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+
+  <!-- latitude rings — static, perspective-projected at tilt 25deg -->
+  <!-- equator y=0: ellipse rx=200 ry=200*sin(25)=84.5 -->
+  <ellipse cx="260" cy="260" rx="200" ry="85" fill="none" stroke="rgba(106,155,204,0.18)" stroke-width="1.5"/>
+  <!-- lat +60 y=0.5: r=173, ry=73 center y=260-0.5*200*cos(25)=260-90.6=169 -->
+  <ellipse cx="260" cy="169" rx="173" ry="73" fill="none" stroke="rgba(106,155,204,0.09)" stroke-width="0.8"/>
+  <!-- lat -60 -->
+  <ellipse cx="260" cy="351" rx="173" ry="73" fill="none" stroke="rgba(106,155,204,0.09)" stroke-width="0.8"/>
+  <!-- lat +30 -->
+  <ellipse cx="260" cy="214" rx="195" ry="82" fill="none" stroke="rgba(106,155,204,0.07)" stroke-width="0.7"/>
+  <!-- lat -30 -->
+  <ellipse cx="260" cy="306" rx="195" ry="82" fill="none" stroke="rgba(106,155,204,0.07)" stroke-width="0.7"/>
+
+  <!-- meridian YZ -->
+  <ellipse cx="260" cy="260" rx="7" ry="200" fill="none" stroke="rgba(155,109,255,0.12)" stroke-width="1"/>
+  <!-- meridian XZ tilted -->
+  <ellipse cx="260" cy="260" rx="200" ry="85" fill="none" stroke="rgba(155,109,255,0.08)" stroke-width="0.8" transform="rotate(90 260 260)"/>
+
+  <!-- axis lines -->
+  <!-- vertical |0⟩ top |1⟩ bottom -->
+  <line x1="260" y1="55" x2="260" y2="465" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,5"/>
+  <!-- horizontal |+⟩ |−⟩ -->
+  <line x1="55" y1="260" x2="465" y2="260" stroke="rgba(106,155,204,0.15)" stroke-width="0.8" stroke-dasharray="4,5"/>
+  <!-- depth axis |i⟩ projected -->
+  <line x1="175" y1="215" x2="345" y2="305" stroke="rgba(155,109,255,0.15)" stroke-width="0.8" stroke-dasharray="4,5"/>
+
+  <!-- axis labels -->
+  <text x="265" y="48" fill="rgba(255,255,255,0.6)" font-family="monospace" font-size="13" font-weight="bold">|0⟩</text>
+  <text x="265" y="480" fill="rgba(255,255,255,0.35)" font-family="monospace" font-size="13">|1⟩</text>
+  <text x="468" y="264" fill="rgba(106,155,204,0.6)" font-family="monospace" font-size="12">|+⟩</text>
+  <text x="28" y="264" fill="rgba(106,155,204,0.4)" font-family="monospace" font-size="12">|−⟩</text>
+  <text x="348" y="302" fill="rgba(155,109,255,0.5)" font-family="monospace" font-size="11">|i⟩</text>
+
+  <!-- spinning state vector group — rotates around Y axis (vertical) -->
+  <g transform="translate(260,260)">
+    <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0"
+      dur="6s" repeatCount="indefinite" additive="replace"
+      calcMode="linear"/>
+    <!-- equatorial projection shadow -->
+    <line x1="0" y1="0" x2="170" y2="0" stroke="rgba(217,119,87,0.15)" stroke-width="1" stroke-dasharray="3,4"/>
+    <!-- vertical projection -->
+    <line x1="170" y1="0" x2="170" y2="-120" stroke="rgba(217,119,87,0.12)" stroke-width="1" stroke-dasharray="3,4"/>
+    <!-- gradient vector shaft — approx 45deg on sphere: x=170 y=-120 on unit sphere -->
+    <line x1="0" y1="0" x2="170" y2="-120"
+      stroke="url(#vecGrad)" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+    <!-- arrowhead -->
+    <polygon points="170,-120 157,-110 163,-130"
+      fill="#d4af37" filter="url(#glow)"/>
+    <!-- tip glow -->
+    <circle cx="170" cy="-120" r="16" fill="url(#tipGlow)"/>
+    <!-- tip dot -->
+    <circle cx="170" cy="-120" r="5" fill="#d4af37" filter="url(#glow)"/>
+    <!-- |ψ⟩ label follows tip -->
+    <text x="178" y="-128" fill="rgba(212,175,55,0.85)" font-family="monospace" font-size="12" font-weight="bold">|ψ⟩</text>
+  </g>
+
+  <!-- origin dot -->
+  <circle cx="260" cy="260" r="3" fill="rgba(255,255,255,0.3)"/>
+
+  <!-- bottom identity line -->
+  <text x="260" y="510" fill="rgba(212,175,55,0.5)" font-family="monospace" font-size="11" text-anchor="middle">ρ' = φ⁻¹·UρU† + φ⁻²·ρ · QATAAUM · zero sorry</text>
+</svg>

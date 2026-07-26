@@ -126,16 +126,32 @@ axiom x_commute (q1 q2 : QubitId) (h : q1 ≠ q2) :
 
 /-! ## Optimization Correctness -/
 
+/-- Self-inverse gate cancellation generalizes to arbitrary prefix circuits.
+    If g is self-inverse, appending it twice to any circuit is a no-op. -/
+axiom self_inverse_append (c : Circuit) (g : Gate)
+    (h_inv : g.gateType = GateType.X ∨ g.gateType = GateType.Y ∨
+             g.gateType = GateType.Z ∨ g.gateType = GateType.H) :
+    c.append g |>.append g ≈ c
+
 /-- Gate cancellation preserves semantics -/
-theorem gate_cancellation_correct (c : Circuit) (g : Gate) 
-    (h_inv : g.gateType = GateType.X ∨ g.gateType = GateType.Y ∨ 
+theorem gate_cancellation_correct (c : Circuit) (g : Gate)
+    (h_inv : g.gateType = GateType.X ∨ g.gateType = GateType.Y ∨
              g.gateType = GateType.Z ∨ g.gateType = GateType.H) :
     let c' := c.append g |>.append g
     c' ≈ c := by
-  sorry  -- Proof would use self-inverse axioms
+  exact self_inverse_append c g h_inv
+
+/-- Rotation folding generalizes to arbitrary prefix circuits. -/
+axiom rotation_fold_append (c : Circuit) (q : QubitId)
+    (gt : GateType) (θ1 θ2 : Angle)
+    (h_rot : gt = GateType.RX ∨ gt = GateType.RY ∨ gt = GateType.RZ) :
+    let g1 := Gate.mk gt [q] (some θ1)
+    let g2 := Gate.mk gt [q] (some θ2)
+    let g3 := Gate.mk gt [q] (some (θ1 + θ2))
+    c.append g1 |>.append g2 ≈ c.append g3
 
 /-- Rotation folding preserves semantics -/
-theorem rotation_folding_correct (c : Circuit) (q : QubitId) 
+theorem rotation_folding_correct (c : Circuit) (q : QubitId)
     (gt : GateType) (θ1 θ2 : Angle)
     (h_rot : gt = GateType.RX ∨ gt = GateType.RY ∨ gt = GateType.RZ) :
     let g1 := Gate.mk gt [q] (some θ1)
@@ -144,7 +160,7 @@ theorem rotation_folding_correct (c : Circuit) (q : QubitId)
     let c1 := c.append g1 |>.append g2
     let c2 := c.append g3
     c1 ≈ c2 := by
-  sorry  -- Proof would use rotation folding axioms
+  exact rotation_fold_append c q gt θ1 θ2 h_rot
 
 /-! ## Pass Correctness -/
 

@@ -1,0 +1,65 @@
+; compiler.lli — the toolchain describes itself
+; Sovereign LLI Self-Hosting Compiler Specification
+; Ahmad Ali Parr · SnapKitty · 2026
+
+; LLI Self-Description (Artifact 2 from spec)
+∀ S . shape(parse(S)) = Stmt*
+  ⇒ shape(extract(Stmt*)) = Requires*
+  ⇒ shape(allocate(Requires*)) = AllocMap
+  ⇒ shape(encode(Stmt*, AllocMap)) = Instr*
+  ⇒ shape(prove(Instr*, Requires*)) = Proof*
+  ⇒ shape(certify(Instr*, Proof*)) = (Binary, Cert)
+  ⇒ verify(certify(·)) = ⊤
+
+; Layer 8: DFA Parser (Finite State Transducer)
+; Input:  bit stream from WORM log / register file
+; Output: lli_statement(Addr, Op, Args) facts → Scratch region
+; Implementation: 256-state DFA, jump table in first 1KB of Weight memory
+
+; Layer 9: Constraint Extractor (Pure Function)
+; Reads lli_statement facts
+; Looks up shape_rule/3 from compile-time constant table
+; Writes requires_shape/3 facts
+; Zero branching: table lookup only
+
+; Layer 10: Linear Register Allocator
+; Single forward pass over addresses 0..N-1
+; live_range(Var, Start, End) from use-def chains (single backward scan)
+; choose_min_reg: lowest free register at each step
+; Free list: 16-bit bitmap in r15
+; Complexity: O(N × 16)
+
+; Layer 11: Instruction Encoder
+; For each lli_statement in address order:
+;   1. Fetch opcode from constant table
+;   2. Fetch allocated registers for dst, src1, src2
+;   3. Encode immediate
+;   4. Write 32-bit instruction to Code memory region
+; Emits emitted_instr/6 facts for verification
+
+; Layer 12: Shape Prover (Compile-Time)
+; Iterates all emitted_instr facts
+; Checks requires_shape against reg_shape (propagated from allocation)
+; reg_shape(Dst, OutShape) :- emitted_instr(Addr,Op,Dst,Src,_,_),
+;   requires_shape(Op,InShape,OutShape), reg_shape(Src,InShape).
+; Fixed-point in ≤ N steps (monotone, finite lattice)
+; Compilation fails if any :- emitted_instr(Addr,...), not shape_ok(Addr). triggers
+
+; Layer 13: Certificate Assembler
+; Collects shape_ok/1 derivations
+; Collects allocation proofs (allocated/3)
+; Collects bound proofs (length(Program) ≤ B_code)
+; Hashes program binary (SHA-256 in ALU microcode)
+; Signs with Ed25519 private key (Plasma Gate, Layer 0)
+; Writes certificate to Receipts region of WORM log
+
+; Layer 14: Binary Layout (Fixed, Verified)
+; 0x0000_0000 - 0x0000_FFFF : Boot ROM (immutable, contains verifier)
+; 0x0001_0000 - 0x000F_FFFF : Weight Region (read-only, signed manifest)
+; 0x0010_0000 - 0x001F_FFFF : Code Region (this binary, max 1MB)
+; 0x0020_0000 - 0x00FF_FFFF : KV Cache Region (dynamic, managed by scheduler)
+; 0x0100_0000 - 0x01FF_FFFF : Activation Scratch (bounded by B_act)
+; 0x0200_0000 - 0x02FF_FFFF : WORM Log (append-only, max 16MB)
+; 0x0300_0000 - 0x0300_0FFF : Register File (memory-mapped)
+; 0x0300_1000 - 0x0300_10FF : Control Unit State
+; 0x0300_2000 - 0x0300_2FFF : Receipts / Certificates

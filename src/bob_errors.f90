@@ -19,6 +19,7 @@ module bob_errors
     integer(i4), parameter, public :: BOB_ERROR_INVALID_STATE = 7
     integer(i4), parameter, public :: BOB_ERROR_INVALID_GATE = 8
     integer(i4), parameter, public :: BOB_ERROR_INVALID_LATTICE = 9
+    integer(i4), parameter, public :: BOB_ERROR_BUFFER_TOO_SMALL = 10
     integer(i4), parameter, public :: BOB_ERROR_INTEGRATION_FAILED = 10
     integer(i4), parameter, public :: BOB_ERROR_IO = 11
     integer(i4), parameter, public :: BOB_ERROR_NOT_IMPLEMENTED = 99
@@ -34,7 +35,7 @@ module bob_errors
     end type bob_error_state
     
     ! Global error state (thread-local in OpenMP builds)
-    type(bob_error_state), save :: g_error_state
+    type(bob_error_state), public, save :: g_error_state
     !$omp threadprivate(g_error_state)
     
     public :: bob_set_error

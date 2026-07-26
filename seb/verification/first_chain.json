@@ -1,0 +1,37 @@
+{
+  "genesis_tip": "0000000000000000000000000000000000000000000000000000000000000000",
+  "records": [
+    {
+      "n": 0,
+      "payload": "d41724da7c420fa090814961b63b8ca2c54c2f19cd9b6aae7091c7db45654434d41724da7c420fa090814961b63b8ca2c54c2f19cd9b6aae7091c7db45654434",
+      "commitment": "70e0c333fea63e4daf3011c828d78db72e67896336d456f1c4dee1561c9e2021"
+    },
+    {
+      "n": 1,
+      "payload": "ee16093ecbcb4fe5fd6f27f36629f0f1cdb3ce93e394ef11e08cd6a591e478ccee16093ecbcb4fe5fd6f27f36629f0f1cdb3ce93e394ef11e08cd6a591e478cc",
+      "commitment": "c4c23b2cc9533ec905288380fc42c26e2f5bf71e6ba4218a3a2f8d0c6faa55bd"
+    },
+    {
+      "n": 2,
+      "payload": "1436ea787d0db2bad062e4a6e97355b532b1135c1274c57dc9870d9478ff8d0a1436ea787d0db2bad062e4a6e97355b532b1135c1274c57dc9870d9478ff8d0a",
+      "commitment": "43dc19f05b564e760d423106be0d5848cfdc74bc24ea473b829bc386f646d2cf"
+    },
+    {
+      "n": 3,
+      "payload": "6440aa8833daea94a3896fa4c54ba3c6840436620ff2fb893c4d380dba64afcf6440aa8833daea94a3896fa4c54ba3c6840436620ff2fb893c4d380dba64afcf",
+      "commitment": "23773d1a79eda74673751be0756cd6a0aa9ef48e7087ba32f02eb2f3c3f10c04"
+    },
+    {
+      "n": 4,
+      "payload": "7487d63fe1909d57bdc139a03972098320e05e47a16c5491f1391b683134f53a7487d63fe1909d57bdc139a03972098320e05e47a16c5491f1391b683134f53a",
+      "commitment": "ec39ce4b9033d64bb99f6718ecf59ddb203d34306961770a354e7ad1b0a809c5"
+    },
+    {
+      "n": 5,
+      "payload": "b5b98639781586759b4dda8d7f50eb9bda70edb016093ec25325105c1ecaf32db5b98639781586759b4dda8d7f50eb9bda70edb016093ec25325105c1ecaf32d",
+      "commitment": "32a1c2742f72bbd84a71b18fbb07b260507c9ead34c7683dc9df0ce4fceaddfc"
+    }
+  ],
+  "final_tip": "32a1c2742f72bbd84a71b18fbb07b260507c9ead34c7683dc9df0ce4fceaddfc",
+  "verify": "PASS"
+}

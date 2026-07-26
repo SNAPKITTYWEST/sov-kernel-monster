@@ -1,0 +1,37 @@
+JOB TRUST_REVIEW
+// SEB event sequence for sovereign trust deed review
+// Agent: autonomous (council_001) capability=vacuum_collapse
+// Requires: SOVEREIGN_ROOT — council quorum required (weight=MAX, human_review=true)
+// Constitution gate: SEB_Constitution.authorize must return Approved
+// Agda theorem sovereign-requires-vacuum: only VacuumCollapse can authorize 0xFFFF
+
+INPUT TRUST_DEED
+
+STEP VERIFY_PARTIES
+// SEB event: ARCH_DECISION 0x0010 — verify signatories against agent registry
+// required_capability: verify (metatron/arch_001)
+// Datalog: authorized(metatron, offset) :- agent_competency(metatron, verify)
+ROUTE CARTO
+
+STEP VERIFY_LOGIC
+// SEB event: ARCH_DECISION 0x0010 — verify deed logic via Datalog derivation
+// SEB_Reasoning_Verification.idr: verify_trace checks proof_tree_ref
+// reasoning trace: check_authorization step with proof_tree_ref -> Souffle derivation
+// Evidence: constitution_denied must NOT fire for this proposal
+ROUTE EDAULC
+
+STEP ANCHOR_RECEIPT
+// SEB event: SOVEREIGN_ROOT 0xFFFF — final anchor of trust deed
+// required_capability: vacuum_collapse (autonomous/council_001 ONLY)
+// weight: 4294967295 (MAX — human review required + council quorum)
+// Constitution gate: wrong-cap-denied and sovereign-requires-vacuum theorems enforced
+// Human touch: review_queue PendingChange must be Approved by council_quorum agent
+// Lattice commitment seals the entire trust deed history
+// seb_pnp_bridge: emits PROBLEM_SOLVED event to convergence_log (positive delta)
+ROUTE LEDGE
+
+SEAL SHA256
+// Final tip = lattice_commit(prev_tip, sovereign_root_payload)
+// This tip is the immutable identity of the sealed trust deed
+// Bifrost hash registered in seb/adapters/SEB_FISCAL_ADAPTER DB2 SOVEREIGN_LEDGER
+END

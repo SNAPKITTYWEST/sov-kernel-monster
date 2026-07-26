@@ -41,6 +41,26 @@ SOV_KERNEL: PROCEDURE OPTIONS(MAIN, REENTRANT) RECURSIVE NOCHECK;
       POINTER, FIXED BINARY(31),           /* payload, len */
       POINTER, POINTER);                   /* sk, sig */
 
+   /* ── SOVEREIGN KNOWLEDGE ABI (sov_knowledge.f90) ──────────────── */
+   /* Agents query WORM-attested chunks — no Ollama, no wrapper RAG.  */
+   DECLARE sov_knowledge_init   EXTERNAL ENTRY(FIXED BINARY(63));
+   DECLARE sov_knowledge_append EXTERNAL ENTRY(
+      POINTER, FIXED BINARY(63),           /* content, len */
+      POINTER, FIXED BINARY(63));          /* source_key, len */
+   DECLARE sov_knowledge_search EXTERNAL ENTRY(
+      POINTER, FIXED BINARY(63),           /* query, len */
+      FIXED BINARY(63))                    /* k */
+      RETURNS(FIXED BINARY(63));           /* n_hits */
+   DECLARE sov_knowledge_verify EXTERNAL ENTRY(
+      POINTER, FIXED BINARY(63))           /* chunk_id, len */
+      RETURNS(FIXED BINARY(63));           /* 1 = verified */
+   DECLARE sov_knowledge_count  EXTERNAL ENTRY()
+      RETURNS(FIXED BINARY(63));
+   DECLARE sov_knowledge_tau    EXTERNAL ENTRY(
+      FLOAT(FLOAT_PRECISION),              /* tau_0 */
+      FIXED BINARY(63))                    /* k_hits */
+      RETURNS(FLOAT(FLOAT_PRECISION));
+
    /* ── UPGRADE 3: Cryptographic State at Variable Assignment Layer ─── */
    /* Every state update carries its Blake3 hash inline.                  */
    DECLARE 1 SOVEREIGN_STATE,
@@ -78,6 +98,7 @@ SOV_KERNEL: PROCEDURE OPTIONS(MAIN, REENTRANT) RECURSIVE NOCHECK;
    CALL COBOL_RECORD_GATE();   /* Hand off to COBOL record layer */
    CALL INTERCAL_INVERT();     /* INTERCAL control inversion layer */
    CALL SOV_EVOLVE_LOOP();
+   CALL KNOWLEDGE_AGENT();     /* WORM-attested agent knowledge (no wrapper LLM) */
    CALL SOV_WORM_SEAL();
 
    RETURN;
@@ -175,5 +196,33 @@ SOV_DEQUEUE: PROCEDURE RETURNS(CHARACTER(128));
    MSG_QUEUE.HEAD = MOD(MSG_QUEUE.HEAD + 1, QUEUE_CAP);
    RETURN(MSG);
 END SOV_DEQUEUE;
+
+/* ── KNOWLEDGE AGENT: WORM-attested semantic memory (non-recursive) ─ */
+/* Actual agent surface — not a wrapper class, not an LLM host.         */
+/* PL/I enqueues experience; Fortran KB seals + retrieves by cosine.    */
+KNOWLEDGE_AGENT: PROCEDURE;
+   DECLARE QUERY   CHARACTER(128) VARYING;
+   DECLARE KEY     CHARACTER(32)  VARYING;
+   DECLARE HITS    FIXED BINARY(63);
+   DECLARE TAU     FLOAT(FLOAT_PRECISION);
+   DECLARE N_CHUNKS FIXED BINARY(63);
+   DECLARE NOTE    CHARACTER(128);
+
+   CALL sov_knowledge_init(1024);
+   KEY = 'SOVEREIGN_PLI_AGENT';
+   QUERY = 'agent_state: generation=' || GENERATION;
+
+   /* Seal current agent observation into knowledge ledger */
+   CALL sov_knowledge_append(ADDR(QUERY), LENGTH(QUERY), ADDR(KEY), LENGTH(KEY));
+
+   /* Retrieve top-5 attested chunks for this agent context */
+   HITS = sov_knowledge_search(ADDR(QUERY), LENGTH(QUERY), 5);
+   N_CHUNKS = sov_knowledge_count();
+   TAU = sov_knowledge_tau(1.0, HITS);   /* φ⁻ᵏ knowledge temperature */
+
+   /* Push summary onto actor queue for COBOL/INTERCAL layers */
+   NOTE = 'KB_HITS';
+   CALL SOV_ENQUEUE(NOTE);
+END KNOWLEDGE_AGENT;
 
 END SOV_KERNEL;

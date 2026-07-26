@@ -1,0 +1,129 @@
+{
+  "version": "1.0.0",
+  "circuit": "GF(2^8)[x]/(x^32+1), K0=1, K1=x, K2=x^2, 0x11B",
+  "record_size": 96,
+  "commitment_size": 32,
+  "payload_size": 64,
+  "vectors": [
+    {
+      "id": 0,
+      "prev_commitment": "0000000000000000000000000000000000000000000000000000000000000000",
+      "payload": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+      "next_commitment": "213f212321272123212f212321272123213f212321272123212f212321272123"
+    },
+    {
+      "id": 1,
+      "prev_commitment": "213f212321272123212f212321272123213f212321272123212f212321272123",
+      "payload": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "next_commitment": "213f212321272123212f212321272123213f212321272123212f212321272123"
+    },
+    {
+      "id": 2,
+      "prev_commitment": "213f212321272123212f212321272123213f212321272123212f212321272123",
+      "payload": "aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55aa55",
+      "next_commitment": "dec0dedcded8dedcded0dedcded8dedcdec0dedcded8dedcded0dedcded8dedc"
+    },
+    {
+      "id": 3,
+      "prev_commitment": "dec0dedcded8dedcded0dedcded8dedcdec0dedcded8dedcded0dedcded8dedc",
+      "payload": "e1c2fffade596ef7b19c6dbc99b29567cb8eec67510005f90665a3e3e46c2674e1c2fffade596ef7b19c6dbc99b29567cb8eec67510005f90665a3e3e46c2674",
+      "next_commitment": "8c55fde1dbfc59eb4796f32d0ffdf5fb2c6c9bbe55ee8fd9222fbd1a9edf5696"
+    },
+    {
+      "id": 4,
+      "prev_commitment": "8c55fde1dbfc59eb4796f32d0ffdf5fb2c6c9bbe55ee8fd9222fbd1a9edf5696",
+      "payload": "2e349d641df8832bcf5da733adbc1763608e99fb59858a6aeeafd619c469077a2e349d641df8832bcf5da733adbc1763608e99fb59858a6aeeafd619c469077a",
+      "next_commitment": "f101e7482285bc90ef7261d79b63e450586f75a9374c53d6c2abfc635102fbf8"
+    },
+    {
+      "id": 5,
+      "prev_commitment": "f101e7482285bc90ef7261d79b63e450586f75a9374c53d6c2abfc635102fbf8",
+      "payload": "d66fab0fea0c5aaca348d1cc1c1c6def749ffc80f4b5c8d9d5d19df8204543b7d66fab0fea0c5aaca348d1cc1c1c6def749ffc80f4b5c8d9d5d19df8204543b7",
+      "next_commitment": "05605e8c86605ac6197d8a4e86b3e421daf49eca4b3812abd3a7f82f34da9efe"
+    },
+    {
+      "id": 6,
+      "prev_commitment": "05605e8c86605ac6197d8a4e86b3e421daf49eca4b3812abd3a7f82f34da9efe",
+      "payload": "5a5b58595e5f5c5d52535051565754554a4b48494e4f4c4d42434041464744457a7b78797e7f7c7d72737071767774756a6b68696e6f6c6d6263606166676465",
+      "next_commitment": "245f7fafa7477be53852ab6da794c502fbcbbfe96a1f3388f288d90c15fdbfdd"
+    },
+    {
+      "id": 7,
+      "prev_commitment": "245f7fafa7477be53852ab6da794c502fbcbbfe96a1f3388f288d90c15fdbfdd",
+      "payload": "a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba85848786818083828d8c8f8e89888b8a95949796919093929d9c9f9e99989b9a",
+      "next_commitment": "05605e8c86605ac6197d8a4e86b3e421daf49eca4b3812abd3a7f82f34da9efe"
+    },
+    {
+      "id": 8,
+      "prev_commitment": "05605e8c86605ac6197d8a4e86b3e421daf49eca4b3812abd3a7f82f34da9efe",
+      "payload": "0000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "next_commitment": "fa9fa173799fa539e68275b1794c1bde250b6135b4c7ed542c5807d0cb256101"
+    },
+    {
+      "id": 9,
+      "prev_commitment": "fa9fa173799fa539e68275b1794c1bde250b6135b4c7ed542c5807d0cb256101",
+      "payload": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000",
+      "next_commitment": "05605e8c86605ac6197d8a4e86b3e421daf49eca4b3812abd3a7f82f34da9efe"
+    },
+    {
+      "id": 10,
+      "prev_commitment": "05605e8c86605ac6197d8a4e86b3e421daf49eca4b3812abd3a7f82f34da9efe",
+      "payload": "36ce94bff914b6714c6ca0a51b0bcc31cdfefea64d72cbeb437adde78be6e65336ce94bff914b6714c6ca0a51b0bcc31cdfefea64d72cbeb437adde78be6e653",
+      "next_commitment": "b005a6d6ad26b764de40aa82830df4e62708adca13d32d12f30fc1880eb6f3fe"
+    },
+    {
+      "id": 11,
+      "prev_commitment": "b005a6d6ad26b764de40aa82830df4e62708adca13d32d12f30fc1880eb6f3fe",
+      "payload": "21aef37bf4ee4959fdbe78951e41403222f6b902e0a6822daa7f0d49468714b821aef37bf4ee4959fdbe78951e41403222f6b902e0a6822daa7f0d49468714b8",
+      "next_commitment": "1c9c298b25a9adc3cee4e9446e86abe755187985a8316b365c8814fa4ab9326d"
+    },
+    {
+      "id": 12,
+      "prev_commitment": "1c9c298b25a9adc3cee4e9446e86abe755187985a8316b365c8814fa4ab9326d",
+      "payload": "b57d7fca1df58e6028d6929eaba63c1a441d5731e86c4d5dddf426d4ebfba56ab57d7fca1df58e6028d6929eaba63c1a441d5731e86c4d5dddf426d4ebfba56a",
+      "next_commitment": "d343e189907e45b820ac170062b3a67d734620cfcee8ef174c083d28b8862233"
+    },
+    {
+      "id": 13,
+      "prev_commitment": "d343e189907e45b820ac170062b3a67d734620cfcee8ef174c083d28b8862233",
+      "payload": "8cff07c77e6bdbdbb300977090e7f88621e517b610e654b633fc1f119a52ed458cff07c77e6bdbdbb300977090e7f88621e517b610e654b633fc1f119a52ed45",
+      "next_commitment": "7b8a927150c7500820c4a4978553d1620de1e43d6f4e19a5ae8df2cbb60dea8c"
+    },
+    {
+      "id": 14,
+      "prev_commitment": "7b8a927150c7500820c4a4978553d1620de1e43d6f4e19a5ae8df2cbb60dea8c",
+      "payload": "1f348a2dd6128081971ea2b9354aec57fc7900e8b8d8fd154d6e54565800a2c21f348a2dd6128081971ea2b9354aec57fc7900e8b8d8fd154d6e54565800a2c2",
+      "next_commitment": "1b57b9cff73c949a21d22d2b9edfaec4b64a6144871e798046d5d1f1b403b22e"
+    },
+    {
+      "id": 15,
+      "prev_commitment": "1b57b9cff73c949a21d22d2b9edfaec4b64a6144871e798046d5d1f1b403b22e",
+      "payload": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+      "next_commitment": "3a6898ecd61bb5b900fd0c08bff88fe797754067a63958a367faf0d29524930d"
+    },
+    {
+      "id": 16,
+      "prev_commitment": "3a6898ecd61bb5b900fd0c08bff88fe797754067a63958a367faf0d29524930d",
+      "payload": "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f",
+      "next_commitment": "1b57b9cff73c949a21d22d2b9edfaec4b64a6144871e798046d5d1f1b403b22e"
+    },
+    {
+      "id": 17,
+      "prev_commitment": "1b57b9cff73c949a21d22d2b9edfaec4b64a6144871e798046d5d1f1b403b22e",
+      "payload": "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf",
+      "next_commitment": "3a6898ecd61bb5b900fd0c08bff88fe797754067a63958a367faf0d29524930d"
+    },
+    {
+      "id": 18,
+      "prev_commitment": "3a6898ecd61bb5b900fd0c08bff88fe797754067a63958a367faf0d29524930d",
+      "payload": "c0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+      "next_commitment": "1b57b9cff73c949a21d22d2b9edfaec4b64a6144871e798046d5d1f1b403b22e"
+    },
+    {
+      "id": 19,
+      "prev_commitment": "1b57b9cff73c949a21d22d2b9edfaec4b64a6144871e798046d5d1f1b403b22e",
+      "payload": "fec577d6349e7a8c06a64df4884c8f349c3712ef5c55ed7ce0258ef7bfd231cdfec577d6349e7a8c06a64df4884c8f349c3712ef5c55ed7ce0258ef7bfd231cd",
+      "next_commitment": "e764827d56de3e7ed7588dc027a36a070de2ca617aad7038d749145acd4bdfcd"
+    }
+  ]
+}

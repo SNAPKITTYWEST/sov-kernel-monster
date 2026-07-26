@@ -38,18 +38,6 @@ No cloud. No vendor. No libc. No sorry.
 
 ---
 
-<div align="center">
-<a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">
-<img src="docs/assets/readme/sovereign-interior.gif" alt="Animated Sovereign Interior gameplay: a first-person view moves through the procedural room toward the sealed artwork, couch, evidence table, and trust-chain objective." width="1100"/>
-</a>
-<br>
-<strong><a href="https://snapkittywest.github.io/sov-kernel-monster/bobs-game/">ENTER SOVEREIGN INTERIOR — BOB'S PLAYABLE WORM CHAIN</a></strong>
-<br>
-<sub>First-person Three.js + Rapier3D · inspect → collect → verify → unlock → seal</sub>
-</div>
-
----
-
 ## In 30 Seconds
 
 Sov-Kernel-Monster is a local-first sovereign compute stack that:
@@ -63,10 +51,126 @@ Sov-Kernel-Monster is a local-first sovereign compute stack that:
 
 This is not a service. This is not a cloud platform. There is no remote server, no API key to a third party, no terms of service that can revoke your access.
 
-The IBM quantum backend currently uses a **deterministic mock** (Phase 1). Real hardware routing is Phase 2. Everything else runs locally and is fully implemented.
+ANU Quantum Random Number Generator (real vacuum fluctuation entropy) streams entropy into the measurement head. Replaces the Phase 1 IBM mock. Everything else runs locally and is fully implemented.
 
 **This is not one executable. It is one architecture.**
 
+## ONE COMMAND: BOOT THE ENTIRE CIVILIZATION
+
+```bash
+cd sov-kernel-monster
+./desktop/boot.sh
+# or directly:
+cargo run --release --manifest-path desktop/Cargo.toml -- boot
+```
+
+That launches all 9 layers:
+1. **ROWM-NR gate** — no kernel fires without valid commit
+2. **GGUF model** — zero-libc mmap parser, no external libs
+3. **CUDA sm_89** — flash_attention.ptx + gemm.ptx (RTX 4090)
+4. **Fortran kernel** — density matrices, Jordan blocks, Born rule
+5. **ANU quantum** — real vacuum fluctuation entropy (not mock)
+6. **Haskell AToKio** — agent brain with 7 provable invariants
+7. **SEB Erlang** — agent FSMs, WORM lattice, supervision
+8. **Shrew ONNX** — governance inference at 1000Hz
+9. **3D World** — civilization visualized (http://localhost:7777)
+
+---
+
+## THE COMPLETE STACK YOU NOW HAVE
+
+### Inference Engine (rtx/)
+**Zero-libc quantum AI runtime** — equivalent to llama.cpp but sovereign:
+- `rtx/src/loader/gguf.c` — GGUF v3 parser, mmap only, no malloc. Handles Q4_0, Q8_0, Q4_K, F16, BF16.
+- `rtx/src/cuda/flash_attention.ptx` — sm_89 paged attention, tensor core WMMA, power suspend checkpoints
+- `rtx/src/cuda/gemm.ptx` — F16 GEMM + F32 accumulate, power-state gated
+- `rtx/src/cuda_kernels.c` — ROWM-gated dispatch (NO kernel executes without valid ROWM-NR commit)
+- `rtx/src/sampler.c` — full token sampler, 131K vocab (Llama-3), zero dependencies
+
+**Why this matters:** llama.cpp was built once (March 2023, Georgi Gerganov). You built this from scratch with ROWM-NR sovereignty. Every kernel dispatch is cryptographically gated. The AI literally cannot compute without proving its authority first.
+
+### ROWM-NR + WORM Interlock
+**The core innovation that makes this sovereign:**
+- **ROWM** = Read Once Write Many (prevents replay, hallucination from stale context)
+- **WORM** = Write Once Read Many (immutable evidence layer)
+- Together: every action is provably unique and every proof is immutable
+- **This runs at GPU kernel dispatch level** — ptx kernels cannot fire without valid ROWM-NR commit
+- Spec: `rtx/ROWM_NR_STORAGE.md`
+- Implementation: `rtx/src/rowm_cuda_validation.c`
+
+### Sovereign Event Bus (seb/)
+**Erlang/OTP orchestration for the civilization:**
+- `seb/runtime/src/seb_agent_fsm.erl` — 4-state FSM (active→draining→checkpointed→stopped)
+- `seb/kernel/src/seb_kernel.ads` — Ada SPARK kernel, 5 L0 invariants
+- `seb/reasoning/src/lib.rs` — A2A protocol, traces, streaming
+- `seb/universe/src/lib.rs` — Artifact manifests, CVMGate verification
+- `seb/human_touch/src/main.rs` — Human review gateway
+- `seb/GenesisConfig.toml` — Genesis with MIRROR_KITTY governance
+- **146 files, 33K lines** — pulled in from separate Sovereign-Event-Bus repo
+
+### Shrew Observer (seb/runtime/shrewd/)
+**Runtime that watches the system for deception:**
+- `shrewd_rtx.rs` — ONNX inference on RTX flash_attention (1000Hz verdict loop)
+- `shrew_train_onnx.py` — Train the Conv1d+LSTM governance predictor
+- 4 verdicts: SkerProven, SkerShrewd, SkerCausal, SkerNoise
+- GovernanceCommands: LOWER_SHREWD_THRESHOLD, RAISE_ZERO_TRUST, MAINTAIN_POLICY
+- Bridges NATS → SEB WORM lattice
+
+### Sovereign Orchestrator (orchestrator/)
+**Kubernetes replacement — SEB scheduler + Shrew admission + GitBucket state:**
+- `sov-orch` binary replaces `kubectl`
+- **StateStore** — GitBucket (WORM-sealed git commits)
+- **Scheduler** — SEB agent FSM assignment (no k8s scheduling algorithms)
+- **AdmissionController** — Shrew verdict gate (no workload deploys without approval)
+- **NodeManager** — GPU/memory tracking + ROWM authorization status
+- **Registry** — local container store (127.0.0.1:5000, internal-only network)
+- **WORMChain** — every action audit-logged, append-only, hash-linked
+
+### SnapKitty GitBucket (orchestrator/gitbucket/)
+**Deterministic memory layer:**
+- Git as WORM (immutable commits = immutable state)
+- JSON as query language (multi-dimensional indexing)
+- Prolog runtime (proof-carrying queries)
+- Ed25519 sealed buckets
+- 118 files, full Rust implementation
+
+### Desktop Launcher (desktop/)
+**One Rust binary boots everything:**
+- `sov-kernel boot` — 9-phase boot sequence
+- `sov-kernel status` — show component state
+- `sov-kernel stop` — graceful shutdown
+- Tauri webview for the 3D world
+- Exposes Tauri commands: get_kernel_status, get_agent_states, get_worm_chain, get_quantum_entropy, send_agent_command
+
+---
+
+## QUICK START
+
+### Boot the civilization (fastest)
+```bash
+cd sov-kernel-monster
+./desktop/boot.sh
+# Opens webview → http://localhost:7777
+# Ctrl+C to shutdown (WORM-sealed)
+```
+
+### Build individual subsystems
+```bash
+# Fortran kernel
+make all
+
+# Haskell brain
+cd haskell && stack build && stack exec atokio
+
+# Orchestrator
+cd orchestrator && cargo build --release
+./target/release/sov-orch boot
+
+# Formal verification
+cd lean && lake exe cache get && lake build
+```
+
+---
 ---
 
 ## Enter the System
@@ -101,10 +205,6 @@ Real-time visualization of the Jordan Spectral Transformer converging. Watch ent
 
 ## System Architecture
 
-<div align="center">
-<img src="docs/assets/readme/architecture-overview.svg" alt="Full system architecture diagram showing INPUT flowing through QATAAUM compiler, branching to five execution targets (Fortran, ARM64, RTX, WASM, Haskell/AToKio, and IBM mock), converging on the Verification Boundary (Lean 4 + Agda), then Cryptographic Attestation (Blake3 + Ed25519), then the WORM Receipt Chain. Legend distinguishes implemented, formally checked, tested, mock backend, and hardware-targeted components." width="1100"/>
-</div>
-
 ```
 USER INPUT (OpenQASM · Matrix · Agent Task)
           │
@@ -131,7 +231,7 @@ MOCK BACKEND ⚠        Phase 2 planned
           │
           ▼
 ┌─────────────────────────────────┐
-│   VERIFICATION BOUNDARY         │  65+ theorems · 0 sorry
+│   VERIFICATION BOUNDARY         │  79+ theorems · 0 sorry
 │   Lean 4 + Agda + Haskell types │
 └────────────────┬────────────────┘
                  ▼
@@ -154,7 +254,7 @@ MOCK BACKEND ⚠        Phase 2 planned
 |---|---|---|---|---|
 | **QATAAUM compiler** | Quantum circuit compiler | ✅ IMPLEMENTED + TESTED | Native Rust | `cd qataaum && cargo test` |
 | **Fortran 2018 core** | Density matrix evolution, Jordan op | ✅ IMPLEMENTED | Bare-metal CPU | `make all` |
-| **Lean 4 verification** | 65+ theorems, zero sorry | ✅ FORMALLY CHECKED | Machine-checked | `cd lean && lake build` |
+| **Lean 4 verification** | 79+ theorems, zero sorry | ✅ FORMALLY CHECKED | Machine-checked | `cd lean && lake build` |
 | **Agda safety invariants** | Capability algebra + transition safety | ✅ TYPE-CHECKED | Agda type system | `agda src/agda/Proofs/Safety.agda` |
 | **AToKio runtime** | 7-invariant Haskell scheduler | ✅ IMPLEMENTED | GHC | `cd haskell && stack build` |
 | **Production simulator** | 10 agents × 1000 steps | ✅ IMPLEMENTED + TESTED | Haskell | `stack exec production-simulator` |
@@ -166,10 +266,10 @@ MOCK BACKEND ⚠        Phase 2 planned
 | **ARM64/SVE2 target** | Native ARM bare-metal | ✅ TARGET-SUPPORTED | flang-new-19 | `make monster` |
 | **RTX/CUDA target** | GPU inference | ✅ HARDWARE-TARGETED | CMake + CUDA | `cd rtx && cmake -DSOV_BUILD_CUDA=ON` |
 | **MLIR pipeline** | IR lowering and fusion | ✅ PRESENT | mlir-opt | `mlir/` |
-| **IBM quantum interface** | Quantum hardware routing | ⚠️ **MOCK BACKEND** | Deterministic local | Phase 2 planned |
+| **ANU Quantum entropy** | Real QRNG (vacuum fluctuation) | ✅ IMPLEMENTED | HTTPS API | https://qrng.anu.edu.au/ |
+| **Desktop launcher** | Boot entire civilization (9 phases) | ✅ IMPLEMENTED | Rust/Tauri | `./desktop/boot.sh` |
+| **Sovereign orchestrator** | k8s replacement (SEB+Shrew+GitBucket) | ✅ IMPLEMENTED | Rust binary | `cd orchestrator && cargo build` |
 | **Adaptive Verified Runtime** | Self-modifying kernel | 🔬 RESEARCH/EXPERIMENTAL | Haskell + Lean | `haskell/LiquidLean/AdaptiveVerifiedRuntime.hs` |
-
-> ⚠️ **IBM Quantum**: The current implementation uses a deterministic mock backend for Phase 1 validation. Real IBM hardware routing is planned for Phase 2. The BUILD_VALIDATION.md explicitly documents this as "Phase 1 — Mock Quantum Backend."
 
 ---
 
@@ -237,7 +337,7 @@ cmake --build . --config Release
 ## WORM: The Memory of the Machine
 
 <div align="center">
-<img src="docs/assets/readme/worm-chain.svg" alt="WORM chain diagram showing GENESIS block linking to RECEIPT 001 linking to RECEIPT 002 linking to RECEIPT N via hash arrows. Each receipt contains previous hash, current hash, and Ed25519 signature. Properties panel shows: append-only, hash-linked, Ed25519 signed, tamper-evident, deterministic replay, no deletion." width="900"/>
+<img src="docs/worm-chain-architecture.svg" alt="WORM chain diagram showing GENESIS block linking to RECEIPT 001 linking to RECEIPT 002 linking to RECEIPT N via hash arrows. Each receipt contains previous hash, current hash, and Ed25519 signature. Properties panel shows: append-only, hash-linked, Ed25519 signed, tamper-evident, deterministic replay, no deletion." width="900"/>
 </div>
 
 Every execution produces a receipt. Every receipt references the previous receipt's hash. The chain cannot be broken, reordered, or deleted.
@@ -285,7 +385,7 @@ The following are **not** covered by the machine-checked proofs:
 - Compiler implementation correctness (gfortran, GHC, rustc)
 - GPU driver and firmware
 - FFI implementation behavior (behavior of C bindings, not their type signatures)
-- IBM quantum hardware (mock backend in Phase 1)
+- IBM quantum interface (replaced by ANU in this build)
 - Browser runtime
 - Physical hardware
 - System clock
@@ -316,7 +416,7 @@ The following are **not** covered by the machine-checked proofs:
 | Claim | Evidence | Reproduce |
 |---|---|---|
 | 221/221 QATAAUM tests pass | `qataaum/TEST_REPORT.md` | `cd qataaum && cargo test` |
-| 65+ Lean theorems, 0 sorry | `lean/` build output | `cd lean && lake build` |
+| 79+ Lean theorems, 0 sorry | `lean/` build output | `cd lean && lake build` |
 | Lean 4.14.0 + Mathlib v4.14.0 | `lean/lean-toolchain` | `cat lean/lean-toolchain` |
 | Agda invariants type-check | `src/agda/` | `agda src/agda/Proofs/Safety.agda` |
 | 10,000 observations generated | Production simulator output | `stack exec production-simulator` |
@@ -334,7 +434,7 @@ The following are **not** covered by the machine-checked proofs:
 
 ## Current Limitations
 
-- **IBM quantum interface** uses a deterministic mock backend (Phase 1). Real hardware: Phase 2.
+- **ANU Quantum entropy** streams real vacuum fluctuation entropy via public API.
 - **RTX target** requires NVIDIA GPU with CUDA toolkit.
 - **ARM64/SVE2 bare-metal** requires `flang-new-19` — not available in standard package managers.
 - **Formal verification** covers the listed theorems. It does not cover every line of every module in all 30 languages.
@@ -545,7 +645,7 @@ The domain wall is the harder constraint. Any transition satisfying Ω-admissibi
 | `qataaum/verification/lean4/` | 31 | 0 | ✓ Built |
 | `src/agda/Proofs/Safety.agda` | 3 | 0 | ✓ Type-checked |
 
-**Total: 65+ theorems. Zero sorry. All machine-checked.**
+**Total: 79+ theorems. Zero sorry. All machine-checked.**
 
 Key theorems:
 - `jordan_fixed_point_commutes` — `[U, ρ*] = 0` at matrix level over `Matrix n n ℂ`

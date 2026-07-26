@@ -25,6 +25,7 @@ module jordan_block
   use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, &
        c_size_t, c_loc
   use, intrinsic :: iso_fortran_env, only: int64, real64, int8
+  use, intrinsic :: iso_c_binding, only: c_ptr, c_loc, c_int64_t, c_double, c_f_pointer
   use sov_monster_kernel, only: dp, ci, czero, &
        sov_zmexp_scaling_squaring, sov_apl_step_zgemm_fused, &
        sov_blake3_hash_matrix, sov_bifrost_sign, &
@@ -36,6 +37,7 @@ module jordan_block
   public :: jordan_fib
   public :: jordan_fixpoint
   public :: jordan_gradient
+  public :: PHI_INV, PHI, PHI_IN2
 
   ! φ = (1 + √5) / 2 — golden ratio
   real(dp), parameter :: PHI     = 1.6180339887498948482_dp
@@ -61,12 +63,15 @@ contains
     integer(c_int64_t), intent(in),  value :: n
     real(dp),           intent(in),  value :: dt
     type(c_ptr),        intent(in),  value :: sk_ptr, pk_ptr
-    type(c_ptr),        intent(in),  value :: out_rho_ptr, hash_ptr, sig_ptr
+    type(c_ptr),        value :: out_rho_ptr, hash_ptr, sig_ptr
 
     complex(dp), pointer :: H(:,:), rho(:,:), out_rho(:,:)
     complex(dp), allocatable :: U(:,:), evolved(:,:)
     real(dp) :: trace_r
-    integer(c_int64_t) :: i
+    integer(c_int64_t) :: i, j, ii, k
+    complex(dp) :: comm
+    real(dp) :: eigval_approx, entropy_bound, delta_t
+    logical :: anomaly_detected
 
     call c_f_pointer(H_ptr,       H,       [n, n])
     call c_f_pointer(rho_ptr,     rho,     [n, n])
@@ -91,7 +96,6 @@ contains
     !$omp parallel do collapse(2) default(none) &
     !$omp shared(out_rho,evolved,rho,n) private(i)
     do i = 1, n
-      integer(c_int64_t) :: j
       do j = 1, n
         out_rho(i,j) = PHI_INV * evolved(i,j) + PHI_IN2 * rho(i,j)
       end do
@@ -132,7 +136,6 @@ contains
       ! 2. FAULT INJECTION PROTECTION: Enforce ρ* purity via entropy bound
       entropy_bound = 0.0_dp
       do ii = 1, n
-        real(dp) :: eigval_approx
         eigval_approx = real(out_rho(ii,ii))
         if (eigval_approx > 1.0e-15_dp) then
           entropy_bound = entropy_bound - eigval_approx * log(eigval_approx)
@@ -258,7 +261,7 @@ contains
     ! Any interception alters [U,ρ*]=0 → key corruption → WORM mismatch
     ! ═══════════════════════════════════════════════════════════════
     block
-      integer(i8) :: freshness_hash(32), latest_worm_hash(32)
+      integer(i8), target :: freshness_hash(32), latest_worm_hash(32)
       logical :: is_fresh
       integer(c_int64_t) :: fh_idx
 
@@ -328,10 +331,11 @@ contains
     complex(dp), pointer :: H_list(:,:,:), rho(:,:)
     real(dp),    pointer :: dt_list(:)
     integer(i8), pointer :: receipts(:)
-    complex(dp), allocatable :: rho_cur(:,:), rho_nxt(:,:)
+    complex(dp), allocatable, target :: rho_cur(:,:), rho_nxt(:,:)
     real(dp) :: fib_a, fib_b, fib_c, diff_norm
     integer(c_int64_t) :: k, i, j
-    integer(c_int64_t), parameter :: RECEIPT_SZ = 96  ! 32 hash + 64 sig
+    integer(c_int64_t), parameter :: RECEIPT_SZ = 96
+    type(c_ptr) :: hash_ptr, sig_ptr  ! 32 hash + 64 sig
 
     call c_f_pointer(H_list_ptr,  H_list,   [n_layers, n, n])
     call c_f_pointer(dt_list_ptr, dt_list,  [n_layers])
@@ -348,7 +352,6 @@ contains
 
     ! APL: ρ ← \ jordan_step over H_list    — prefix scan across layers
     do k = 1, n_layers
-      type(c_ptr) :: hash_ptr, sig_ptr
       hash_ptr = c_loc(receipts((k-1)*RECEIPT_SZ + 1))
       sig_ptr  = c_loc(receipts((k-1)*RECEIPT_SZ + 33))
 
@@ -395,7 +398,7 @@ contains
     type(c_ptr),        intent(in),  value :: hash_ptr, sig_ptr
 
     complex(dp), pointer :: rho(:,:)
-    complex(dp), allocatable :: rho_nxt(:,:)
+    complex(dp), allocatable, target :: rho_nxt(:,:)
     real(dp) :: diff_norm
     integer(c_int64_t) :: k, i, j
 
@@ -440,7 +443,10 @@ contains
     real(dp),           intent(in),  value :: dt
 
     complex(dp), pointer :: rho_fwd(:,:), lambda(:,:), dH(:,:)
-    integer(c_int64_t) :: i, j, k
+    integer(c_int64_t) :: i, j, ii, k
+    complex(dp) :: comm
+    real(dp) :: eigval_approx, entropy_bound, delta_t
+    logical :: anomaly_detected
 
     call c_f_pointer(rho_fwd_ptr, rho_fwd, [n, n])
     call c_f_pointer(lambda_ptr,  lambda,  [n, n])
@@ -452,7 +458,7 @@ contains
     !$omp shared(dH,lambda,rho_fwd,n,dt) private(i,j,k)
     do i = 1, n
       do j = 1, n
-        complex(dp) :: comm; comm = czero
+        comm = czero
         do k = 1, n
           comm = comm + lambda(i,k)*rho_fwd(k,j) - rho_fwd(i,k)*lambda(k,j)
         end do

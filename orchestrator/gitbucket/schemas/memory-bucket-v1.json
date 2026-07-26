@@ -1,0 +1,127 @@
+{
+  "$schema": "https://snapkitty.os/schema/memory-bucket-v1.json",
+  "$id": "https://snapkitty.os/schema/memory-bucket-v1.json",
+  "title": "SnapKitty Memory Bucket v1",
+  "description": "Canonical JSON schema for GitBucket memory entries. Every commit produces one bucket.",
+  "type": "object",
+  "required": ["id", "git_hash", "parent_hash", "timestamp", "author", "branch", "type", "summary", "worm_seal"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^mem_[0-9]{6}$",
+      "description": "Unique bucket identifier"
+    },
+    "git_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Full SHA-1 commit hash"
+    },
+    "parent_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Parent commit hash (empty for genesis)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of commit"
+    },
+    "author": {
+      "type": "object",
+      "required": ["id", "pubkey"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Author identifier"
+        },
+        "pubkey": {
+          "type": "string",
+          "pattern": "^ed25519:.+$",
+          "description": "Ed25519 public key"
+        }
+      }
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch name"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["architecture", "implementation", "decision", "repair", "audit", "fiscal_decision"],
+      "description": "Commit classification"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Structured summary of the commit"
+    },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Extracted keywords for indexing"
+    },
+    "entities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Named entities referenced in the commit"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "role", "diff_hash"],
+        "properties": {
+          "path": { "type": "string" },
+          "role": {
+            "type": "string",
+            "enum": ["core", "new", "modified", "deleted", "config", "test", "doc"]
+          },
+          "diff_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "description": "SHA-256 of the diff hunk"
+          }
+        }
+      },
+      "description": "Files touched in this commit"
+    },
+    "related": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Related bucket IDs or external refs (issues, PRs)"
+    },
+    "trust": {
+      "type": "string",
+      "enum": ["verified", "pending", "disputed"],
+      "description": "Trust level after evaluation"
+    },
+    "immutable": {
+      "type": "boolean",
+      "const": true,
+      "description": "Buckets are always immutable"
+    },
+    "worm_seal": {
+      "type": "object",
+      "required": ["algorithm", "signature", "signer", "audit_ref"],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "const": "Ed25519"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Hex-encoded Ed25519 signature"
+        },
+        "signer": {
+          "type": "string",
+          "description": "Signer identifier"
+        },
+        "audit_ref": {
+          "type": "string",
+          "format": "uuid",
+          "description": "UUID linking to audit log entry"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

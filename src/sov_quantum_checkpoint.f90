@@ -24,8 +24,8 @@ module sov_quantum_checkpoint
     integer(i4)  :: version = CHECKPOINT_VERSION
     integer(i4)  :: num_qubits = 0
     integer(i4)  :: num_seals = 0
-    integer(i64) :: timestamp = 0_i64
-    integer(i64) :: worm_counter = 0_i64
+    integer(i8) :: timestamp = 0_i8
+    integer(i8) :: worm_counter = 0_i8
     character(len=64) :: system_id = ''
   end type sov_checkpoint_header
 
@@ -123,7 +123,7 @@ contains
     allocate(chain%seals(1024))
     chain%capacity = 1024
     chain%length = 0
-    chain%counter = 0_i64
+    chain%counter = 0_i8
     chain%initialized = .true.
 
     num_qubits_loaded = 0

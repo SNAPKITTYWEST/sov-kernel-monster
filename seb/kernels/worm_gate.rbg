@@ -1,0 +1,39 @@
+CORPUS SEB_KERNELS
+
+RECORD KERNEL WORM_GATE
+FIELD INPUT = "job_route_plan"
+FIELD OUTPUT = "sealed_receipt"
+FIELD STATUS = "active"
+FIELD ENGINE = "seb_lattice_c"
+FIELD CIRCUIT = "GF_2_8_cyclic_convolution"
+FIELD COMMITMENT_SIZE = "32"
+FIELD PAYLOAD_SIZE = "64"
+FIELD RECORD_SIZE = "96"
+
+// SEB lattice circuit (seb_lattice.c)
+// commitment[k] = prev[k] XOR payload[(k-1)&31] XOR payload[32+((k-2)&31)]
+// K0=1 (identity) K1=x K2=x^2 over GF(2^8)[x]/(x^32+1) AES poly 0x11B
+FIELD SEAL_FUNCTION = "seb_lattice_commit"
+FIELD VERIFY_FUNCTION = "seb_lattice_verify"
+FIELD GENESIS_TIP = "0000000000000000000000000000000000000000000000000000000000000000"
+END
+
+RECORD POLICY WORM_GATE_POLICY
+FIELD GATE_1 = "plasma_verify: ed25519_verify(agent_id, event_hash, sig)"
+FIELD GATE_2 = "chain_intact: footer.prev_hash == tip_hash"
+FIELD GATE_3 = "offset_monotonic: header.offset > tip_offset"
+FIELD GATE_4 = "commitment_valid: circuit(prev_tip || header[0:64]) == footer.event_hash"
+FIELD GATE_5 = "fiscal_gate: weight < MAX or treasury_balance >= weight"
+FIELD GATE_6 = "constitution_gate: SEB_Constitution.authorize(proposal) == Approved"
+FIELD ON_FAILURE = "halt: no output, no receipt, no state change"
+END
+
+RECORD ROUTE WORM_GATE_ROUTES
+FIELD APPROVED = "seb_kernel_nif:append_event -> WORM chain -> receipt"
+FIELD FISCAL_SETTLE = "human_touch:review_queue -> approval -> append_event"
+FIELD SOVEREIGN_ROOT = "human_touch:review_queue -> council_quorum -> append_event"
+FIELD DENIED = "seb_datalog_bridge:denied_log -> audit_only"
+END
+
+SEAL SHA256
+END

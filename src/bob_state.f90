@@ -6,6 +6,7 @@
 module bob_state
     use bob_kinds
     use bob_errors
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
     implicit none
     private
     
@@ -140,8 +141,8 @@ contains
         
         ! Check for NaN or Inf
         do i = 1, this%dim
-            if (isnan(real(this%amplitudes(i))) .or. &
-                isnan(aimag(this%amplitudes(i))) .or. &
+            if (ieee_is_nan(real(this%amplitudes(i))) .or. &
+                ieee_is_nan(aimag(this%amplitudes(i))) .or. &
                 abs(this%amplitudes(i)) > huge(1.0_wp)) then
                 call bob_set_error(BOB_ERROR_INVALID_STATE, &
                     "State contains NaN or Inf", "state_validate")

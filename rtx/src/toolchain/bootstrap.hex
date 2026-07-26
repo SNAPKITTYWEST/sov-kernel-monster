@@ -1,0 +1,19 @@
+; First Binary Output — Bootstrap Compiler (Artifact 4)
+; Sovereign Compute Unit — Ahmad Ali Parr · SnapKitty · 2026
+
+00010000: 09 00 00 00 00 00 00 00 ; LOAD r0, parser_table
+00010008: 09 01 00 00 00 00 01 00 ; LOAD r1, input_buffer
+00010010: 07 02 00 01 00 00 00 00 ; ADD r2, r0, r1 ; parse loop
+00010018: 08 03 02 00 00 00 00 10 ; MUL r3, r2, 16 ; stride
+00010020: 09 04 00 00 00 00 00 20 ; LOAD r4, shape_table
+00010028: 07 05 03 04 00 00 00 00 ; ADD r5, r3, r4 ; shape lookup
+00010030: 01 06 05 00 00 00 00 00 ; RMSN r6, r5 ; normalize
+00010038: 02 07 06 00 00 00 00 00 ; QKV r7, r6
+00010040: 03 08 07 07 07 00 00 00 ; ATTN r8, r7, r7, r7
+00010048: 04 09 08 00 00 00 00 00 ; OUTP r9, r8
+00010050: 07 0A 09 06 00 00 00 00 ; ADD r10, r9, r6 ; residual
+00010058: 0D 00 00 00 00 00 00 00 ; HALT
+
+; Certificate appended at 0x0200_2000 (WORM Receipts)
+; Ed25519 signature over SHA-256(program_binary)
+; Proof terms: shape_ok/1 × N, allocated/3 × R, length_bound

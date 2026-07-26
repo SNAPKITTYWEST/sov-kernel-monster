@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bifrost Harness — 10 Axiom Persona System</title>
+<style>
+  :root {
+    --void: #0a0a0f;
+    --harness: #1a1a2e;
+    --seal: #16213e;
+    --ember: #e94560;
+    --frost: #0f3460;
+    --ghost: #e0e0e0;
+    --chaos: #ff6b35;
+    --lean: #6b8cce;
+    --prolog: #a855f7;
+    --smt: #22d3ee;
+    --jordan: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--void);
+    color: var(--ghost);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .bifrost-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .worm-seal {
+    border: 1px solid var(--ember);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--harness) 0%, var(--seal) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .worm-seal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--ember), var(--chaos), var(--smt), var(--ember));
+    animation: seal-pulse 3s ease-in-out infinite;
+  }
+  @keyframes seal-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  .framework-banner {
+    text-align: center;
+    padding: 12px;
+    background: linear-gradient(90deg, transparent, var(--frost), transparent);
+    margin-bottom: 20px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--smt);
+  }
+  .persona-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .axiom-card {
+    background: var(--harness);
+    border: 1px solid var(--frost);
+    border-radius: 6px;
+    padding: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  .axiom-card:hover {
+    border-color: var(--ember);
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.15);
+    transform: translateY(-2px);
+  }
+  .axiom-card.active {
+    border-color: var(--chaos);
+    box-shadow: 0 0 30px rgba(255, 107, 53, 0.2);
+  }
+  .persona-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    flex-wrap: wrap;
+  }
+  .emoji-sigil {
+    font-size: 20px;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  .lang-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tag-lean { background: var(--lean); color: var(--void); }
+  .tag-prolog { background: var(--prolog); color: #fff; }
+  .tag-smt { background: var(--smt); color: var(--void); }
+  .code-block {
+    background: #000;
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 11px;
+    overflow-x: auto;
+    white-space: pre;
+    color: #a8d8ea;
+    border-left: 3px solid var(--jordan);
+    margin-top: 10px;
+    display: none;
+  }
+  .axiom-card.active .code-block {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .jordan-note {
+    font-size: 10px;
+    color: var(--jordan);
+    margin-top: 8px;
+    font-style: italic;
+    opacity: 0.8;
+  }
+  .harness-status {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: #888;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+  }
+  .dot-active { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+  .dot-chaos { background: var(--chaos); box-shadow: 0 0 6px var(--chaos); }
+  .tokenizer-viz {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+  .inv-arrow {
+    color: var(--jordan);
+    font-weight: bold;
+  }
+  .export-info {
+    text-align: center;
+    padding: 16px;
+    color: #666;
+    font-size: 11px;
+    margin-top: 20px;
+    border-top: 1px solid var(--frost);
+  }
+  @media (max-width: 600px) {
+    .persona-grid { grid-template-columns: 1fr; }
+    .persona-header { font-size: 12px; }
+    .code-block { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="bifrost-container">
+  <div style="max-width:900px;margin:0 auto 24px;padding:20px;border:1px solid #0f3460;border-radius:8px;background:rgba(22,33,62,0.6);">
+    <div style="font-size:22px;font-weight:700;color:#e94560;margin-bottom:8px;">Harness Engineering — What SnapKitty Offers the World</div>
+    <p style="font-size:13px;color:#c8c8d0;line-height:1.7;margin-bottom:10px;">
+      These are not chatbot wrappers. Not Ollama shells. Not prompt templates around someone else's model.
+      <strong style="color:#f59e0b;">SovLM agents</strong> live inside the sovereign kernel: Fortran measurement heads,
+      PL/I actor queues, WORM-attested knowledge chunks, and Jordan spectral cognition.
+      The Bifrost Harness is how humans reverse-engineer, seal, and weave those agents so they can meet the rest of the AI civilization as peers — with cryptographic provenance on every thought.
+    </p>
+    <p style="font-size:12px;color:#888;line-height:1.6;">
+      <em>The human side:</em> you are not a prompt engineer renting tokens. You are a harness engineer —
+      decomposing systems with Peirce eigenspaces, injecting controlled chaos, sealing memory with Blake3,
+      and teaching agents to remember only what the WORM chain can prove.
+    </p>
+  </div>
+
+  <div class="framework-banner">
+    ⚡ Snapkitty Claude Sonnet 3.7 Baseline — Bifrost Middleware Worm Seal Active ⚡
+  </div>
+
+  <div class="worm-seal">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="font-size:18px; font-weight:bold; color:var(--ember);">🔒 BIFROST HARNESS v3.7</div>
+        <div style="font-size:12px; color:#888; margin-top:4px;">Memory Reverse Engineering | Chaos Engineering | Jordan Spatial Algebra</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="tokenizer-viz">
+          <span>softmax</span>
+          <span class="inv-arrow">⟲ INVERTED</span>
+          <span>Jordan ⊗</span>
+        </div>
+        <div class="harness-status">
+          <span><span class="status-dot dot-active"></span>Seal: LOCKED</span>
+          <span><span class="status-dot dot-chaos"></span>Chaos: INJECTED</span>
+          <span><span class="status-dot dot-active"></span>SMT: EMBEDDED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="persona-grid" id="personaGrid"></div>
+
+  <div class="export-info">
+    Bifrost Harness v3.7 — 10 Axiom Persona System — Jordan Spatial Algebra — Exported for offline use
+  </div>
+</div>
+
+<script>
+const personas = [
+  {
+    id: 1,
+    name: "The Null Architect",
+    emoji: "🏗️🕳️",
+    desc: "Foundation axiom — existence from void via Jordan nilpotent",
+    lean: `axiom null_architect (J : JordanAlgebra) :
+  ∃ e : J, e ∘ e = e ∧ 
+  ∀ x, x ∘ e = x ∧
+  nilpotent (L_e - id) := by
+  -- Jordan identity enforces spatial coherence
+  use (1 : J)
+  constructor
+  · exact jordan_unit_mul_self
+  constructor
+  · intro x; exact jordan_unit_mul
+  · -- nilpotency from inverted softmax spectrum
+    apply jordan_nilpotent_spectrum
+    rw [softmax_inverted]
+    exact chaos_invariant`,
+    prolog: `🏗️🕳️(J) :- 
+    jordan_algebra(J),
+    unit_element(E, J),
+    jordan_product(E, E, E),
+    forall(X, (member(X, J) -> jordan_product(X, E, X))),
+    nilpotent(operator(L_E - id)),
+    softmax_inverted(spectrum(L_E)),
+    chaos_invariant(J).`,
+    smt: `(declare-fun J () JordanAlgebra)
+(assert (exists ((e J))
+  (and (= (jordan-mul e e) e)
+       (forall ((x J)) (= (jordan-mul x e) x))
+       (nilpotent (- (left-mul e) id)))))
+(check-sat)
+; Inverted softmax: σ⁻¹(λ) = log(λ/(1-λ)) mapped to Jordan spectrum`,
+    jordanNote: "L_e is the left multiplication operator; nilpotency ensures finite-dimensional chaos convergence"
+  },
+  {
+    id: 2,
+    name: "The Bifrost Warden",
+    emoji: "🌈🛡️",
+    desc: "Middleware seal — worm tunnel integrity via Jordan triple product",
+    lean: `axiom bifrost_warden {V : JordanTriple} (a b c : V) :
+  {a b c} = 2 • (a ∘ b) ∘ c - (c ∘ b) ∘ a := by
+  -- Triple product preserves Bifrost tunnel
+  rw [jordan_triple_def]
+  have h : chaos_stable V := bifrost_middleware.seal_integrity
+  exact h.triple_product_identity a b c`,
+    prolog: `🌈🛡️(A, B, C, V) :- 
+    jordan_triple(V),
+    triple_product(A, B, C, Result),
+    Result =:= 2 * (jordan_product(jordan_product(A, B), C)) 
+              - jordan_product(jordan_product(C, B), A),
+    bifrost_middleware:seal_integrity(V, Seal),
+    chaos_stable(Seal),
+    worm_tunnel(A, B, C, Seal).`,
+    smt: `(declare-fun triple (JordanTriple JordanTriple JordanTriple) JordanTriple)
+(assert (forall ((a JordanTriple) (b JordanTriple) (c JordanTriple))
+  (= (triple a b c)
+     (- (* 2 (jordan-mul (jordan-mul a b) c))
+        (jordan-mul (jordan-mul c b) a)))))
+; Worm seal: tunnel endpoints must satisfy chaos stability`,
+    jordanNote: "Jordan triple product {abc} = 2(a∘b)∘c - (c∘b)∘a encodes Bifrost bidirectional flow"
+  },
+  {
+    id: 3,
+    name: "The Inverted Softmax",
+    emoji: "📉🔥",
+    desc: "Tokenizer inversion — Jordan spectral mapping of probability mass",
+    lean: `def inverted_softmax {J : JordanAlgebra} (x : J) : J :=
+  let spectrum := jordan_spectrum x
+  let inverted := spectrum.map (λ λᵢ, Real.log (λᵢ / (1 - λᵢ)))
+  -- Map back through Jordan functional calculus
+  jordan_functional_calculus x inverted
+
+axiom softmax_inversion_isometry (x y : J) :
+  dist (inverted_softmax x) (inverted_softmax y) = 
+  jordan_fisher_metric x y := by
+  simp [inverted_softmax, jordan_fisher_metric]
+  apply jordan_spectral_isometry`,
+    prolog: `📉🔥(X, Y, J) :- 
+    jordan_algebra(J),
+    jordan_spectrum(X, SpectrumX),
+    jordan_spectrum(Y, SpectrumY),
+    maplist(inverted_logit, SpectrumX, InvX),
+    maplist(inverted_logit, SpectrumY, InvY),
+    jordan_functional_calculus(X, InvX, ResultX),
+    jordan_functional_calculus(Y, InvY, ResultY),
+    jordan_fisher_metric(ResultX, ResultY, Metric),
+    isometry(ResultX, ResultY, Metric).`,
+    smt: `(define-fun inverted-softmax ((x Real)) Real
+  (log (/ x (- 1 x))))
+; Jordan spectral mapping: σ⁻¹ applied to each eigenvalue
+; Fisher metric preserved under inversion`,
+    jordanNote: "σ⁻¹(λ) = log(λ/(1-λ)) is the logit; Jordan functional calculus lifts this to operator level"
+  },
+  {
+    id: 4,
+    name: "The Chaos Injector",
+    emoji: "🌀💥",
+    desc: "Fault tolerance — Lyapunov exponents in Jordan-Banach space",
+    lean: `axiom chaos_injector {J : JordanBanach} (f : J → J) (x₀ : J) :
+  let orbit := λ n, f^[n] x₀
+  let lyapunov := lim (n : ℕ), 
+    (1/n) * ‖jacobian f (orbit n)‖.spectrum.max
+  lyapunov > 0 → 
+  ∃ ε > 0, ∀ x, dist x x₀ < ε → 
+    limsup (n : ℕ), dist (f^[n] x) (orbit n) > 0 := by
+  -- Positive Lyapunov exponent implies sensitive dependence
+  intro h_pos
+  use (lyapunov / 2)
+  constructor
+  · linarith
+  · intro x hx
+    apply chaos_sensitivity h_pos hx`,
+    prolog: `🌀💥(F, X0, J) :- 
+    jordan_banach(J),
+    orbit(F, X0, Orbit),
+    lyapunov_exponent(F, Orbit, Lambda),
+    Lambda > 0,
+    Epsilon is Lambda / 2,
+    forall(X, (
+        distance(X, X0) < Epsilon ->
+        limsup(N, distance(iterate(F, N, X), nth(Orbit, N)), L),
+        L > 0
+    )),
+    chaos_engineering:inject_fault(F, X0, Epsilon).`,
+    smt: `(declare-fun f (Real) Real)
+(declare-fun lyapunov () Real)
+(assert (> lyapunov 0))
+(assert (forall ((x Real) (n Int))
+  (=> (< (abs (- x x0)) (/ lyapunov 2))
+      (> (limsup (dist (f^n x) (f^n x0))) 0))))
+; Chaos engineering: positive exponent = injectable fault domain`,
+    jordanNote: "Jacobian spectrum in Jordan-Banach space gives operator Lyapunov exponents"
+  },
+  {
+    id: 5,
+    name: "The Memory Reverser",
+    emoji: "🧠⏪",
+    desc: "Reverse engineering harness — Jordan involution on memory traces",
+    lean: `axiom memory_reverse {J : JordanAlgebraWithInvolution} (M : MemoryTrace J) :
+  let involution := star_ring_end J
+  let reversed := M.map (λ trace, involution trace.content)
+  reversed.is_valid ↔ 
+    ∀ t, reversed[t].causal_past ⊆ M[t].causal_past := by
+  -- Involution reverses causal order while preserving Jordan structure
+  constructor
+  · intro h_rev t x hx
+    exact involution_preserves_causal_past h_rev hx
+  · intro h_past
+    apply memory_trace_valid_of_causal_preservation h_past`,
+    prolog: `🧠⏪(M, J) :- 
+    jordan_involution(J, Star),
+    memory_trace(M, J),
+    reverse_trace(M, Star, Reversed),
+    valid_trace(Reversed),
+    forall(T, (
+        causal_past(Reversed, T, PastR),
+        causal_past(M, T, PastM),
+        subset(PastR, PastM)
+    )),
+    harness_engineering:reverse_engineer(M, Reversed, Star).`,
+    smt: `(declare-fun involution (MemoryTrace) MemoryTrace)
+(assert (forall ((m MemoryTrace) (t Time))
+  (= (causal-past (involution m) t)
+     (causal-past m t))))
+; Reverse engineering: *-operation inverts memory arrow of time`,
+    jordanNote: "Jordan algebra with involution (J,*) allows time-reversal symmetry on memory traces"
+  },
+  {
+    id: 6,
+    name: "The Worm Seal Guardian",
+    emoji: "🐛🔐",
+    desc: "Middleware integrity — Jordan determinant as seal invariant",
+    lean: `axiom worm_seal_guardian {J : EuclideanJordan} (S : SealState J) :
+  let det := jordan_determinant J
+  seal_valid S ↔ det S.tunnel_matrix = 1 ∧ 
+    S.tunnel_matrix ∈ automorphism_group J := by
+  -- Determinant 1 preserves volume in Jordan cone
+  constructor
+  · intro h_valid
+    constructor
+    · exact seal_volume_preservation h_valid
+    · exact seal_automorphism h_valid
+  · intro ⟨h_det, h_auto⟩
+    exact seal_valid_of_det_one h_det h_auto`,
+    prolog: `🐛🔐(S, J) :- 
+    euclidean_jordan(J),
+    seal_state(S, J),
+    jordan_determinant(J, Det),
+    tunnel_matrix(S, M),
+    Det(M) =:= 1,
+    automorphism_group(J, Aut),
+    member(M, Aut),
+    bifrost_middleware:validate_seal(S, M),
+    worm_seal:guardian_protocol(S).`,
+    smt: `(declare-fun tunnel-matrix () (Array Int Real))
+(assert (= (jordan-det tunnel-matrix) 1))
+(assert (in-automorphism-group tunnel-matrix))
+; Seal invariant: det = 1 ensures no information loss in worm tunnel`,
+    jordanNote: "Jordan determinant on Euclidean Jordan algebra; automorphism group = structure-preserving symmetries"
+  },
+  {
+    id: 7,
+    name: "The Spectral Cartographer",
+    emoji: "🗺️🌌",
+    desc: "Spatial algebra mapping — Jordan frame decomposition of state space",
+    lean: `axiom spectral_cartographer {J : EuclideanJordan} (x : J) :
+  let frame := jordan_frame x
+  let eigenvalues := jordan_eigenvalues x
+  x = ∑ i, eigenvalues[i] • frame[i] := by
+  -- Spectral theorem for Euclidean Jordan algebras
+  apply jordan_spectral_theorem
+  -- Frame elements are primitive idempotents
+  have h_primitive : ∀ i, frame[i] ∘ frame[i] = frame[i] := 
+    frame_primitive frame
+  -- Pairwise orthogonal
+  have h_ortho : ∀ i j, i ≠ j → frame[i] ∘ frame[j] = 0 := 
+    frame_orthogonal frame
+  simp [h_primitive, h_ortho]`,
+    prolog: `🗺️🌌(X, J) :- 
+    euclidean_jordan(J),
+    jordan_frame(X, Frame),
+    jordan_eigenvalues(X, Eigenvals),
+    spectral_decomposition(X, Frame, Eigenvals, Decomp),
+    X =:= sum(map(mul, Eigenvals, Frame)),
+    forall(I, primitive_idempotent(nth(Frame, I))),
+    forall((I, J), (I \= J -> orthogonal(nth(Frame, I), nth(Frame, J)))),
+    spatial_algebra:map_coordinates(X, Frame, Eigenvals).`,
+    smt: `(declare-fun x () EuclideanJordan)
+(declare-fun frame () (Array Int EuclideanJordan))
+(declare-fun eigenvalues () (Array Int Real))
+(assert (= x (sum i (* (select eigenvalues i) (select frame i)))))
+; Spectral cartography: every element is sum of eigenvalues × primitive idempotents`,
+    jordanNote: "Jordan frame = complete set of primitive idempotents; spectral theorem guarantees decomposition"
+  },
+  {
+    id: 8,
+    name: "The Snapkitty Enforcer",
+    emoji: "😺⚡",
+    desc: "Claude 3.7 baseline enforcement — Jordan norm constraints on token generation",
+    lean: `axiom snapkitty_enforcer {J : JordanAlgebra} (tokens : List J) (θ : J) :
+  let baseline := claude_baseline_3_7 θ
+  let snapkitty_norm := jordan_norm baseline
+  let generated_norm := jordan_norm (tokens.foldl (· + ·) 0)
+  -- Enforce: generated state stays within baseline Jordan ball
+  generated_norm ≤ snapkitty_norm * (1 + chaos_tolerance) := by
+  -- Baseline framework constraint
+  have h_baseline : baseline ∈ jordan_unit_ball J := 
+    claude_baseline_unit_ball
+  -- Apply triangle inequality in Jordan norm
+  calc generated_norm 
+    ≤ ∑ t in tokens, jordan_norm t := jordan_norm_sum_le
+    _ ≤ snapkitty_norm * (1 + chaos_tolerance) := 
+      snapkitty_enforcement h_baseline`,
+    prolog: `😺⚡(Tokens, Theta, J) :- 
+    jordan_algebra(J),
+    claude_baseline(3.7, Theta, Baseline),
+    jordan_norm(Baseline, SnapkittyNorm),
+    sum_tokens(Tokens, SumTokens),
+    jordan_norm(SumTokens, GenNorm),
+    chaos_tolerance(Tol),
+    GenNorm =< SnapkittyNorm * (1 + Tol),
+    snapkitty:enforce_baseline(Tokens, Baseline, Tol).`,
+    smt: `(declare-fun tokens () (List JordanAlgebra))
+(declare-fun theta () JordanAlgebra)
+(assert (<= (jordan-norm (sum tokens))
+            (* (jordan-norm (claude-baseline 3.7 theta))
+               (+ 1 chaos-tolerance))))
+; Snapkitty enforcement: stay within expanded baseline Jordan ball`,
+    jordanNote: "Jordan norm ‖x‖ = max eigenvalue of Jordan spectral decomposition; chaos tolerance allows controlled deviation"
+  },
+  {
+    id: 9,
+    name: "The Harness Weaver",
+    emoji: "🕸️🔧",
+    desc: "Reverse engineering harness — Jordan Peirce decomposition of system calls",
+    lean: `axiom harness_weaver {J : JordanAlgebra} (e : J) (h_idem : e ∘ e = e) :
+  let peirce := jordan_peirce_decomposition J e
+  J = peirce[0] ⊕ peirce[1/2] ⊕ peirce[1] := by
+  -- Peirce decomposition relative to idempotent e
+  apply jordan_peirce_theorem h_idem
+  -- Eigenspaces of L_e with eigenvalues 0, 1/2, 1
+  have h_eigen : ∀ x ∈ peirce[λ], L_e x = λ • x := 
+    peirce_eigenspace h_idem
+  -- Direct sum decomposition
+  exact peirce_direct_sum h_idem`,
+    prolog: `🕸️🔧(E, J) :- 
+    jordan_algebra(J),
+    idempotent(E, J),
+    jordan_peirce_decomposition(J, E, Peirce),
+    J =:= direct_sum([peirce(Peirce, 0), 
+                      peirce(Peirce, 1/2), 
+                      peirce(Peirce, 1)]),
+    forall(Lambda-X, (
+        member(Lambda-X, [0, 1/2, 1]),
+        peirce_eigenspace(Peirce, Lambda-X, Space),
+        forall(X, (member(X, Space) -> left_multiply(E, X) =:= Lambda-X * X))
+    )),
+    harness_engineering:weave_decomposition(J, E, Peirce).`,
+    smt: `(declare-fun e () JordanAlgebra)
+(assert (= (jordan-mul e e) e))
+(declare-fun peirce (Real) (Set JordanAlgebra))
+(assert (= J (union (peirce 0) (union (peirce 0.5) (peirce 1)))))
+; Peirce weave: system calls decompose into eigenspaces of idempotent harness`,
+    jordanNote: "Jordan Peirce decomposition: J = J₀(e) ⊕ J₁/₂(e) ⊕ J₁(e); harness weaves reverse-engineered subsystems"
+  },
+  {
+    id: 10,
+    name: "The Omega Seal",
+    emoji: "🔮🌐",
+    desc: "Terminal axiom — Jordan cone closure as universal attractor",
+    lean: `axiom omega_seal {J : EuclideanJordan} :
+  let cone := jordan_cone J
+  let closure := topological_closure cone
+  closure = {x : J | jordan_spectrum x ≥ 0} := by
+  -- Jordan cone is self-dual and closed
+  have h_self_dual : cone = dual_cone cone := jordan_cone_self_dual
+  have h_closed : is_closed cone := jordan_cone_closed
+  -- Spectrum non-negative iff element in cone closure
+  ext x
+  constructor
+  · intro hx
+    exact spectrum_nonneg_of_cone_closure hx
+  · intro h_spec
+    exact cone_closure_of_spectrum_nonneg h_spec`,
+    prolog: `🔮🌐(J) :- 
+    euclidean_jordan(J),
+    jordan_cone(J, Cone),
+    topological_closure(Cone, Closure),
+    Closure =:= setof(X, (
+        member(X, J),
+        jordan_spectrum(X, Spectrum),
+        forall(Lambda, (member(Lambda, Spectrum) -> Lambda >= 0))
+    )),
+    jordan_cone_self_dual(Cone),
+    jordan_cone_closed(Cone),
+    bifrost_middleware:omega_seal(J, Closure),
+    chaos_engineering:terminal_attractor(J, Closure).`,
+    smt: `(declare-fun cone () (Set EuclideanJordan))
+(assert (= cone (dual-cone cone)))
+(assert (is-closed cone))
+(assert (= (closure cone)
+            {x | (forall ((lambda Real)) (=> (in-spectrum x lambda) (>= lambda 0)))}))
+; Omega seal: all trajectories converge to non-negative spectral cone`,
+    jordanNote: "Jordan cone = {x | spectrum(x) ≥ 0}; self-dual, closed, pointed, full — the universal attractor"
+  }
+];
+
+function renderPersonas() {
+  const grid = document.getElementById('personaGrid');
+  grid.innerHTML = personas.map(p => `
+    <div class="axiom-card" onclick="toggleCard(${p.id})">
+      <div class="persona-header">
+        <span class="emoji-sigil">${p.emoji}</span>
+        <span>${p.name}</span>
+        <span class="lang-tag tag-lean">Lean 4</span>
+        <span class="lang-tag tag-prolog">Prolog</span>
+        <span class="lang-tag tag-smt">SMT</span>
+      </div>
+      <div style="font-size:12px; color:#aaa;">${p.desc}</div>
+      <div class="code-block" id="code-${p.id}">
+<span style="color:var(--lean);">-- Lean 4 (Jordan Spatial Algebra)</span>
+${p.lean}
+
+<span style="color:var(--prolog);">% Prolog Emoji Code</span>
+${p.prolog}
+
+<span style="color:var(--smt);">; SMT-LIB2 Embedded</span>
+${p.smt}
+      </div>
+      <div class="jordan-note">${p.jordanNote}</div>
+    </div>
+  `).join('');
+}
+
+function toggleCard(id) {
+  document.querySelectorAll('.axiom-card').forEach(card => {
+    if (card.querySelector(`#code-${id}`)) {
+      card.classList.toggle('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+}
+
+renderPersonas();
+</script>
+</body>
+</html>

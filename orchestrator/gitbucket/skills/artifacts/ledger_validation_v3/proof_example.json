@@ -1,0 +1,15 @@
+{
+  "input": {
+    "entry": {
+      "account": "cash",
+      "debit": 100,
+      "credit": 100
+    }
+  },
+  "output": {
+    "valid": true,
+    "proof": {
+      "balanced": true
+    }
+  }
+}

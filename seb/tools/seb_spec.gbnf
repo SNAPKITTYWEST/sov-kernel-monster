@@ -1,0 +1,73 @@
+# seb_spec.gbnf
+# Cherry-picked from sovereign-xml-compiler/grammars/sovereign_prompt.gbnf
+# Extended: enforces valid SEB XML specification structure.
+# Use with llama.cpp: --grammar-file seb_spec.gbnf
+#
+# This grammar makes it PHYSICALLY IMPOSSIBLE for the model to output
+# malformed SEB XML specs. Token selection is masked at the softmax layer.
+# Connection to Gates Normalization (PAR-004):
+#   G_P(D_M) = softmax(logits_M + b_P)
+#   b_P = -inf for grammar-violating tokens
+#   Sum over valid tokens = 1 (simplex constraint preserved)
+
+root ::= seb-spec
+
+seb-spec ::= "<SEB_SPECIFICATION" ws attrs ws ">" ws
+             meta ws
+             axioms ws
+             layer* ws
+             pipeline? ws
+             genesis? ws
+             "</SEB_SPECIFICATION>"
+
+attrs ::= (ws attr)*
+attr  ::= [a-zA-Z_]+ "=\"" [^"]* "\""
+
+meta ::= "<meta>" ws
+         "<version>" semver "</version>" ws
+         "<status>" status-val "</status>" ws
+         "<parent>" text "</parent>" ws
+         "</meta>"
+
+semver     ::= [0-9]+ "." [0-9]+ "." [0-9]+
+status-val ::= "DRAFT" | "FROZEN" | "ACTIVE" | "DEPRECATED"
+
+axioms ::= "<axioms>" ws axiom+ ws "</axioms>"
+axiom  ::= "<axiom" ws "id=\"" text "\"" ws "priority=\"" [0-9]+ "\">" text "</axiom>"
+
+layer ::= "<layer" ws "id=\"" text "\">" ws
+          layer-field* ws
+          artifacts? ws
+          "</layer>"
+
+layer-field ::= "<field" ws "name=\"" text "\">" text "</field>" ws
+
+artifacts ::= "<artifacts>" ws artifact+ ws "</artifacts>"
+artifact   ::= "<artifact" ws "id=\"" text "\"" ws "type=\"" text "\">" ws
+               content? ws
+               "</artifact>"
+
+content ::= "<content>" ws text ws "</content>"
+
+pipeline ::= "<pipeline>" ws stage+ ws "</pipeline>"
+stage    ::= "<stage" ws "id=\"" text "\">" ws
+             stage-field* ws
+             gate? ws
+             "</stage>"
+stage-field ::= "<field" ws "name=\"" text "\">" text "</field>" ws
+gate        ::= "<gate>" text "</gate>"
+
+genesis ::= "<genesis>" ws constant+ ws "</genesis>"
+constant ::= "<constant" ws "name=\"" text "\""
+             (ws "hex=\"" hex-string "\"")?
+             (ws "value=\"" text "\"")? ws
+             "/>"
+
+hex-string ::= [0-9a-fA-F]+
+
+# SEB-specific element types
+seb-element ::= "<axiom>" | "<layer>" | "<kernel>" | "<policy>" | "<job>" |
+                "<verification>" | "<proof>" | "<theorem>" | "<invariant>"
+
+text ::= [^<>\"]+
+ws   ::= [ \t\n\r]*

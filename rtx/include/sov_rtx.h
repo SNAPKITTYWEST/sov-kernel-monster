@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #define SOV_MAX_SEQS     256
+#define SOV_MAX_SEQ_LEN  2048
 #define SOV_MAX_HEADS    128
 #define SOV_KV_BLOCK_SIZE 16
 #define SOV_JANET_SLOTS   32
@@ -71,8 +72,8 @@ int sov_scheduler_step(sov_scheduler_t* sched, void* batch_ptr, void* kv_ptr);
 
 /* KV Cache */
 int sov_kv_init(void* kv_store, int n_layers, int n_kv_heads, int head_dim, int block_size, int max_blocks);
-int sov_kv_allocate_blocks(void* kv_store, int seq_id, int n_blocks, int* block_table);
-int sov_kv_append_tokens(void* kv_store, int* block_table, float* k, float* v, int layer, int token_pos);
+/* See kv_allocator.h for authoritative prototype */
+/* See kv_allocator.h for authoritative prototype */
 
 /* GGUF */
 int         sov_gguf_load(const char* path, void** ctx_out);
@@ -97,3 +98,7 @@ int sov_speculative_verify(void* draft_logits, void* target_logits, int len);
 /* Janet */
 float sov_janet_get(int slot);
 void  sov_janet_set(int slot, float val);
+
+/* CUDA backend identifiers */
+#define SOV_CUDA_BACKEND_SOV_RTX  1
+#define SOV_CUDA_REQUIRED_KERNEL_MASK 0x3F  /* gemm + flash_attn + rms_norm + rotary + softmax + elementwise */

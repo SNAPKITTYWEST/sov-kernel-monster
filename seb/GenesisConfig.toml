@@ -1,0 +1,106 @@
+# SEB Genesis Configuration
+# Generated from: SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION.xml
+# Version: 1.0.0
+# Date: 2026-07-25T04:23:00Z
+
+[metadata]
+version = "1.0.0"
+specification = "SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION.xml"
+created_at = "2026-07-25T04:23:00Z"
+created_by = "scaffold-agent"
+
+[manifest]
+# SHA-256 hash of all contract templates (sorted by path)
+# Computed from: rust.template, typescript.template, python.template, lean4.template, openapi.template
+manifest_hash = "5168C5EBDFE574AE24E5B4FC14B36A79FACAC136D823911725094BF849CD0138"
+algorithm = "sha256"
+template_count = 5
+
+[templates]
+rust = "contracts/rust.template"
+typescript = "contracts/typescript.template"
+python = "contracts/python.template"
+lean4 = "contracts/lean4.template"
+openapi = "contracts/openapi.template"
+
+[codegen_targets]
+[codegen_targets.rust]
+priority = 1
+output_path = "kernel/"
+description = "Core SEB runtime and kernel modules"
+
+[codegen_targets.typescript]
+priority = 2
+output_path = "clients/typescript/"
+description = "Client library for Node.js and browser environments"
+
+[codegen_targets.python]
+priority = 3
+output_path = "clients/python/"
+description = "Client library for Python agents and scripts"
+
+[codegen_targets.lean4]
+priority = 4
+output_path = "verification/lean4/"
+description = "Formal verification of SEB invariants and properties"
+
+[codegen_targets.openapi]
+priority = 5
+output_path = "docs/api/"
+description = "REST API specification for HTTP gateway"
+
+[governance]
+model = "MIRROR_KITTY"
+principles = [
+    "Be Impeccable with Your Word (cryptographic sealing)",
+    "Don't Take Anything Personally (agent-agnostic verification)",
+    "Don't Make Assumptions (evidence-based reasoning)",
+    "Always Do Your Best (phi-decay bounded effort)"
+]
+
+[cryptography]
+hash_function = "blake3"
+signature_scheme = "ed25519"
+key_derivation = "hkdf-sha256"
+
+[performance]
+event_latency_p99_ms = 10
+throughput_events_per_sec = 10000
+seal_latency_p99_ms = 5
+memory_per_event_bytes = 1024
+
+[security]
+fail_closed = true
+default_policy = "deny"
+require_evidence = true
+worm_integration = true
+
+[verification]
+# Verification status of scaffold components
+scaffold_verified = false  # Set to true after 'make scaffold-verify' passes
+contracts_validated = false
+scripts_executable = false
+documentation_complete = false
+
+[signature]
+# Ed25519 signature of this configuration (to be added after signing)
+# public_key = ""
+# signature = ""
+# signed_at = ""
+
+[notes]
+description = """
+This Genesis Configuration establishes the foundational parameters for the
+Sovereign Event Bus (SEB) scaffold. The manifest hash ensures integrity of
+all contract templates. Any modification to templates will change this hash,
+providing tamper detection.
+
+The scaffold is complete when:
+1. All contract templates are present and validated
+2. All codegen scripts are executable
+3. 'make scaffold-verify' passes all checks
+4. Documentation is complete and linked
+5. This configuration is cryptographically signed
+"""
+
+handoff_ready = false  # Set to true when ready for implementation agents

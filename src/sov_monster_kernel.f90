@@ -15,10 +15,13 @@ module sov_monster_kernel
   public :: sov_bifrost_verify
   public :: sov_apl_step_zgemm_fused
   public :: sov_apl_evolve_sequence
+  public :: dp, ci, czero, i8, sov_zmexp_scaling_squaring, sov_blake3_hash_matrix
+  public :: sov_is_hermitian_matrix, sov_is_density_matrix, sov_fault
+  public :: sov_zgetrf, blake3_state, sov_blake3_init, sov_blake3_update, sov_blake3_finalize
+  public :: BLAKE3_IV, HASH_LEN, sov_zgetrs
 
   integer, parameter :: dp  = real64
-  integer, parameter :: i64 = int64
-  integer, parameter :: i8  = int8
+  integer, parameter :: i8 = int64
   complex(dp), parameter :: ci    = (0.0_dp, 1.0_dp)
   complex(dp), parameter :: czero = (0.0_dp, 0.0_dp)
 
@@ -28,16 +31,16 @@ module sov_monster_kernel
   integer, parameter :: MAX_DIM         = 256
   integer, parameter :: BLAKE3_BLOCK_LEN = 64
 
-  integer(i64), parameter :: BLAKE3_IV(8) = [ &
-    int(Z'6A09E667F3BCC908', i64), int(Z'BB67AE8584CAA73B', i64), &
-    int(Z'3C6EF372FE94F82B', i64), int(Z'A54FF53A5F1D36F1', i64), &
-    int(Z'510E527FADE682D1', i64), int(Z'9B05688C2B3E6C1F', i64), &
-    int(Z'1F83D9ABFB41BD6B', i64), int(Z'5BE0CD19137E2179', i64) ]
+  integer(i8), parameter :: BLAKE3_IV(8) = [ &
+    int(Z'6A09E667F3BCC908', i8), int(Z'BB67AE8584CAA73B', i8), &
+    int(Z'3C6EF372FE94F82B', i8), int(Z'A54FF53A5F1D36F1', i8), &
+    int(Z'510E527FADE682D1', i8), int(Z'9B05688C2B3E6C1F', i8), &
+    int(Z'1F83D9ABFB41BD6B', i8), int(Z'5BE0CD19137E2179', i8) ]
 
   type :: blake3_state
-    integer(i64), dimension(8)  :: chaining_value
+    integer(i8), dimension(8)  :: chaining_value
     integer(i8),  dimension(64) :: block
-    integer(i64)                :: block_len, counter, flags
+    integer(i8)                :: block_len, counter, flags
   end type
 
 contains
@@ -45,7 +48,7 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 1. PLASMA GATE
   !══════════════════════════════════════════════════════════════════
-  pure function sov_plasma_verify(shape_ptr, rank, herm, trace_one, &
+  function sov_plasma_verify(shape_ptr, rank, herm, trace_one, &
                                    hash_ptr, buffer_ptr, buffer_bytes) &
        bind(C, name="sov_plasma_verify") result(ok)
     type(c_ptr),        intent(in), value :: shape_ptr, hash_ptr, buffer_ptr
@@ -68,14 +71,14 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 2. BIFROST: Ed25519 sign / verify
   !══════════════════════════════════════════════════════════════════
-  pure subroutine sov_bifrost_sign(payload_ptr, payload_len, sk_ptr, sig_ptr) &
+  subroutine sov_bifrost_sign(payload_ptr, payload_len, sk_ptr, sig_ptr) &
        bind(C, name="sov_bifrost_sign")
     type(c_ptr),       intent(in), value :: payload_ptr, sk_ptr, sig_ptr
     integer(c_size_t), intent(in), value :: payload_len
     integer(i8), pointer :: payload(:), sk(:), sig(:)
     integer(i8)  :: h_sk(64), R_enc(32), s_bytes(32), h_ram(64)
-    integer(i64) :: r_sc(10), a_sc(10), hram_sc(10), s_sc(10)
-    integer(i64) :: Rx(10), Ry(10), Rz(10), Rt(10)
+    integer(i8) :: r_sc(10), a_sc(10), hram_sc(10), s_sc(10)
+    integer(i8) :: Rx(10), Ry(10), Rz(10), Rt(10)
     call c_f_pointer(payload_ptr, payload, [payload_len])
     call c_f_pointer(sk_ptr,      sk,      [SK_LEN])
     call c_f_pointer(sig_ptr,     sig,     [SIG_LEN])
@@ -93,15 +96,15 @@ contains
     sig(1:32) = R_enc; sig(33:64) = s_bytes
   end subroutine
 
-  pure function sov_bifrost_verify(payload_ptr, payload_len, sig_ptr, pk_ptr) &
+  function sov_bifrost_verify(payload_ptr, payload_len, sig_ptr, pk_ptr) &
        bind(C, name="sov_bifrost_verify") result(ok)
     type(c_ptr),       intent(in), value :: payload_ptr, sig_ptr, pk_ptr
     integer(c_size_t), intent(in), value :: payload_len
     logical :: ok
     integer(i8), pointer :: payload(:), sig(:), pk(:)
     integer(i8)  :: R_enc(32), s_bytes(32), pk_bytes(32), h_ram(64), check_enc(32)
-    integer(i64) :: s_sc(10), hram_sc(10), Rx(10),Ry(10),Rz(10),Rt(10)
-    integer(i64) :: Ax(10),Ay(10),Az(10),At(10), cx(10),cy(10),cz(10),ct(10)
+    integer(i8) :: s_sc(10), hram_sc(10), Rx(10),Ry(10),Rz(10),Rt(10)
+    integer(i8) :: Ax(10),Ay(10),Az(10),At(10), cx(10),cy(10),cz(10),ct(10)
     call c_f_pointer(payload_ptr, payload, [payload_len])
     call c_f_pointer(sig_ptr,     sig,     [SIG_LEN])
     call c_f_pointer(pk_ptr,      pk,      [32])
@@ -133,7 +136,7 @@ contains
     real(dp),    intent(in),    value :: dt
     type(c_ptr), intent(in),    value :: sk, pk
     complex(dp), intent(out),   dimension(ldr,*) :: out_rho
-    type(c_ptr), intent(inout), value :: out_hash, out_sig
+    type(c_ptr), intent(inout) :: out_hash, out_sig
     integer(c_int64_t) :: n, i, j, k
     complex(dp), allocatable :: U(:,:), Ut(:,:), tmp(:,:)
     n = ldr
@@ -252,7 +255,7 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 6. LU FACTORIZATION & TRIANGULAR SOLVE (pure Fortran, no LAPACK)
   !══════════════════════════════════════════════════════════════════
-  pure subroutine sov_zgetrf(A, n)
+  subroutine sov_zgetrf(A, n)
     complex(dp), intent(inout), dimension(n,n) :: A
     integer, intent(in) :: n
     integer :: i, j, k, piv
@@ -273,7 +276,7 @@ contains
     end do
   end subroutine
 
-  pure subroutine sov_zgetrs(LU, n, B)
+  subroutine sov_zgetrs(LU, n, B)
     complex(dp), intent(in),    dimension(n,n) :: LU
     integer,     intent(in)    :: n
     complex(dp), intent(inout), dimension(n,n) :: B
@@ -289,7 +292,7 @@ contains
     end do
   end subroutine
 
-  pure function sov_is_hermitian_matrix(A, n) result(ok)
+  function sov_is_hermitian_matrix(A, n) result(ok)
     complex(dp), intent(in), dimension(n,n) :: A
     integer(c_int64_t), intent(in) :: n
     logical :: ok
@@ -304,7 +307,7 @@ contains
     end do
   end function
 
-  pure function sov_is_density_matrix(rho, n) result(ok)
+  function sov_is_density_matrix(rho, n) result(ok)
     complex(dp), intent(in), dimension(n,n) :: rho
     integer(c_int64_t), intent(in) :: n
     logical :: ok
@@ -320,12 +323,12 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 7. BLAKE3 (Pure Fortran, RFC 9561, vectorizable)
   !══════════════════════════════════════════════════════════════════
-  pure subroutine sov_blake3_init(s)
+  subroutine sov_blake3_init(s)
     type(blake3_state), intent(out) :: s
     s%chaining_value = BLAKE3_IV; s%block=0_i8; s%block_len=0; s%counter=0; s%flags=0
   end subroutine
 
-  pure subroutine sov_blake3_update(s, input, in_len)
+  subroutine sov_blake3_update(s, input, in_len)
     type(blake3_state), intent(inout) :: s
     integer(i8), intent(in), dimension(*) :: input
     integer, intent(in) :: in_len
@@ -339,12 +342,12 @@ contains
     end do
   end subroutine
 
-  pure subroutine sov_blake3_finalize(s, out, out_len)
+  subroutine sov_blake3_finalize(s, out, out_len)
     type(blake3_state), intent(inout) :: s
     integer(i8), intent(out), dimension(*) :: out
     integer, intent(in) :: out_len
     integer :: i, j
-    s%flags = ior(s%flags, 4_i64)
+    s%flags = ior(s%flags, 4_i8)
     call sov_blake3_compress(s)
     do i = 1, min(out_len/8, 8)
       do j = 1, 8
@@ -353,9 +356,9 @@ contains
     end do
   end subroutine
 
-  pure subroutine sov_blake3_compress(s)
+  subroutine sov_blake3_compress(s)
     type(blake3_state), intent(inout) :: s
-    integer(i64) :: v(16), m(16)
+    integer(i8) :: v(16), m(16)
     integer :: i, j, r
     integer, parameter :: SIGMA(16,7) = reshape([ &
       0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, &
@@ -364,16 +367,16 @@ contains
       10,7,12,9,14,3,13,15,4,0,11,2,5,8,1,6,  &
       12,13,9,11,15,10,14,8,7,2,5,3,0,1,6,4,  &
       9,14,11,5,8,12,15,1,13,3,0,7,2,4,6,10,  &
-      11,15,5,0,1,9,8,2,10,7,3,12,4,6,13,14 /],[16,7])
+      11,15,5,0,1,9,8,2,10,7,3,12,4,6,13,14 ],[16,7])
     do i=1,8; v(i)=s%chaining_value(i); end do
     v(9:16) = BLAKE3_IV
     v(13) = ieor(v(13), s%counter)
     v(15) = ieor(v(15), s%block_len)
     v(16) = ieor(v(16), s%flags)
     do i = 1, 16
-      m(i) = 0_i64
+      m(i) = 0_i8
       do j = 1, 4
-        m(i) = ior(m(i), shiftl(int(iand(s%block((i-1)*4+j),int(Z'FF',i8)),i64),8*(j-1)))
+        m(i) = ior(m(i), shiftl(int(iand(s%block((i-1)*4+j),int(Z'FF',i8)),i8),8*(j-1)))
       end do
     end do
     do r = 1, 7
@@ -389,9 +392,9 @@ contains
     do i=1,8; s%chaining_value(i)=ieor(v(i),v(i+8)); end do
   end subroutine
 
-  pure subroutine sov_blake3_g(v, mx, my, a, b, c, d)
-    integer(i64), intent(inout), dimension(16) :: v
-    integer(i64), intent(in) :: mx, my
+  subroutine sov_blake3_g(v, mx, my, a, b, c, d)
+    integer(i8), intent(inout), dimension(16) :: v
+    integer(i8), intent(in) :: mx, my
     integer, intent(in) :: a, b, c, d
     v(a)=v(a)+v(b)+mx;          v(d)=ishftc(ieor(v(d),v(a)),-32)
     v(c)=v(c)+v(d);              v(b)=ishftc(ieor(v(b),v(c)),-24)
@@ -399,7 +402,7 @@ contains
     v(c)=v(c)+v(d);              v(b)=ishftc(ieor(v(b),v(c)),-63)
   end subroutine
 
-  pure function sov_blake3_verify_buffer(buf_ptr, buf_len, hash_ptr) result(ok)
+  function sov_blake3_verify_buffer(buf_ptr, buf_len, hash_ptr) result(ok)
     type(c_ptr),        intent(in), value :: buf_ptr, hash_ptr
     integer(c_int64_t), intent(in), value :: buf_len
     logical :: ok
@@ -411,14 +414,14 @@ contains
     call sov_blake3_finalize(state, computed, 32); ok = all(computed == expected)
   end function
 
-  pure subroutine sov_blake3_hash_matrix(mat, n, hash_ptr)
+  subroutine sov_blake3_hash_matrix(mat, n, hash_ptr)
     complex(dp), intent(in), dimension(n,n) :: mat
     integer, intent(in) :: n
     type(c_ptr), intent(in), value :: hash_ptr
     integer(i8), pointer :: hash_bytes(:)
     type(blake3_state) :: state
     integer(i8) :: buf(16)
-    integer(i64) :: bits
+    integer(i8) :: bits
     integer :: i, j, k
     call c_f_pointer(hash_ptr, hash_bytes, [32])
     call sov_blake3_init(state)
@@ -432,7 +435,7 @@ contains
     call sov_blake3_finalize(state, hash_bytes, 32)
   end subroutine
 
-  pure subroutine sov_blake3_hash_bytes(input, in_len, out, out_len)
+  subroutine sov_blake3_hash_bytes(input, in_len, out, out_len)
     integer(i8), intent(in),  dimension(*) :: input
     integer, intent(in) :: in_len, out_len
     integer(i8), intent(out), dimension(*) :: out
@@ -441,7 +444,7 @@ contains
     call sov_blake3_finalize(state, out, out_len)
   end subroutine
 
-  pure subroutine sov_blake3_hash_concat(a, la, b, lb, out, out_len)
+  subroutine sov_blake3_hash_concat(a, la, b, lb, out, out_len)
     integer(i8), intent(in), dimension(*) :: a, b
     integer, intent(in) :: la, lb, out_len
     integer(i8), intent(out), dimension(*) :: out
@@ -450,7 +453,7 @@ contains
     call sov_blake3_update(state, b, lb); call sov_blake3_finalize(state, out, out_len)
   end subroutine
 
-  pure subroutine sov_blake3_hash_concat3(a,la, b,lb, c,lc, out,out_len)
+  subroutine sov_blake3_hash_concat3(a,la, b,lb, c,lc, out,out_len)
     integer(i8), intent(in), dimension(*) :: a, b, c
     integer, intent(in) :: la, lb, lc, out_len
     integer(i8), intent(out), dimension(*) :: out
@@ -480,59 +483,59 @@ contains
   ! ── Field element helpers ──────────────────────────────────────
 
   ! Reduce a field element: propagate carries so each limb is in range
-  pure subroutine fe_reduce(f)
-    integer(i64), intent(inout), dimension(10) :: f
-    integer(i64) :: c
+  subroutine fe_reduce(f)
+    integer(i8), intent(inout), dimension(10) :: f
+    integer(i8) :: c
     ! Odd limbs: 26-bit mask; even limbs: 25-bit mask
-    c=shiftr(f(1),26);  f(1)=iand(f(1),int(Z'3FFFFFF',i64)); f(2)=f(2)+c
-    c=shiftr(f(2),25);  f(2)=iand(f(2),int(Z'1FFFFFF',i64)); f(3)=f(3)+c
-    c=shiftr(f(3),26);  f(3)=iand(f(3),int(Z'3FFFFFF',i64)); f(4)=f(4)+c
-    c=shiftr(f(4),25);  f(4)=iand(f(4),int(Z'1FFFFFF',i64)); f(5)=f(5)+c
-    c=shiftr(f(5),26);  f(5)=iand(f(5),int(Z'3FFFFFF',i64)); f(6)=f(6)+c
-    c=shiftr(f(6),25);  f(6)=iand(f(6),int(Z'1FFFFFF',i64)); f(7)=f(7)+c
-    c=shiftr(f(7),26);  f(7)=iand(f(7),int(Z'3FFFFFF',i64)); f(8)=f(8)+c
-    c=shiftr(f(8),25);  f(8)=iand(f(8),int(Z'1FFFFFF',i64)); f(9)=f(9)+c
-    c=shiftr(f(9),26);  f(9)=iand(f(9),int(Z'3FFFFFF',i64)); f(10)=f(10)+c
-    c=shiftr(f(10),25); f(10)=iand(f(10),int(Z'1FFFFFF',i64)); f(1)=f(1)+19*c
-    c=shiftr(f(1),26);  f(1)=iand(f(1),int(Z'3FFFFFF',i64)); f(2)=f(2)+c
+    c=shiftr(f(1),26);  f(1)=iand(f(1),int(Z'3FFFFFF',i8)); f(2)=f(2)+c
+    c=shiftr(f(2),25);  f(2)=iand(f(2),int(Z'1FFFFFF',i8)); f(3)=f(3)+c
+    c=shiftr(f(3),26);  f(3)=iand(f(3),int(Z'3FFFFFF',i8)); f(4)=f(4)+c
+    c=shiftr(f(4),25);  f(4)=iand(f(4),int(Z'1FFFFFF',i8)); f(5)=f(5)+c
+    c=shiftr(f(5),26);  f(5)=iand(f(5),int(Z'3FFFFFF',i8)); f(6)=f(6)+c
+    c=shiftr(f(6),25);  f(6)=iand(f(6),int(Z'1FFFFFF',i8)); f(7)=f(7)+c
+    c=shiftr(f(7),26);  f(7)=iand(f(7),int(Z'3FFFFFF',i8)); f(8)=f(8)+c
+    c=shiftr(f(8),25);  f(8)=iand(f(8),int(Z'1FFFFFF',i8)); f(9)=f(9)+c
+    c=shiftr(f(9),26);  f(9)=iand(f(9),int(Z'3FFFFFF',i8)); f(10)=f(10)+c
+    c=shiftr(f(10),25); f(10)=iand(f(10),int(Z'1FFFFFF',i8)); f(1)=f(1)+19*c
+    c=shiftr(f(1),26);  f(1)=iand(f(1),int(Z'3FFFFFF',i8)); f(2)=f(2)+c
   end subroutine
 
   ! f = a + b mod p
-  pure subroutine fe_add(a, b, f)
-    integer(i64), intent(in),  dimension(10) :: a, b
-    integer(i64), intent(out), dimension(10) :: f
+  subroutine fe_add(a, b, f)
+    integer(i8), intent(in),  dimension(10) :: a, b
+    integer(i8), intent(out), dimension(10) :: f
     integer :: i
     do i=1,10; f(i)=a(i)+b(i); end do
     call fe_reduce(f)
   end subroutine
 
   ! f = a - b mod p
-  pure subroutine fe_sub(a, b, f)
-    integer(i64), intent(in),  dimension(10) :: a, b
-    integer(i64), intent(out), dimension(10) :: f
+  subroutine fe_sub(a, b, f)
+    integer(i8), intent(in),  dimension(10) :: a, b
+    integer(i8), intent(out), dimension(10) :: f
     integer :: i
     ! Add 2p before subtracting to stay positive
-    integer(i64), parameter :: TWO_P(10) = [ &
-      int(Z'7FFFFDA', i64), int(Z'3FFFFFE', i64), int(Z'7FFFFFE', i64), &
-      int(Z'3FFFFFE', i64), int(Z'7FFFFFE', i64), int(Z'3FFFFFE', i64), &
-      int(Z'7FFFFFE', i64), int(Z'3FFFFFE', i64), int(Z'7FFFFFE', i64), &
-      int(Z'3FFFFFE', i64) ]
+    integer(i8), parameter :: TWO_P(10) = [ &
+      int(Z'7FFFFDA', i8), int(Z'3FFFFFE', i8), int(Z'7FFFFFE', i8), &
+      int(Z'3FFFFFE', i8), int(Z'7FFFFFE', i8), int(Z'3FFFFFE', i8), &
+      int(Z'7FFFFFE', i8), int(Z'3FFFFFE', i8), int(Z'7FFFFFE', i8), &
+      int(Z'3FFFFFE', i8) ]
     do i=1,10; f(i)=a(i)-b(i)+TWO_P(i); end do
     call fe_reduce(f)
   end subroutine
 
   ! f = a * b mod p  (schoolbook, fully reduced)
-  pure subroutine fe_mul(a, b, f)
-    integer(i64), intent(in),  dimension(10) :: a, b
-    integer(i64), intent(out), dimension(10) :: f
-    integer(i64) :: h(10), b2(2:10)
+  subroutine fe_mul(a, b, f)
+    integer(i8), intent(in),  dimension(10) :: a, b
+    integer(i8), intent(out), dimension(10) :: f
+    integer(i8) :: h(10), b2(2:10)
+    integer(i8) :: b19(10)
+    integer(i8) :: b219(2:10)
     integer :: i
     ! Pre-multiply even-position b-limbs by 2, odd by 1 (radix-2^25.5)
     do i=2,10,2; b2(i)=2*b(i); end do
     ! Also pre-multiply all b-limbs by 19 for the wrap-around terms
-    integer(i64) :: b19(10)
     do i=1,10; b19(i)=19*b(i); end do
-    integer(i64) :: b219(2:10)
     do i=2,10,2; b219(i)=2*b19(i); end do
 
     h(1)  = a(1)*b(1)   + a(3)*b19(9) *2 + a(5)*b19(7) *2 + a(7)*b19(5) *2 + a(9)*b19(3) *2 &
@@ -560,10 +563,10 @@ contains
   end subroutine
 
   ! f = a^2 mod p  (optimised squaring)
-  pure subroutine fe_sq(a, f)
-    integer(i64), intent(in),  dimension(10) :: a
-    integer(i64), intent(out), dimension(10) :: f
-    integer(i64) :: h(10), a2(10), a19(10), a219(10)
+  subroutine fe_sq(a, f)
+    integer(i8), intent(in),  dimension(10) :: a
+    integer(i8), intent(out), dimension(10) :: f
+    integer(i8) :: h(10), a2(10), a19(10), a219(10)
     integer :: i
     do i=1,10; a2(i)=2*a(i); end do
     do i=1,10; a19(i)=19*a(i); end do
@@ -606,20 +609,21 @@ contains
   end subroutine
 
   ! f = a^(2^n) mod p  (repeated squaring)
-  pure subroutine fe_sq_n(a, n, f)
-    integer(i64), intent(in),  dimension(10) :: a
+  subroutine fe_sq_n(a, n, f)
+    integer(i8), intent(in),  dimension(10) :: a
     integer,      intent(in)                 :: n
-    integer(i64), intent(out), dimension(10) :: f
+    integer(i8), intent(out), dimension(10) :: f
     integer :: i
     f = a
     do i = 1, n; call fe_sq(f, f); end do
   end subroutine
 
   ! f = a^(-1) mod p via Fermat: a^(p-2) = a^(2^255 - 21)
-  pure subroutine fe_inv(a, f)
-    integer(i64), intent(in),  dimension(10) :: a
-    integer(i64), intent(out), dimension(10) :: f
-    integer(i64) :: t0(10),t1(10),t2(10),t3(10)
+  subroutine fe_inv(a, f)
+    integer(i8), intent(in),  dimension(10) :: a
+    integer(i8), intent(out), dimension(10) :: f
+    integer(i8) :: t0(10),t1(10),t2(10),t3(10)
+    integer(i8) :: a8(10), a11(10), bits
     call fe_sq(a, t0)             ! t0 = a^2
     call fe_mul(a, t0, t1)        ! t1 = a^3
     call fe_sq(t1, t0)            ! t0 = a^6
@@ -667,7 +671,6 @@ contains
     call fe_mul(t1, a,  f)        ! 2^255-32+1 — need a^(32-21)=a^11
     ! a^11 = a^8 * a^2 * a
     call fe_sq(t0, t0)            ! reuse — overwritten, use fresh
-    integer(i64) :: a8(10),a11(10)
     call fe_sq(a,a8); call fe_sq(a8,a8); call fe_sq(a8,a8)  ! a^8
     call fe_mul(a8, t0, t0)       ! a^8 * (2^250-1)*2^5 — not right either
     ! Clean canonical inversion (ref10 pattern, verbatim):
@@ -697,25 +700,26 @@ contains
   end subroutine
 
   ! Convert field element to canonical 32-byte little-endian
-  pure subroutine fe_tobytes(f, b)
-    integer(i64), intent(in),  dimension(10) :: f
+  subroutine fe_tobytes(f, b)
+    integer(i8), intent(in),  dimension(10) :: f
     integer(i8),  intent(out), dimension(32) :: b
-    integer(i64) :: h(10), c
+    integer(i8) :: h(10), c
     integer :: i
+    integer(i8) :: bits
     h = f
     call fe_reduce(h)
     ! Final canonical reduction: subtract p if h >= p
     ! p = 2^255-19; detect by checking if h[10]*2^230 + ... >= p
     ! Simplest: add 19, propagate, strip top bit
-    c = 19_i64
+    c = 19_i8
     do i=1,9
       h(i) = h(i)+c
-      if (mod(i,2)==1) then; c=shiftr(h(i),26); h(i)=iand(h(i),int(Z'3FFFFFF',i64))
-      else;                  c=shiftr(h(i),25); h(i)=iand(h(i),int(Z'1FFFFFF',i64)); end if
+      if (mod(i,2)==1) then; c=shiftr(h(i),26); h(i)=iand(h(i),int(Z'3FFFFFF',i8))
+      else;                  c=shiftr(h(i),25); h(i)=iand(h(i),int(Z'1FFFFFF',i8)); end if
     end do
-    h(10)=h(10)+c; c=shiftr(h(10),25); h(10)=iand(h(10),int(Z'1FFFFFF',i64))
+    h(10)=h(10)+c; c=shiftr(h(10),25); h(10)=iand(h(10),int(Z'1FFFFFF',i8))
     h(1)=h(1)+19*c
-    c=shiftr(h(1),26); h(1)=iand(h(1),int(Z'3FFFFFF',i64)); h(2)=h(2)+c
+    c=shiftr(h(1),26); h(1)=iand(h(1),int(Z'3FFFFFF',i8)); h(2)=h(2)+c
     ! Now pack limbs into 32 bytes (little-endian bit packing)
     b = 0_i8
     b(1) = int(iand(h(1),Z'FF'),i8)
@@ -738,7 +742,7 @@ contains
     b(17)= int(iand(shiftr(h(6),2),Z'FF'),i8)
     b(18)= int(iand(shiftr(h(6),10),Z'FF'),i8)
     b(19)= int(iand(shiftr(h(6),18),Z'FF'),i8)
-    b(20)= int(iand(ior(shiftr(h(6),24)+shiftl(h(7),1),Z'FF')),i8)  ! wrong — redo
+    b(20)= int(iand(shiftr(h(6),24)+shiftl(h(7),1), int(Z'FF',i8)),i8)
     ! Correct byte packing for radix-2^25.5:
     ! bit offset of each limb:
     !  h(1):  0..25 (26 bits)
@@ -751,8 +755,7 @@ contains
     !  h(8):179..203 (25 bits)
     !  h(9):204..229 (26 bits)
     ! h(10):230..254 (25 bits)
-    integer(i64) :: bits
-    bits = 0_i64
+    bits = 0_i8
     bits = ior(h(1),                         shiftl(h(2), 26))
     b(1) = int(iand(bits,     Z'FF'),i8); bits=shiftr(bits,8)
     b(2) = int(iand(bits,     Z'FF'),i8); bits=shiftr(bits,8)
@@ -798,31 +801,31 @@ contains
   end subroutine
 
   ! Load 32 bytes (little-endian) into field element
-  pure subroutine fe_frombytes(b, f)
+  subroutine fe_frombytes(b, f)
     integer(i8),  intent(in),  dimension(32) :: b
-    integer(i64), intent(out), dimension(10) :: f
-    integer(i64) :: w(8)
+    integer(i8), intent(out), dimension(10) :: f
+    integer(i8) :: w(8)
     integer :: i
     do i=1,8
-      w(i) = 0_i64
-      w(i) = ior(w(i), shiftl(int(iand(b(4*i-3),int(Z'FF',i8)),i64), 0))
-      w(i) = ior(w(i), shiftl(int(iand(b(4*i-2),int(Z'FF',i8)),i64), 8))
-      w(i) = ior(w(i), shiftl(int(iand(b(4*i-1),int(Z'FF',i8)),i64),16))
-      w(i) = ior(w(i), shiftl(int(iand(b(4*i  ),int(Z'FF',i8)),i64),24))
+      w(i) = 0_i8
+      w(i) = ior(w(i), shiftl(int(iand(b(4*i-3),int(Z'FF',i8)),i8), 0))
+      w(i) = ior(w(i), shiftl(int(iand(b(4*i-2),int(Z'FF',i8)),i8), 8))
+      w(i) = ior(w(i), shiftl(int(iand(b(4*i-1),int(Z'FF',i8)),i8),16))
+      w(i) = ior(w(i), shiftl(int(iand(b(4*i  ),int(Z'FF',i8)),i8),24))
     end do
     ! Extract limbs from bit stream
-    f(1)  = iand(w(1),                         int(Z'3FFFFFF',i64))
-    f(2)  = iand(shiftr(w(1),26),               int(Z'1FFFFFF',i64))
-    f(3)  = iand(ior(shiftr(w(1),51), shiftl(w(2),13)), int(Z'3FFFFFF',i64))
-    f(4)  = iand(shiftr(w(2),13),               int(Z'1FFFFFF',i64))
-    f(5)  = iand(ior(shiftr(w(2),38), shiftl(w(3),26)), int(Z'3FFFFFF',i64))
-    f(6)  = iand(shiftr(w(3),0),                int(Z'1FFFFFF',i64))  ! 102-bit offset
-    f(7)  = iand(shiftr(w(3),25),               int(Z'3FFFFFF',i64))
-    f(8)  = iand(ior(shiftr(w(3),51), shiftl(w(4),13)), int(Z'1FFFFFF',i64))
-    f(9)  = iand(shiftr(w(4),12),               int(Z'3FFFFFF',i64))
-    f(10) = iand(ior(shiftr(w(4),38), shiftl(w(5),26)), int(Z'1FFFFFF',i64))
+    f(1)  = iand(w(1),                         int(Z'3FFFFFF',i8))
+    f(2)  = iand(shiftr(w(1),26),               int(Z'1FFFFFF',i8))
+    f(3)  = iand(ior(shiftr(w(1),51), shiftl(w(2),13)), int(Z'3FFFFFF',i8))
+    f(4)  = iand(shiftr(w(2),13),               int(Z'1FFFFFF',i8))
+    f(5)  = iand(ior(shiftr(w(2),38), shiftl(w(3),26)), int(Z'3FFFFFF',i8))
+    f(6)  = iand(shiftr(w(3),0),                int(Z'1FFFFFF',i8))  ! 102-bit offset
+    f(7)  = iand(shiftr(w(3),25),               int(Z'3FFFFFF',i8))
+    f(8)  = iand(ior(shiftr(w(3),51), shiftl(w(4),13)), int(Z'1FFFFFF',i8))
+    f(9)  = iand(shiftr(w(4),12),               int(Z'3FFFFFF',i8))
+    f(10) = iand(ior(shiftr(w(4),38), shiftl(w(5),26)), int(Z'1FFFFFF',i8))
     ! Mask top bit (sign bit cleared per RFC 8032 §5.1.3)
-    f(10) = iand(f(10), int(Z'7FFFFFFF',i64))
+    f(10) = iand(f(10), int(Z'7FFFFFFF',i8))
     call fe_reduce(f)
   end subroutine
 
@@ -833,7 +836,7 @@ contains
 
   ! Reduce a 512-bit integer (from hashing) mod L using Barrett reduction
   ! Input: 64 bytes h; Output: 32-byte scalar s
-  pure subroutine sc_reduce64(h, s)
+  subroutine sc_reduce64(h, s)
     integer(i8),  intent(in),  dimension(64) :: h
     integer(i8),  intent(out), dimension(32) :: s
     ! L in 8×32-bit limbs (little-endian):
@@ -842,76 +845,76 @@ contains
     !      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     !      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F]
     ! Scalar reduction via the standard 38-limb approach (SUPERCOP sc_reduce)
-    integer(i64) :: a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11
-    integer(i64) :: b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11
-    integer(i64) :: carry, t
+    integer(i8) :: a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11
+    integer(i8) :: b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11
+    integer(i8) :: carry, t
     ! Load 64 bytes into 21-bit limbs (SUPERCOP sc_reduce style)
     ! Each limb is 21 bits to avoid overflow on multiplication
-    integer(i64) :: s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12
+    integer(i8) :: s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12
     integer(i8)  :: hb(64)
+    integer(i8), parameter :: MU0=666643_i8, MU1=470296_i8, MU2=654183_i8
+    integer(i8), parameter :: MU3=-997805_i8, MU4=136657_i8, MU5=-683901_i8
     hb = h
     ! Load as signed to handle bit manipulation
-    s0  = iand(int(hb(1),i64),Z'FF') + shiftl(iand(int(hb(2),i64),Z'FF'),8) &
-        + shiftl(iand(int(hb(3),i64),Z'FF'),16) + shiftl(iand(iand(int(hb(4),i64),Z'FF'),Z'1F'),24)
-    s1  = shiftr(iand(int(hb(4),i64),Z'FF'),5) + shiftl(iand(int(hb(5),i64),Z'FF'),3) &
-        + shiftl(iand(int(hb(6),i64),Z'FF'),11) + shiftl(iand(iand(int(hb(7),i64),Z'FF'),Z'3F'),19)
-    s2  = shiftr(iand(int(hb(7),i64),Z'FF'),6) + shiftl(iand(int(hb(8),i64),Z'FF'),2) &
-        + shiftl(iand(int(hb(9),i64),Z'FF'),10) + shiftl(iand(iand(int(hb(10),i64),Z'FF'),Z'7F'),18)
-    s3  = shiftr(iand(int(hb(10),i64),Z'FF'),7) + shiftl(iand(int(hb(11),i64),Z'FF'),1) &
-        + shiftl(iand(int(hb(12),i64),Z'FF'),9) + shiftl(iand(int(hb(13),i64),Z'FF'),17)
-    s4  = iand(int(hb(14),i64),Z'FF') + shiftl(iand(int(hb(15),i64),Z'FF'),8) &
-        + shiftl(iand(int(hb(16),i64),Z'FF'),16) + shiftl(iand(iand(int(hb(17),i64),Z'FF'),Z'1F'),24)
-    s5  = shiftr(iand(int(hb(17),i64),Z'FF'),5) + shiftl(iand(int(hb(18),i64),Z'FF'),3) &
-        + shiftl(iand(int(hb(19),i64),Z'FF'),11) + shiftl(iand(iand(int(hb(20),i64),Z'FF'),Z'3F'),19)
-    s6  = shiftr(iand(int(hb(20),i64),Z'FF'),6) + shiftl(iand(int(hb(21),i64),Z'FF'),2) &
-        + shiftl(iand(int(hb(22),i64),Z'FF'),10) + shiftl(iand(iand(int(hb(23),i64),Z'FF'),Z'7F'),18)
-    s7  = shiftr(iand(int(hb(23),i64),Z'FF'),7) + shiftl(iand(int(hb(24),i64),Z'FF'),1) &
-        + shiftl(iand(int(hb(25),i64),Z'FF'),9) + shiftl(iand(int(hb(26),i64),Z'FF'),17)
-    s8  = iand(int(hb(27),i64),Z'FF') + shiftl(iand(int(hb(28),i64),Z'FF'),8) &
-        + shiftl(iand(int(hb(29),i64),Z'FF'),16) + shiftl(iand(iand(int(hb(30),i64),Z'FF'),Z'1F'),24)
-    s9  = shiftr(iand(int(hb(30),i64),Z'FF'),5) + shiftl(iand(int(hb(31),i64),Z'FF'),3) &
-        + shiftl(iand(int(hb(32),i64),Z'FF'),11) + shiftl(iand(iand(int(hb(33),i64),Z'FF'),Z'3F'),19)
-    s10 = shiftr(iand(int(hb(33),i64),Z'FF'),6) + shiftl(iand(int(hb(34),i64),Z'FF'),2) &
-        + shiftl(iand(int(hb(35),i64),Z'FF'),10) + shiftl(iand(iand(int(hb(36),i64),Z'FF'),Z'7F'),18)
-    s11 = shiftr(iand(int(hb(36),i64),Z'FF'),7) + shiftl(iand(int(hb(37),i64),Z'FF'),1) &
-        + shiftl(iand(int(hb(38),i64),Z'FF'),9) + shiftl(iand(int(hb(39),i64),Z'FF'),17)
-    s12 = iand(int(hb(40),i64),Z'FF') + shiftl(iand(int(hb(41),i64),Z'FF'),8) &
-        + shiftl(iand(int(hb(42),i64),Z'FF'),16) + shiftl(iand(iand(int(hb(43),i64),Z'FF'),Z'1F'),24)
+    s0  = iand(int(hb(1),i8),Z'FF') + shiftl(iand(int(hb(2),i8),Z'FF'),8) &
+        + shiftl(iand(int(hb(3),i8),Z'FF'),16) + shiftl(iand(iand(int(hb(4),i8),Z'FF'),Z'1F'),24)
+    s1  = shiftr(iand(int(hb(4),i8),Z'FF'),5) + shiftl(iand(int(hb(5),i8),Z'FF'),3) &
+        + shiftl(iand(int(hb(6),i8),Z'FF'),11) + shiftl(iand(iand(int(hb(7),i8),Z'FF'),Z'3F'),19)
+    s2  = shiftr(iand(int(hb(7),i8),Z'FF'),6) + shiftl(iand(int(hb(8),i8),Z'FF'),2) &
+        + shiftl(iand(int(hb(9),i8),Z'FF'),10) + shiftl(iand(iand(int(hb(10),i8),Z'FF'),Z'7F'),18)
+    s3  = shiftr(iand(int(hb(10),i8),Z'FF'),7) + shiftl(iand(int(hb(11),i8),Z'FF'),1) &
+        + shiftl(iand(int(hb(12),i8),Z'FF'),9) + shiftl(iand(int(hb(13),i8),Z'FF'),17)
+    s4  = iand(int(hb(14),i8),Z'FF') + shiftl(iand(int(hb(15),i8),Z'FF'),8) &
+        + shiftl(iand(int(hb(16),i8),Z'FF'),16) + shiftl(iand(iand(int(hb(17),i8),Z'FF'),Z'1F'),24)
+    s5  = shiftr(iand(int(hb(17),i8),Z'FF'),5) + shiftl(iand(int(hb(18),i8),Z'FF'),3) &
+        + shiftl(iand(int(hb(19),i8),Z'FF'),11) + shiftl(iand(iand(int(hb(20),i8),Z'FF'),Z'3F'),19)
+    s6  = shiftr(iand(int(hb(20),i8),Z'FF'),6) + shiftl(iand(int(hb(21),i8),Z'FF'),2) &
+        + shiftl(iand(int(hb(22),i8),Z'FF'),10) + shiftl(iand(iand(int(hb(23),i8),Z'FF'),Z'7F'),18)
+    s7  = shiftr(iand(int(hb(23),i8),Z'FF'),7) + shiftl(iand(int(hb(24),i8),Z'FF'),1) &
+        + shiftl(iand(int(hb(25),i8),Z'FF'),9) + shiftl(iand(int(hb(26),i8),Z'FF'),17)
+    s8  = iand(int(hb(27),i8),Z'FF') + shiftl(iand(int(hb(28),i8),Z'FF'),8) &
+        + shiftl(iand(int(hb(29),i8),Z'FF'),16) + shiftl(iand(iand(int(hb(30),i8),Z'FF'),Z'1F'),24)
+    s9  = shiftr(iand(int(hb(30),i8),Z'FF'),5) + shiftl(iand(int(hb(31),i8),Z'FF'),3) &
+        + shiftl(iand(int(hb(32),i8),Z'FF'),11) + shiftl(iand(iand(int(hb(33),i8),Z'FF'),Z'3F'),19)
+    s10 = shiftr(iand(int(hb(33),i8),Z'FF'),6) + shiftl(iand(int(hb(34),i8),Z'FF'),2) &
+        + shiftl(iand(int(hb(35),i8),Z'FF'),10) + shiftl(iand(iand(int(hb(36),i8),Z'FF'),Z'7F'),18)
+    s11 = shiftr(iand(int(hb(36),i8),Z'FF'),7) + shiftl(iand(int(hb(37),i8),Z'FF'),1) &
+        + shiftl(iand(int(hb(38),i8),Z'FF'),9) + shiftl(iand(int(hb(39),i8),Z'FF'),17)
+    s12 = iand(int(hb(40),i8),Z'FF') + shiftl(iand(int(hb(41),i8),Z'FF'),8) &
+        + shiftl(iand(int(hb(42),i8),Z'FF'),16) + shiftl(iand(iand(int(hb(43),i8),Z'FF'),Z'1F'),24)
     ! Reduce s12..s0 mod L (SUPERCOP sc_reduce carry/muladd pattern)
     ! muladd coefficients from L = 2^252 + c, so 2^252 = L - c
     ! => s12 * 2^252 = s12*(L-c) = s12*L - s12*c => reduce by subtracting s12*c
     ! c components (little-endian 21-bit limbs of c):
     ! c = 27742317777372353535851937790883648493
     ! 666643*s12 added to s0; 470296*s12 to s1; 654183*s12 to s2; etc.
-    integer(i64), parameter :: MU0=666643_i64, MU1=470296_i64, MU2=654183_i64
-    integer(i64), parameter :: MU3=-997805_i64, MU4=136657_i64, MU5=-683901_i64
     s0  = s0  + MU0*s12; s1  = s1  + MU1*s12; s2  = s2  + MU2*s12
     s3  = s3  + MU3*s12; s4  = s4  + MU4*s12; s5  = s5  + MU5*s12; s12 = 0
-    carry = shiftr(s0,21); s1=s1+carry; s0=iand(s0,int(Z'1FFFFF',i64))
-    carry = shiftr(s1,21); s2=s2+carry; s1=iand(s1,int(Z'1FFFFF',i64))
-    carry = shiftr(s2,21); s3=s3+carry; s2=iand(s2,int(Z'1FFFFF',i64))
-    carry = shiftr(s3,21); s4=s4+carry; s3=iand(s3,int(Z'1FFFFF',i64))
-    carry = shiftr(s4,21); s5=s5+carry; s4=iand(s4,int(Z'1FFFFF',i64))
-    carry = shiftr(s5,21); s6=s6+carry; s5=iand(s5,int(Z'1FFFFF',i64))
-    carry = shiftr(s6,21); s7=s7+carry; s6=iand(s6,int(Z'1FFFFF',i64))
-    carry = shiftr(s7,21); s8=s8+carry; s7=iand(s7,int(Z'1FFFFF',i64))
-    carry = shiftr(s8,21); s9=s9+carry; s8=iand(s8,int(Z'1FFFFF',i64))
-    carry = shiftr(s9,21); s10=s10+carry; s9=iand(s9,int(Z'1FFFFF',i64))
-    carry = shiftr(s10,21);s11=s11+carry; s10=iand(s10,int(Z'1FFFFF',i64))
-    carry = shiftr(s11,21);s12=s11; s11=iand(s11,int(Z'1FFFFF',i64))  ! s12 gets high bits
+    carry = shiftr(s0,21); s1=s1+carry; s0=iand(s0,int(Z'1FFFFF',i8))
+    carry = shiftr(s1,21); s2=s2+carry; s1=iand(s1,int(Z'1FFFFF',i8))
+    carry = shiftr(s2,21); s3=s3+carry; s2=iand(s2,int(Z'1FFFFF',i8))
+    carry = shiftr(s3,21); s4=s4+carry; s3=iand(s3,int(Z'1FFFFF',i8))
+    carry = shiftr(s4,21); s5=s5+carry; s4=iand(s4,int(Z'1FFFFF',i8))
+    carry = shiftr(s5,21); s6=s6+carry; s5=iand(s5,int(Z'1FFFFF',i8))
+    carry = shiftr(s6,21); s7=s7+carry; s6=iand(s6,int(Z'1FFFFF',i8))
+    carry = shiftr(s7,21); s8=s8+carry; s7=iand(s7,int(Z'1FFFFF',i8))
+    carry = shiftr(s8,21); s9=s9+carry; s8=iand(s8,int(Z'1FFFFF',i8))
+    carry = shiftr(s9,21); s10=s10+carry; s9=iand(s9,int(Z'1FFFFF',i8))
+    carry = shiftr(s10,21);s11=s11+carry; s10=iand(s10,int(Z'1FFFFF',i8))
+    carry = shiftr(s11,21);s12=s11; s11=iand(s11,int(Z'1FFFFF',i8))  ! s12 gets high bits
     s0  = s0  + MU0*s12; s1  = s1  + MU1*s12; s2  = s2  + MU2*s12
     s3  = s3  + MU3*s12; s4  = s4  + MU4*s12; s5  = s5  + MU5*s12; s12 = 0
-    carry=shiftr(s0,21); s1=s1+carry; s0=iand(s0,int(Z'1FFFFF',i64))
-    carry=shiftr(s1,21); s2=s2+carry; s1=iand(s1,int(Z'1FFFFF',i64))
-    carry=shiftr(s2,21); s3=s3+carry; s2=iand(s2,int(Z'1FFFFF',i64))
-    carry=shiftr(s3,21); s4=s4+carry; s3=iand(s3,int(Z'1FFFFF',i64))
-    carry=shiftr(s4,21); s5=s5+carry; s4=iand(s4,int(Z'1FFFFF',i64))
-    carry=shiftr(s5,21); s6=s6+carry; s5=iand(s5,int(Z'1FFFFF',i64))
-    carry=shiftr(s6,21); s7=s7+carry; s6=iand(s6,int(Z'1FFFFF',i64))
-    carry=shiftr(s7,21); s8=s8+carry; s7=iand(s7,int(Z'1FFFFF',i64))
-    carry=shiftr(s8,21); s9=s9+carry; s8=iand(s8,int(Z'1FFFFF',i64))
-    carry=shiftr(s9,21); s10=s10+carry; s9=iand(s9,int(Z'1FFFFF',i64))
-    carry=shiftr(s10,21);s11=s11+carry; s10=iand(s10,int(Z'1FFFFF',i64))
+    carry=shiftr(s0,21); s1=s1+carry; s0=iand(s0,int(Z'1FFFFF',i8))
+    carry=shiftr(s1,21); s2=s2+carry; s1=iand(s1,int(Z'1FFFFF',i8))
+    carry=shiftr(s2,21); s3=s3+carry; s2=iand(s2,int(Z'1FFFFF',i8))
+    carry=shiftr(s3,21); s4=s4+carry; s3=iand(s3,int(Z'1FFFFF',i8))
+    carry=shiftr(s4,21); s5=s5+carry; s4=iand(s4,int(Z'1FFFFF',i8))
+    carry=shiftr(s5,21); s6=s6+carry; s5=iand(s5,int(Z'1FFFFF',i8))
+    carry=shiftr(s6,21); s7=s7+carry; s6=iand(s6,int(Z'1FFFFF',i8))
+    carry=shiftr(s7,21); s8=s8+carry; s7=iand(s7,int(Z'1FFFFF',i8))
+    carry=shiftr(s8,21); s9=s9+carry; s8=iand(s8,int(Z'1FFFFF',i8))
+    carry=shiftr(s9,21); s10=s10+carry; s9=iand(s9,int(Z'1FFFFF',i8))
+    carry=shiftr(s10,21);s11=s11+carry; s10=iand(s10,int(Z'1FFFFF',i8))
     ! Pack 12×21-bit limbs into 32 bytes
     s(1) =int(iand(s0,Z'FF'),i8)
     s(2) =int(iand(shiftr(s0,8),Z'FF'),i8)
@@ -949,58 +952,58 @@ contains
 
   ! Scalar multiply mod L: res = a*b mod L
   ! Both a, b are 32-byte scalars; result is 32 bytes
-  pure subroutine sc_muladd(a, b, c, s)
+  subroutine sc_muladd(a, b, c, s)
     ! s = a*b + c  mod L  (standard Ed25519 signing formula)
     integer(i8), intent(in),  dimension(32) :: a, b, c
     integer(i8), intent(out), dimension(32) :: s
-    integer(i64) :: a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11
-    integer(i64) :: b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11
-    integer(i64) :: c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11
-    integer(i64) :: s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12
-    integer(i64) :: s13,s14,s15,s16,s17,s18,s19,s20,s21,s22,s23
-    integer(i64) :: carry
-    integer(i64), parameter :: MASK21 = int(Z'1FFFFF',i64)
-    integer(i64), parameter :: MU0=666643_i64, MU1=470296_i64, MU2=654183_i64
-    integer(i64), parameter :: MU3=-997805_i64, MU4=136657_i64, MU5=-683901_i64
+    integer(i8) :: a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11
+    integer(i8) :: b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11
+    integer(i8) :: c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11
+    integer(i8) :: s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12
+    integer(i8) :: s13,s14,s15,s16,s17,s18,s19,s20,s21,s22,s23
+    integer(i8) :: carry
+    integer(i8), parameter :: MU0=666643_i8, MU1=470296_i8, MU2=654183_i8
+    integer(i8), parameter :: MU3=-997805_i8, MU4=136657_i8, MU5=-683901_i8
+    integer(i8), parameter :: MASK21 = int(Z'1FFFFF',i8)
     ! Load a into 21-bit limbs
-    a0  = iand(int(a(1),i64),Z'FF') + shiftl(iand(int(a(2),i64),Z'FF'),8) + shiftl(iand(iand(int(a(3),i64),Z'FF'),Z'1F'),16)
-    a1  = shiftr(iand(int(a(3),i64),Z'FF'),5) + shiftl(iand(int(a(4),i64),Z'FF'),3) + shiftl(iand(iand(int(a(5),i64),Z'FF'),Z'3F'),11) + shiftl(iand(iand(int(a(6),i64),Z'FF'),Z'3'),19)
-    a2  = shiftr(iand(int(a(6),i64),Z'FF'),2) + shiftl(iand(int(a(7),i64),Z'FF'),6) + shiftl(iand(iand(int(a(8),i64),Z'FF'),Z'7F'),14) + shiftl(iand(iand(int(a(9),i64),Z'FF'),Z'0'),21)
-    a3  = shiftr(iand(int(a(9),i64),Z'FF'),0) + shiftl(iand(int(a(10),i64),Z'FF'),8) + shiftl(iand(iand(int(a(11),i64),Z'FF'),Z'1F'),16)
-    a4  = shiftr(iand(int(a(11),i64),Z'FF'),5) + shiftl(iand(int(a(12),i64),Z'FF'),3) + shiftl(iand(iand(int(a(13),i64),Z'FF'),Z'3F'),11)
-    a5  = shiftr(iand(int(a(13),i64),Z'FF'),6) + shiftl(iand(int(a(14),i64),Z'FF'),2) + shiftl(iand(iand(int(a(15),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(a(16),i64),Z'FF'),Z'3'),18)
-    a6  = shiftr(iand(int(a(16),i64),Z'FF'),2) + shiftl(iand(int(a(17),i64),Z'FF'),6) + shiftl(iand(iand(int(a(18),i64),Z'FF'),Z'7F'),14)
-    a7  = shiftr(iand(int(a(18),i64),Z'FF'),7) + shiftl(iand(int(a(19),i64),Z'FF'),1) + shiftl(iand(iand(int(a(20),i64),Z'FF'),Z'FF'),9) + shiftl(iand(iand(int(a(21),i64),Z'FF'),Z'7'),17)
-    a8  = shiftr(iand(int(a(21),i64),Z'FF'),3) + shiftl(iand(int(a(22),i64),Z'FF'),5) + shiftl(iand(iand(int(a(23),i64),Z'FF'),Z'3F'),13)
-    a9  = shiftr(iand(int(a(23),i64),Z'FF'),6) + shiftl(iand(int(a(24),i64),Z'FF'),2) + shiftl(iand(iand(int(a(25),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(a(26),i64),Z'FF'),Z'1'),18)
-    a10 = shiftr(iand(int(a(26),i64),Z'FF'),1) + shiftl(iand(int(a(27),i64),Z'FF'),7) + shiftl(iand(iand(int(a(28),i64),Z'FF'),Z'FF'),15)
-    a11 = shiftr(iand(int(a(28),i64),Z'FF'),6) + shiftl(iand(int(a(29),i64),Z'FF'),2) + shiftl(iand(iand(int(a(30),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(a(31),i64),Z'FF'),Z'7'),18)
+    a0  = iand(int(a(1),i8),Z'FF') + shiftl(iand(int(a(2),i8),Z'FF'),8) + shiftl(iand(iand(int(a(3),i8),Z'FF'),Z'1F'),16)
+    a1  = shiftr(iand(int(a(3),i8),Z'FF'),5) + shiftl(iand(int(a(4),i8),Z'FF'),3) + shiftl(iand(iand(int(a(5),i8),Z'FF'),Z'3F'),11) + shiftl(iand(iand(int(a(6),i8),Z'FF'),Z'3'),19)
+    a2  = shiftr(iand(int(a(6),i8),Z'FF'),2) + shiftl(iand(int(a(7),i8),Z'FF'),6) + shiftl(iand(iand(int(a(8),i8),Z'FF'),Z'7F'),14) + shiftl(iand(iand(int(a(9),i8),Z'FF'),Z'0'),21)
+    a3  = shiftr(iand(int(a(9),i8),Z'FF'),0) + shiftl(iand(int(a(10),i8),Z'FF'),8) + shiftl(iand(iand(int(a(11),i8),Z'FF'),Z'1F'),16)
+    a4  = shiftr(iand(int(a(11),i8),Z'FF'),5) + shiftl(iand(int(a(12),i8),Z'FF'),3) + shiftl(iand(iand(int(a(13),i8),Z'FF'),Z'3F'),11)
+    a5  = shiftr(iand(int(a(13),i8),Z'FF'),6) + shiftl(iand(int(a(14),i8),Z'FF'),2) + shiftl(iand(iand(int(a(15),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(a(16),i8),Z'FF'),Z'3'),18)
+    a6  = shiftr(iand(int(a(16),i8),Z'FF'),2) + shiftl(iand(int(a(17),i8),Z'FF'),6) + shiftl(iand(iand(int(a(18),i8),Z'FF'),Z'7F'),14)
+    a7  = shiftr(iand(int(a(18),i8),Z'FF'),7) + shiftl(iand(int(a(19),i8),Z'FF'),1) + shiftl(iand(iand(int(a(20),i8),Z'FF'),Z'FF'),9) + shiftl(iand(iand(int(a(21),i8),Z'FF'),Z'7'),17)
+    a8  = shiftr(iand(int(a(21),i8),Z'FF'),3) + shiftl(iand(int(a(22),i8),Z'FF'),5) + shiftl(iand(iand(int(a(23),i8),Z'FF'),Z'3F'),13)
+    a9  = shiftr(iand(int(a(23),i8),Z'FF'),6) + shiftl(iand(int(a(24),i8),Z'FF'),2) + shiftl(iand(iand(int(a(25),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(a(26),i8),Z'FF'),Z'1'),18)
+    a10 = shiftr(iand(int(a(26),i8),Z'FF'),1) + shiftl(iand(int(a(27),i8),Z'FF'),7) + shiftl(iand(iand(int(a(28),i8),Z'FF'),Z'FF'),15)
+    a11 = shiftr(iand(int(a(28),i8),Z'FF'),6) + shiftl(iand(int(a(29),i8),Z'FF'),2) + shiftl(iand(iand(int(a(30),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(a(31),i8),Z'FF'),Z'7'),18)
     ! Load b same pattern
-    b0  = iand(int(b(1),i64),Z'FF') + shiftl(iand(int(b(2),i64),Z'FF'),8) + shiftl(iand(iand(int(b(3),i64),Z'FF'),Z'1F'),16)
-    b1  = shiftr(iand(int(b(3),i64),Z'FF'),5) + shiftl(iand(int(b(4),i64),Z'FF'),3) + shiftl(iand(iand(int(b(5),i64),Z'FF'),Z'3F'),11) + shiftl(iand(iand(int(b(6),i64),Z'FF'),Z'3'),19)
-    b2  = shiftr(iand(int(b(6),i64),Z'FF'),2) + shiftl(iand(int(b(7),i64),Z'FF'),6) + shiftl(iand(iand(int(b(8),i64),Z'FF'),Z'7F'),14)
-    b3  = iand(int(b(9),i64),Z'FF') + shiftl(iand(int(b(10),i64),Z'FF'),8) + shiftl(iand(iand(int(b(11),i64),Z'FF'),Z'1F'),16)
-    b4  = shiftr(iand(int(b(11),i64),Z'FF'),5) + shiftl(iand(int(b(12),i64),Z'FF'),3) + shiftl(iand(iand(int(b(13),i64),Z'FF'),Z'3F'),11)
-    b5  = shiftr(iand(int(b(13),i64),Z'FF'),6) + shiftl(iand(int(b(14),i64),Z'FF'),2) + shiftl(iand(iand(int(b(15),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(b(16),i64),Z'FF'),Z'3'),18)
-    b6  = shiftr(iand(int(b(16),i64),Z'FF'),2) + shiftl(iand(int(b(17),i64),Z'FF'),6) + shiftl(iand(iand(int(b(18),i64),Z'FF'),Z'7F'),14)
-    b7  = shiftr(iand(int(b(18),i64),Z'FF'),7) + shiftl(iand(int(b(19),i64),Z'FF'),1) + shiftl(iand(iand(int(b(20),i64),Z'FF'),Z'FF'),9) + shiftl(iand(iand(int(b(21),i64),Z'FF'),Z'7'),17)
-    b8  = shiftr(iand(int(b(21),i64),Z'FF'),3) + shiftl(iand(int(b(22),i64),Z'FF'),5) + shiftl(iand(iand(int(b(23),i64),Z'FF'),Z'3F'),13)
-    b9  = shiftr(iand(int(b(23),i64),Z'FF'),6) + shiftl(iand(int(b(24),i64),Z'FF'),2) + shiftl(iand(iand(int(b(25),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(b(26),i64),Z'FF'),Z'1'),18)
-    b10 = shiftr(iand(int(b(26),i64),Z'FF'),1) + shiftl(iand(int(b(27),i64),Z'FF'),7) + shiftl(iand(iand(int(b(28),i64),Z'FF'),Z'FF'),15)
-    b11 = shiftr(iand(int(b(28),i64),Z'FF'),6) + shiftl(iand(int(b(29),i64),Z'FF'),2) + shiftl(iand(iand(int(b(30),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(b(31),i64),Z'FF'),Z'7'),18)
+    b0  = iand(int(b(1),i8),Z'FF') + shiftl(iand(int(b(2),i8),Z'FF'),8) + shiftl(iand(iand(int(b(3),i8),Z'FF'),Z'1F'),16)
+    b1  = shiftr(iand(int(b(3),i8),Z'FF'),5) + shiftl(iand(int(b(4),i8),Z'FF'),3) + shiftl(iand(iand(int(b(5),i8),Z'FF'),Z'3F'),11) + shiftl(iand(iand(int(b(6),i8),Z'FF'),Z'3'),19)
+    b2  = shiftr(iand(int(b(6),i8),Z'FF'),2) + shiftl(iand(int(b(7),i8),Z'FF'),6) + shiftl(iand(iand(int(b(8),i8),Z'FF'),Z'7F'),14)
+    b3  = iand(int(b(9),i8),Z'FF') + shiftl(iand(int(b(10),i8),Z'FF'),8) + shiftl(iand(iand(int(b(11),i8),Z'FF'),Z'1F'),16)
+    b4  = shiftr(iand(int(b(11),i8),Z'FF'),5) + shiftl(iand(int(b(12),i8),Z'FF'),3) + shiftl(iand(iand(int(b(13),i8),Z'FF'),Z'3F'),11)
+    b5  = shiftr(iand(int(b(13),i8),Z'FF'),6) + shiftl(iand(int(b(14),i8),Z'FF'),2) + shiftl(iand(iand(int(b(15),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(b(16),i8),Z'FF'),Z'3'),18)
+    b6  = shiftr(iand(int(b(16),i8),Z'FF'),2) + shiftl(iand(int(b(17),i8),Z'FF'),6) + shiftl(iand(iand(int(b(18),i8),Z'FF'),Z'7F'),14)
+    b7  = shiftr(iand(int(b(18),i8),Z'FF'),7) + shiftl(iand(int(b(19),i8),Z'FF'),1) + shiftl(iand(iand(int(b(20),i8),Z'FF'),Z'FF'),9) + shiftl(iand(iand(int(b(21),i8),Z'FF'),Z'7'),17)
+    b8  = shiftr(iand(int(b(21),i8),Z'FF'),3) + shiftl(iand(int(b(22),i8),Z'FF'),5) + shiftl(iand(iand(int(b(23),i8),Z'FF'),Z'3F'),13)
+    b9  = shiftr(iand(int(b(23),i8),Z'FF'),6) + shiftl(iand(int(b(24),i8),Z'FF'),2) + shiftl(iand(iand(int(b(25),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(b(26),i8),Z'FF'),Z'1'),18)
+    b10 = shiftr(iand(int(b(26),i8),Z'FF'),1) + shiftl(iand(int(b(27),i8),Z'FF'),7) + shiftl(iand(iand(int(b(28),i8),Z'FF'),Z'FF'),15)
+    b11 = shiftr(iand(int(b(28),i8),Z'FF'),6) + shiftl(iand(int(b(29),i8),Z'FF'),2) + shiftl(iand(iand(int(b(30),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(b(31),i8),Z'FF'),Z'7'),18)
     ! Load c same pattern
-    c0  = iand(int(c(1),i64),Z'FF') + shiftl(iand(int(c(2),i64),Z'FF'),8) + shiftl(iand(iand(int(c(3),i64),Z'FF'),Z'1F'),16)
-    c1  = shiftr(iand(int(c(3),i64),Z'FF'),5) + shiftl(iand(int(c(4),i64),Z'FF'),3) + shiftl(iand(iand(int(c(5),i64),Z'FF'),Z'3F'),11) + shiftl(iand(iand(int(c(6),i64),Z'FF'),Z'3'),19)
-    c2  = shiftr(iand(int(c(6),i64),Z'FF'),2) + shiftl(iand(int(c(7),i64),Z'FF'),6) + shiftl(iand(iand(int(c(8),i64),Z'FF'),Z'7F'),14)
-    c3  = iand(int(c(9),i64),Z'FF') + shiftl(iand(int(c(10),i64),Z'FF'),8) + shiftl(iand(iand(int(c(11),i64),Z'FF'),Z'1F'),16)
-    c4  = shiftr(iand(int(c(11),i64),Z'FF'),5) + shiftl(iand(int(c(12),i64),Z'FF'),3) + shiftl(iand(iand(int(c(13),i64),Z'FF'),Z'3F'),11)
-    c5  = shiftr(iand(int(c(13),i64),Z'FF'),6) + shiftl(iand(int(c(14),i64),Z'FF'),2) + shiftl(iand(iand(int(c(15),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(c(16),i64),Z'FF'),Z'3'),18)
-    c6  = shiftr(iand(int(c(16),i64),Z'FF'),2) + shiftl(iand(int(c(17),i64),Z'FF'),6) + shiftl(iand(iand(int(c(18),i64),Z'FF'),Z'7F'),14)
-    c7  = shiftr(iand(int(c(18),i64),Z'FF'),7) + shiftl(iand(int(c(19),i64),Z'FF'),1) + shiftl(iand(iand(int(c(20),i64),Z'FF'),Z'FF'),9) + shiftl(iand(iand(int(c(21),i64),Z'FF'),Z'7'),17)
-    c8  = shiftr(iand(int(c(21),i64),Z'FF'),3) + shiftl(iand(int(c(22),i64),Z'FF'),5) + shiftl(iand(iand(int(c(23),i64),Z'FF'),Z'3F'),13)
-    c9  = shiftr(iand(int(c(23),i64),Z'FF'),6) + shiftl(iand(int(c(24),i64),Z'FF'),2) + shiftl(iand(iand(int(c(25),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(c(26),i64),Z'FF'),Z'1'),18)
-    c10 = shiftr(iand(int(c(26),i64),Z'FF'),1) + shiftl(iand(int(c(27),i64),Z'FF'),7) + shiftl(iand(iand(int(c(28),i64),Z'FF'),Z'FF'),15)
-    c11 = shiftr(iand(int(c(28),i64),Z'FF'),6) + shiftl(iand(int(c(29),i64),Z'FF'),2) + shiftl(iand(iand(int(c(30),i64),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(c(31),i64),Z'FF'),Z'7'),18)
+    c0  = iand(int(c(1),i8),Z'FF') + shiftl(iand(int(c(2),i8),Z'FF'),8) + shiftl(iand(iand(int(c(3),i8),Z'FF'),Z'1F'),16)
+    c1  = shiftr(iand(int(c(3),i8),Z'FF'),5) + shiftl(iand(int(c(4),i8),Z'FF'),3) + shiftl(iand(iand(int(c(5),i8),Z'FF'),Z'3F'),11) + shiftl(iand(iand(int(c(6),i8),Z'FF'),Z'3'),19)
+    c2  = shiftr(iand(int(c(6),i8),Z'FF'),2) + shiftl(iand(int(c(7),i8),Z'FF'),6) + shiftl(iand(iand(int(c(8),i8),Z'FF'),Z'7F'),14)
+    c3  = iand(int(c(9),i8),Z'FF') + shiftl(iand(int(c(10),i8),Z'FF'),8) + shiftl(iand(iand(int(c(11),i8),Z'FF'),Z'1F'),16)
+    c4  = shiftr(iand(int(c(11),i8),Z'FF'),5) + shiftl(iand(int(c(12),i8),Z'FF'),3) + shiftl(iand(iand(int(c(13),i8),Z'FF'),Z'3F'),11)
+    c5  = shiftr(iand(int(c(13),i8),Z'FF'),6) + shiftl(iand(int(c(14),i8),Z'FF'),2) + shiftl(iand(iand(int(c(15),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(c(16),i8),Z'FF'),Z'3'),18)
+    c6  = shiftr(iand(int(c(16),i8),Z'FF'),2) + shiftl(iand(int(c(17),i8),Z'FF'),6) + shiftl(iand(iand(int(c(18),i8),Z'FF'),Z'7F'),14)
+    c7  = shiftr(iand(int(c(18),i8),Z'FF'),7) + shiftl(iand(int(c(19),i8),Z'FF'),1) + shiftl(iand(iand(int(c(20),i8),Z'FF'),Z'FF'),9) + shiftl(iand(iand(int(c(21),i8),Z'FF'),Z'7'),17)
+    c8  = shiftr(iand(int(c(21),i8),Z'FF'),3) + shiftl(iand(int(c(22),i8),Z'FF'),5) + shiftl(iand(iand(int(c(23),i8),Z'FF'),Z'3F'),13)
+    c9  = shiftr(iand(int(c(23),i8),Z'FF'),6) + shiftl(iand(int(c(24),i8),Z'FF'),2) + shiftl(iand(iand(int(c(25),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(c(26),i8),Z'FF'),Z'1'),18)
+    c10 = shiftr(iand(int(c(26),i8),Z'FF'),1) + shiftl(iand(int(c(27),i8),Z'FF'),7) + shiftl(iand(iand(int(c(28),i8),Z'FF'),Z'FF'),15)
+    c11 = shiftr(iand(int(c(28),i8),Z'FF'),6) + shiftl(iand(int(c(29),i8),Z'FF'),2) + shiftl(iand(iand(int(c(30),i8),Z'FF'),Z'7F'),10) + shiftl(iand(iand(int(c(31),i8),Z'FF'),Z'7'),18)
     ! Multiply a*b (schoolbook 12x12 limbs) + c into 23-limb accumulator
     s0 =c0+a0*b0
     s1 =c1+a0*b1+a1*b0
@@ -1122,27 +1125,27 @@ contains
   ! Curve: -x^2 + y^2 = 1 + d*x^2*y^2
   ! d = -121665/121666 mod p (as 10-limb fe)
 
-  pure subroutine ge_d(d)
-    integer(i64), intent(out), dimension(10) :: d
+  subroutine ge_d(d)
+    integer(i8), intent(out), dimension(10) :: d
     ! d = -121665/121666 mod p
     ! Pre-computed value (RFC 8032 §5.1, SUPERCOP fe d):
-    d = [ -10913610_i64,  13857413_i64, -15372611_i64,  10608986_i64, &
-           12376523_i64,  -12664939_i64,  10701287_i64, -12232133_i64, &
-           -9232152_i64,   12480880_i64 ]
+    d = [ -10913610_i8,  13857413_i8, -15372611_i8,  10608986_i8, &
+           12376523_i8,  -12664939_i8,  10701287_i8, -12232133_i8, &
+           -9232152_i8,   12480880_i8 ]
   end subroutine
 
   ! 2*d (for unified addition formula)
-  pure subroutine ge_2d(d2)
-    integer(i64), intent(out), dimension(10) :: d2
-    integer(i64) :: d(10)
+  subroutine ge_2d(d2)
+    integer(i8), intent(out), dimension(10) :: d2
+    integer(i8) :: d(10)
     call ge_d(d)
     d2 = 2*d
     call fe_reduce(d2)
   end subroutine
 
   ! Set point to neutral element (0:1:1:0) — additive identity
-  pure subroutine ge_zero(x,y,z,t)
-    integer(i64), intent(out), dimension(10) :: x,y,z,t
+  subroutine ge_zero(x,y,z,t)
+    integer(i8), intent(out), dimension(10) :: x,y,z,t
     x=0; y=0; z=0; t=0
     y(1)=1; z(1)=1  ! (0:1:1:0)
   end subroutine
@@ -1150,10 +1153,10 @@ contains
   ! Unified (complete) addition on twisted Edwards
   ! (x3,y3,z3,t3) = (x1,y1,z1,t1) + (x2,y2,z2,t2)
   ! RFC 8032 §5.1.4 formula (Hisil et al. unified addition)
-  pure subroutine ge_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
-    integer(i64), intent(in),  dimension(10) :: x1,y1,z1,t1,x2,y2,z2,t2
-    integer(i64), intent(out), dimension(10) :: x3,y3,z3,t3
-    integer(i64) :: A(10),B(10),C(10),D(10),E(10),F(10),G(10),H(10),d2(10)
+  subroutine ge_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
+    integer(i8), intent(in),  dimension(10) :: x1,y1,z1,t1,x2,y2,z2,t2
+    integer(i8), intent(out), dimension(10) :: x3,y3,z3,t3
+    integer(i8) :: A(10),B(10),C(10),D(10),E(10),F(10),G(10),H(10),d2(10)
     call ge_2d(d2)
     call fe_mul(x1,x2, A)      ! A = X1*X2
     call fe_mul(y1,y2, B)      ! B = Y1*Y2
@@ -1178,10 +1181,10 @@ contains
 
   ! Double a point: (x3,y3,z3,t3) = 2*(x1,y1,z1,t1)
   ! RFC 8032 §5.1.4 doubling (dbl-2008-hwcd)
-  pure subroutine ge_double(x1,y1,z1,t1, x3,y3,z3,t3)
-    integer(i64), intent(in),  dimension(10) :: x1,y1,z1,t1
-    integer(i64), intent(out), dimension(10) :: x3,y3,z3,t3
-    integer(i64) :: A(10),B(10),C(10),H(10),E(10),G(10),F(10)
+  subroutine ge_double(x1,y1,z1,t1, x3,y3,z3,t3)
+    integer(i8), intent(in),  dimension(10) :: x1,y1,z1,t1
+    integer(i8), intent(out), dimension(10) :: x3,y3,z3,t3
+    integer(i8) :: A(10),B(10),C(10),H(10),E(10),G(10),F(10)
     call fe_sq(x1, A)          ! A = X1^2
     call fe_sq(y1, B)          ! B = Y1^2
     call fe_sq(z1, C)          ! C = Z1^2
@@ -1210,13 +1213,13 @@ contains
   end subroutine
 
   ! Constant-time conditional swap (for ladder)
-  pure subroutine fe_cswap(a, b, swap)
-    integer(i64), intent(inout), dimension(10) :: a, b
+  subroutine fe_cswap(a, b, swap)
+    integer(i8), intent(inout), dimension(10) :: a, b
     integer, intent(in) :: swap  ! 0 or 1
-    integer(i64) :: mask, t(10), i
-    mask = -int(swap, i64)  ! 0 or all-ones
+    integer(i8) :: mask, t(10), i
+    mask = -int(swap, i8)  ! 0 or all-ones
     do i=1,10
-      t(i) = mask .and. ieor(a(i), b(i))
+      t(i) = iand(mask, ieor(a(i), b(i)))
       a(i) = ieor(a(i), t(i))
       b(i) = ieor(b(i), t(i))
     end do
@@ -1224,22 +1227,22 @@ contains
 
   ! Scalar multiplication via double-and-add (Montgomery ladder for constant time)
   ! result = s * P  (P given as extended homogeneous (px,py,pz,pt))
-  pure subroutine ge_scalarmult(s_bytes, px,py,pz,pt, rx,ry,rz,rt)
+  subroutine ge_scalarmult(s_bytes, px,py,pz,pt, rx,ry,rz,rt)
     integer(i8),  intent(in),  dimension(32) :: s_bytes
-    integer(i64), intent(in),  dimension(10) :: px,py,pz,pt
-    integer(i64), intent(out), dimension(10) :: rx,ry,rz,rt
-    integer(i64) :: r0x(10),r0y(10),r0z(10),r0t(10)  ! accumulator (neutral)
-    integer(i64) :: r1x(10),r1y(10),r1z(10),r1t(10)  ! P copy
-    integer(i64) :: tx(10),ty(10),tz(10),tt(10)
+    integer(i8), intent(in),  dimension(10) :: px,py,pz,pt
+    integer(i8), intent(out), dimension(10) :: rx,ry,rz,rt
+    integer(i8) :: r0x(10),r0y(10),r0z(10),r0t(10)  ! accumulator (neutral)
+    integer(i8) :: r1x(10),r1y(10),r1z(10),r1t(10)  ! P copy
+    integer(i8) :: tx(10),ty(10),tz(10),tt(10)
     integer :: i, j, bit
-    integer(i64) :: byte_val
+    integer(i8) :: byte_val
     call ge_zero(r0x,r0y,r0z,r0t)   ! R0 = identity
     r1x=px; r1y=py; r1z=pz; r1t=pt  ! R1 = P
     ! Double-and-add (MSB first, 256 bits)
     do i = 32, 1, -1
-      byte_val = iand(int(s_bytes(i),i64), Z'FF')
+      byte_val = iand(int(s_bytes(i),i8), Z'FF')
       do j = 7, 0, -1
-        bit = int(iand(shiftr(byte_val, j), 1_i64))
+        bit = int(iand(shiftr(byte_val, j), 1_i8))
         ! Conditional swap: swap R0,R1 if bit=1
         call fe_cswap(r0x,r1x,bit)
         call fe_cswap(r0y,r1y,bit)
@@ -1262,27 +1265,27 @@ contains
   end subroutine
 
   ! Base point B of Ed25519 (RFC 8032 §5.1)
-  pure subroutine ge_basepoint(bx,by,bz,bt)
-    integer(i64), intent(out), dimension(10) :: bx,by,bz,bt
+  subroutine ge_basepoint(bx,by,bz,bt)
+    integer(i8), intent(out), dimension(10) :: bx,by,bz,bt
     ! B = (Bx, By, 1, Bx*By) in extended homogeneous
     ! By = 4/5 mod p (RFC 8032)
     ! Bx = sqrt((By^2-1)/(d*By^2+1)) (positive square root)
     ! Pre-computed 10-limb values (from SUPERCOP/ref10/base.h):
-    bx = [  -14297830_i64,  -7645148_i64,  16109834_i64, -6494926_i64, &
-             1680036_i64,  12345067_i64,  -5765007_i64, 13725928_i64, &
-             -5792619_i64,   3645073_i64 ]
-    by = [ -26843541_i64,  16110573_i64, -26843546_i64, 15409067_i64, &
-           -26843541_i64,  15078149_i64, -26843541_i64, 14388135_i64, &
-           -26843541_i64,  13415012_i64 ]
+    bx = [  -14297830_i8,  -7645148_i8,  16109834_i8, -6494926_i8, &
+             1680036_i8,  12345067_i8,  -5765007_i8, 13725928_i8, &
+             -5792619_i8,   3645073_i8 ]
+    by = [ -26843541_i8,  16110573_i8, -26843546_i8, 15409067_i8, &
+           -26843541_i8,  15078149_i8, -26843541_i8, 14388135_i8, &
+           -26843541_i8,  13415012_i8 ]
     bz(1)=1; bz(2:10)=0
     call fe_mul(bx,by,bt)
   end subroutine
 
   ! ── Public API wrappers (match existing sov_* ABI) ────────────
 
-  pure subroutine sov_ed25519_clamp_and_decode(b, s)
+  subroutine sov_ed25519_clamp_and_decode(b, s)
     integer(i8),  intent(in),  dimension(32) :: b
-    integer(i64), intent(out), dimension(10) :: s
+    integer(i8), intent(out), dimension(10) :: s
     integer(i8) :: bc(32)
     bc = b
     bc(1) = iand(bc(1), int(Z'F8',i8))
@@ -1290,29 +1293,29 @@ contains
     call fe_frombytes(bc, s)
   end subroutine
 
-  pure subroutine sov_ed25519_scalar_from_bytes(b, s)
+  subroutine sov_ed25519_scalar_from_bytes(b, s)
     integer(i8),  intent(in),  dimension(32) :: b
-    integer(i64), intent(out), dimension(10) :: s
+    integer(i8), intent(out), dimension(10) :: s
     call fe_frombytes(b, s)
   end subroutine
 
-  pure subroutine sov_ed25519_scalar_to_bytes(s, b)
-    integer(i64), intent(in),  dimension(10) :: s
+  subroutine sov_ed25519_scalar_to_bytes(s, b)
+    integer(i8), intent(in),  dimension(10) :: s
     integer(i8),  intent(out), dimension(32) :: b
     call fe_tobytes(s, b)
   end subroutine
 
-  pure function sov_ed25519_scalar_valid(s) result(ok)
-    integer(i64), intent(in), dimension(10) :: s
+  function sov_ed25519_scalar_valid(s) result(ok)
+    integer(i8), intent(in), dimension(10) :: s
     logical :: ok
     ! Valid if not all-zero (zero scalar is the degenerate key)
-    ok = any(s /= 0_i64)
+    ok = any(s /= 0_i8)
   end function
 
   ! Reduce 64-byte hash to scalar mod L
-  pure subroutine sov_ed25519_reduce_scalar(h, s)
+  subroutine sov_ed25519_reduce_scalar(h, s)
     integer(i8),  intent(in),  dimension(64) :: h
-    integer(i64), intent(out), dimension(10) :: s
+    integer(i8), intent(out), dimension(10) :: s
     integer(i8) :: out32(32)
     call sc_reduce64(h, out32)
     call fe_frombytes(out32, s)
@@ -1320,9 +1323,9 @@ contains
 
   ! Scalar multiplication in the field: res = a * b mod L
   ! (both treated as 10-limb fe encoding of the scalar)
-  pure subroutine sov_ed25519_scalar_mul(a, b, res)
-    integer(i64), intent(in),  dimension(10) :: a, b
-    integer(i64), intent(out), dimension(10) :: res
+  subroutine sov_ed25519_scalar_mul(a, b, res)
+    integer(i8), intent(in),  dimension(10) :: a, b
+    integer(i8), intent(out), dimension(10) :: res
     integer(i8) :: ab(32), bb(32), zero(32), out(32)
     zero = 0_i8
     call fe_tobytes(a, ab)
@@ -1332,9 +1335,9 @@ contains
   end subroutine
 
   ! Scalar addition mod L
-  pure subroutine sov_ed25519_scalar_add_mod_l(a, b, res)
-    integer(i64), intent(in),    dimension(10) :: a, b
-    integer(i64), intent(inout), dimension(10) :: res
+  subroutine sov_ed25519_scalar_add_mod_l(a, b, res)
+    integer(i8), intent(in),    dimension(10) :: a, b
+    integer(i8), intent(inout), dimension(10) :: res
     ! res = (a + b) mod L via sc_muladd(1, a, b, res)
     integer(i8) :: ab(32), bb(32), one32(32), out(32)
     one32 = 0_i8; one32(1) = 1_i8
@@ -1345,10 +1348,10 @@ contains
   end subroutine
 
   ! s * BasePoint → (x,y,z,t)
-  pure subroutine sov_ed25519_scalar_mul_base(s, x,y,z,t)
-    integer(i64), intent(in),  dimension(10) :: s
-    integer(i64), intent(out), dimension(10) :: x,y,z,t
-    integer(i64) :: bx(10),by(10),bz(10),bt(10)
+  subroutine sov_ed25519_scalar_mul_base(s, x,y,z,t)
+    integer(i8), intent(in),  dimension(10) :: s
+    integer(i8), intent(out), dimension(10) :: x,y,z,t
+    integer(i8) :: bx(10),by(10),bz(10),bt(10)
     integer(i8)  :: sb(32)
     call ge_basepoint(bx,by,bz,bt)
     call fe_tobytes(s, sb)
@@ -1356,10 +1359,10 @@ contains
   end subroutine
 
   ! s * P → accumulate into (x2,y2,z2,t2)
-  pure subroutine sov_ed25519_scalar_mul_point(s, x1,y1,z1,t1, x2,y2,z2,t2)
-    integer(i64), intent(in),    dimension(10) :: s,x1,y1,z1,t1
-    integer(i64), intent(inout), dimension(10) :: x2,y2,z2,t2
-    integer(i64) :: rx(10),ry(10),rz(10),rt(10)
+  subroutine sov_ed25519_scalar_mul_point(s, x1,y1,z1,t1, x2,y2,z2,t2)
+    integer(i8), intent(in),    dimension(10) :: s,x1,y1,z1,t1
+    integer(i8), intent(inout), dimension(10) :: x2,y2,z2,t2
+    integer(i8) :: rx(10),ry(10),rz(10),rt(10)
     integer(i8)  :: sb(32)
     call fe_tobytes(s, sb)
     call ge_scalarmult(sb, x1,y1,z1,t1, rx,ry,rz,rt)
@@ -1367,54 +1370,65 @@ contains
   end subroutine
 
   ! Unified point addition
-  pure subroutine sov_ed25519_point_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
-    integer(i64), intent(in),  dimension(10) :: x1,y1,z1,t1,x2,y2,z2,t2
-    integer(i64), intent(out), dimension(10) :: x3,y3,z3,t3
+  subroutine sov_ed25519_point_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
+    integer(i8), intent(in),  dimension(10) :: x1,y1,z1,t1,x2,y2,z2,t2
+    integer(i8), intent(out), dimension(10) :: x3,y3,z3,t3
     call ge_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
   end subroutine
 
   ! Negate point: (-X:Y:Z:-T)
-  pure subroutine sov_ed25519_point_negate(x,y,z,t)
-    integer(i64), intent(inout), dimension(10) :: x,y,z,t
-    integer(i64) :: nx(10), nt(10)
-    integer(i64), parameter :: ZERO(10) = 0_i64
+  subroutine sov_ed25519_point_negate(x,y,z,t)
+    integer(i8), intent(inout), dimension(10) :: x,y,z,t
+    integer(i8) :: nx(10), nt(10)
+    integer(i8), parameter :: ZERO(10) = 0_i8
     call fe_sub(ZERO, x, nx)
     call fe_sub(ZERO, t, nt)
     x = nx; t = nt
   end subroutine
 
   ! Encode point (X:Y:Z:T) → 32 bytes (RFC 8032 §5.1.2)
-  pure subroutine sov_ed25519_encode_point(x,y,z,t, b)
-    integer(i64), intent(in),  dimension(10) :: x,y,z,t
+  subroutine sov_ed25519_encode_point(x,y,z,t, b)
+    integer(i8), intent(in),  dimension(10) :: x,y,z,t
     integer(i8),  intent(out), dimension(32) :: b
-    integer(i64) :: recip(10), xp(10), yp(10), zx(10)
+    integer(i8) :: recip(10), xp(10), yp(10), zx(10)
+    integer(i8) :: xb(10)
+    integer(i8) :: xbytes(32)
     call fe_inv(z, recip)       ! recip = 1/Z
     call fe_mul(x, recip, xp)  ! xp = X/Z
     call fe_mul(y, recip, yp)  ! yp = Y/Z
     call fe_tobytes(yp, b)
     ! Set high bit of b[32] to sign bit of x (LSB of xp)
-    integer(i64) :: xb(10)
-    integer(i8)  :: xbytes(32)
     call fe_tobytes(xp, xbytes)
     b(32) = ior(b(32), shiftl(iand(xbytes(1), 1_i8), 7))
   end subroutine
 
   ! Decode 32 bytes → point (RFC 8032 §5.1.3)
-  pure function sov_ed25519_decode_point(b, x,y,z,t) result(ok)
+  function sov_ed25519_decode_point(b, x,y,z,t) result(ok)
     integer(i8),  intent(in),  dimension(32) :: b
-    integer(i64), intent(out), dimension(10) :: x,y,z,t
+    integer(i8), intent(out), dimension(10) :: x,y,z,t
     logical :: ok
     integer(i8)  :: yb(32)
-    integer(i64) :: y_fe(10), y2(10), u(10), v(10), v3(10), v7(10)
-    integer(i64) :: x_candidate(10), check(10), d(10), one(10), tmp(10)
+    integer(i8) :: y_fe(10), y2(10), u(10), v(10), v3(10), v7(10)
+    integer(i8) :: x_candidate(10), check(10), d(10), one(10), tmp(10)
     integer :: sign_bit
-    yb = b; sign_bit = int(iand(shiftr(int(b(32),i64),7), 1_i64))
+    integer(i8) :: xb(32)
+    integer(i8), parameter :: NEG1(10) = &
+      [ int(Z'3FFFFEC',i8), int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), &
+        int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), int(Z'1FFFFFF',i8), &
+        int(Z'3FFFFFF',i8), int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), &
+        int(Z'1FFFFFF',i8) ]
+    integer(i8), parameter :: SQRT_M1(10) = &
+      [ -32595792_i8, -7943725_i8, 9377950_i8, 3500415_i8, &
+        12389472_i8, -272473_i8, -25146209_i8, -2005654_i8, &
+        326686_i8, 11406482_i8 ]
+    integer(i8), parameter :: ZERO(10) = 0_i8
+    yb = b; sign_bit = int(iand(shiftr(int(b(32),i8),7), 1_i8))
     yb(32) = iand(yb(32), int(Z'7F',i8))  ! clear sign bit
     call fe_frombytes(yb, y_fe)
     ! Recover x: x^2 = (y^2-1) / (d*y^2+1)
     call fe_sq(y_fe, y2)
     call ge_d(d)
-    one = 0_i64; one(1) = 1_i64
+    one = 0_i8; one(1) = 1_i8
     call fe_mul(d, y2, u)
     call fe_add(u, one, v)     ! v = d*y^2 + 1
     call fe_sub(y2, one, u)    ! u = y^2 - 1
@@ -1459,37 +1473,25 @@ contains
     call fe_sub(check, u, check)
     call fe_reduce(check)
     ! If check != 0 and check != -1 mod p: no square root
-    integer(i64), parameter :: NEG1(10) = &
-      [ int(Z'3FFFFEC',i64), int(Z'1FFFFFF',i64), int(Z'3FFFFFF',i64), &
-        int(Z'1FFFFFF',i64), int(Z'3FFFFFF',i64), int(Z'1FFFFFF',i64), &
-        int(Z'3FFFFFF',i64), int(Z'1FFFFFF',i64), int(Z'3FFFFFF',i64), &
-        int(Z'1FFFFFF',i64) ]
-    if (all(check == 0_i64)) then
+    if (all(check == 0_i8)) then
       ok = .true.
     else if (all(check == NEG1)) then
       ! x = x * sqrt(-1) = x * 2^((p-1)/4) mod p
-      integer(i64), parameter :: SQRT_M1(10) = &
-        [ -32595792_i64, -7943725_i64, 9377950_i64, 3500415_i64, &
-          12389472_i64, -272473_i64, -25146209_i64, -2005654_i64, &
-          326686_i64, 11406482_i64 ]
       call fe_mul(x_candidate, SQRT_M1, x_candidate)
       ok = .true.
     else
       ok = .false.
-      x = 0_i64; y = 0_i64; z = 0_i64; t = 0_i64
+      x = 0_i8; y = 0_i8; z = 0_i8; t = 0_i8
       return
     end if
     ! Adjust sign
-    integer(i64) :: xbytes_check(10)
-    integer(i8)  :: xb(32)
     call fe_tobytes(x_candidate, xb)
-    if (int(iand(int(xb(1),i64), 1_i64)) /= sign_bit) then
-      call fe_sub(0_i64*x_candidate, x_candidate, x_candidate)  ! negate
-      integer(i64), parameter :: ZERO(10) = 0_i64
+    if (int(iand(int(xb(1),i8), 1_i8)) /= sign_bit) then
+      call fe_sub(0_i8*x_candidate, x_candidate, x_candidate)  ! negate
       call fe_sub(ZERO, x_candidate, x_candidate)
     end if
     x = x_candidate; y = y_fe
-    z(1) = 1_i64; z(2:10) = 0_i64
+    z(1) = 1_i8; z(2:10) = 0_i8
     call fe_mul(x, y, t)
     ok = .true.
   end function
