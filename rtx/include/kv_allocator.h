@@ -21,6 +21,7 @@ typedef struct {
 
 /* Lifecycle */
 int  sov_kv_allocator_init(void);
+int  sov_kv_allocator_init_with_config(const sov_kv_allocator_config_t* cfg);
 void sov_kv_allocator_shutdown(void);
 
 /* Configuration query — fills *cfg, returns 0 on success */
@@ -37,8 +38,11 @@ CUdeviceptr sov_kv_get_k_base(void);
 CUdeviceptr sov_kv_get_v_base(void);
 
 /* Block table management — block_table[seq][logical_block] = physical_block */
-int sov_kv_allocate_blocks(int seq_id, int n_blocks, int32_t* block_table_row);
+int sov_kv_allocate_blocks(int seq_id, int n_tokens);
 int sov_kv_free_sequence(int seq_id);
+
+/* Copy block table to device memory (seq 0 layout) */
+int sov_kv_copy_block_table_to_device(CUdeviceptr d_table);
 
 /* Legacy sov_rtx.h surface */
 int sov_kv_init(void* kv_store, int n_layers, int n_kv_heads, int head_dim,
