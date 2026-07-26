@@ -1,57 +1,71 @@
-#pragma once
-#include <stddef.h>
-#include <stdint.h>
-#include "cuda_driver_loader.h"
+#ifndef SOV_KV_ALLOCATOR_H
+#define SOV_KV_ALLOCATOR_H
+
+#include "sov_rtx.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Static capacity constants — must match the values used by flash_attention.ptx */
-#define SOV_KV_TOTAL_BLOCKS       4096
-#define SOV_KV_MAX_BLOCKS_PER_SEQ  256
+/* ============================================================
+ * KV Block Allocator — zero-malloc, static free-list
+ * Matches vLLM PagedAttention block_table layout exactly.
+ * ============================================================ */
+
+#define SOV_KV_MAX_BLOCKS_PER_SEQ (SOV_MAX_SEQ_LEN / SOV_KV_BLOCK_SIZE) /* 2048/16 = 128 */
+#define SOV_KV_TOTAL_BLOCKS (SOV_MAX_SEQS * SOV_KV_MAX_BLOCKS_PER_SEQ) /* 256 * 128 = 32768 */
 
 typedef struct {
-    uint32_t layer_count;
-    uint32_t kv_head_count;
-    uint32_t head_dim;
-    uint32_t physical_block_count;
-    uint32_t element_bytes;   /* 2 for f16 */
-} sov_kv_allocator_config_t;
+    /* Block table: [seq_id * max_blocks_per_seq + block_idx] = physical_block_id (or -1) */
+    int32_t block_table[SOV_MAX_SEQS * SOV_KV_MAX_BLOCKS_PER_SEQ];
 
-/* Lifecycle */
-int  sov_kv_allocator_init(void);
-int  sov_kv_allocator_init_with_config(const sov_kv_allocator_config_t* cfg);
+    /* Free list: stack of available physical block IDs */
+    int32_t free_list[SOV_KV_TOTAL_BLOCKS];
+    int32_t free_top; /* index of next free slot (0 = empty) */
+
+    /* Per-sequence allocation count */
+    uint16_t seq_block_count[SOV_MAX_SEQS];
+
+    /* GPU memory base pointer for KV cache (set at init) */
+    void* gpu_kv_base; /* cuMemAlloc'd region */
+    size_t gpu_kv_bytes; /* total bytes allocated */
+
+    /* Initialization flag */
+    int initialized;
+} sov_kv_allocator_t;
+
+/* Global singleton instance */
+extern sov_kv_allocator_t g_kv_allocator;
+
+/* Initialize allocator: reserve GPU memory, build free list.
+ * Returns 0 on success, -1 on failure. */
+int sov_kv_allocator_init(void);
+
+/* Allocate 'num_tokens' worth of KV blocks for a sequence.
+ * Returns number of blocks allocated (>= 0), or -1 on OOM. */
+int sov_kv_allocate_blocks(int32_t seq_id, uint32_t num_tokens);
+
+/* Append 'num_new_tokens' to an existing sequence.
+ * Returns 0 on success, -1 on OOM. */
+int sov_kv_append_tokens(int32_t seq_id, uint32_t num_new_tokens);
+
+/* Release all blocks owned by a sequence back to free list. */
+void sov_kv_free_sequence(int32_t seq_id);
+
+/* Copy block_table to GPU (must be called before each flash_attention launch). */
+int sov_kv_copy_block_table_to_device(void* d_block_table);
+
+/* Get physical GPU address for a (seq_id, block_idx) pair. Returns 0 if not allocated. */
+void* sov_kv_get_block_ptr(int32_t seq_id, uint32_t block_idx);
+
+/* Get number of blocks currently allocated to a sequence. */
+uint32_t sov_kv_get_seq_block_count(int32_t seq_id);
+
+/* Shutdown: free GPU memory. */
 void sov_kv_allocator_shutdown(void);
-
-/* Configuration query — fills *cfg, returns 0 on success */
-int sov_kv_get_config(sov_kv_allocator_config_t* cfg);
-
-/* Typed stride accessors — all return byte counts */
-size_t sov_kv_get_token_stride(void);
-size_t sov_kv_get_page_stride(void);
-size_t sov_kv_get_layer_stride(void);
-size_t sov_kv_get_plane_stride(void);
-
-/* GPU base pointers (0 when not initialized) */
-CUdeviceptr sov_kv_get_k_base(void);
-CUdeviceptr sov_kv_get_v_base(void);
-
-/* Block table management — block_table[seq][logical_block] = physical_block */
-int sov_kv_allocate_blocks(int seq_id, int n_tokens);
-int sov_kv_free_sequence(int seq_id);
-
-/* Copy block table to device memory (seq 0 layout) */
-int sov_kv_copy_block_table_to_device(CUdeviceptr d_table);
-
-/* Legacy sov_rtx.h surface */
-int sov_kv_init(void* kv_store, int n_layers, int n_kv_heads, int head_dim,
-                int block_size, int max_blocks);
-int sov_kv_allocate_blocks_legacy(void* kv_store, int seq_id, int n_blocks,
-                                  int* block_table);
-int sov_kv_append_tokens(void* kv_store, int* block_table, float* k, float* v,
-                         int layer, int token_pos);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOV_KV_ALLOCATOR_H */
