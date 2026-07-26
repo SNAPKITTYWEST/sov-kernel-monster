@@ -18,7 +18,7 @@ module sov_monster_kernel
   public :: dp, ci, czero, i8, sov_zmexp_scaling_squaring, sov_blake3_hash_matrix
   public :: sov_is_hermitian_matrix, sov_is_density_matrix, sov_fault
   public :: sov_zgetrf, blake3_state, sov_blake3_init, sov_blake3_update, sov_blake3_finalize
-  public :: BLAKE3_IV, HASH_LEN
+  public :: BLAKE3_IV, HASH_LEN, sov_zgetrs
 
   integer, parameter :: dp  = real64
   integer, parameter :: i8 = int64

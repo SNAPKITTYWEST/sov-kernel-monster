@@ -82,13 +82,13 @@ contains
   ! Frobenius is cheap, differentiable, same fixed point
   !═══════════════════════════════════════════════════════════════════
   function bures_loss(pred_ptr, target_ptr, d) result(L) &
-       bind(C, name="bures_loss")
     type(c_ptr),        intent(in), value :: pred_ptr, target_ptr
     integer(c_int64_t), intent(in), value :: d
     real(dp) :: L
-
     complex(dp), pointer :: pred(:,:), target(:,:)
     integer(c_int64_t) :: i, j
+       bind(C, name="bures_loss")
+
 
     call c_f_pointer(pred_ptr,   pred,   [d, d])
     call c_f_pointer(target_ptr, target, [d, d])
@@ -118,20 +118,20 @@ contains
   !   λ_{k-1} = U_k† λ_k U_k · φ⁻¹ + λ_k · φ⁻²   (reverse of jordan_step)
   !═══════════════════════════════════════════════════════════════════
   subroutine adjoint_pass(H_list_ptr, rho_list_ptr, target_ptr, &
-       n_layers, d, dt, grads_ptr, sk_ptr, pk_ptr) &
-       bind(C, name="adjoint_pass")
     type(c_ptr),        intent(in),  value :: H_list_ptr, rho_list_ptr
     type(c_ptr),        intent(in),  value :: target_ptr, grads_ptr
     integer(c_int64_t), intent(in),  value :: n_layers, d
     real(dp),           intent(in),  value :: dt
     type(c_ptr),        intent(in),  value :: sk_ptr, pk_ptr
-
     complex(dp), pointer :: H_list(:,:,:), rho_list(:,:,:)
     complex(dp), pointer :: target(:,:),   grads(:,:,:)
     complex(dp), allocatable :: lambda(:,:), lambda_prev(:,:)
     complex(dp), allocatable :: U(:,:), Ut(:,:), tmp(:,:)
     integer(c_int64_t) :: k, i, j, l
     integer(i8) :: dummy_hash(32), dummy_sig(64)
+       n_layers, d, dt, grads_ptr, sk_ptr, pk_ptr) &
+       bind(C, name="adjoint_pass")
+
 
     call c_f_pointer(H_list_ptr,   H_list,   [n_layers, d, d])
     call c_f_pointer(rho_list_ptr, rho_list, [n_layers, d, d])
@@ -188,17 +188,17 @@ contains
   !   (1 − φ · unverified/total) so trust violations decay φ-wise.
   !═══════════════════════════════════════════════════════════════════
   subroutine apply_knowledge_gradient_correction(grads_ptr, n_layers, d, &
-       query_ptr, query_len) &
-       bind(C, name="apply_knowledge_gradient_correction")
     type(c_ptr),        intent(in), value :: grads_ptr, query_ptr
     integer(c_int64_t), intent(in), value :: n_layers, d, query_len
-
     complex(dp), pointer :: grads(:,:,:)
     type(knowledge_chunk), allocatable :: constraint_chunks(:)
     character(kind=c_char), pointer :: qbuf(:)
     character(len=:), allocatable :: query
     integer :: i, n_out, n_unverified, nq
     real(dp) :: scale
+       query_ptr, query_len) &
+       bind(C, name="apply_knowledge_gradient_correction")
+
 
     call ensure_sovereign_kb()
     call c_f_pointer(grads_ptr, grads, [n_layers, d, d])
@@ -234,13 +234,13 @@ contains
   !       (conjugate transpose: ⍉ on transposed then ¯ conjugate)
   !═══════════════════════════════════════════════════════════════════
   subroutine project_hermitian(H_ptr, d) &
-       bind(C, name="project_hermitian")
     type(c_ptr),        intent(in), value :: H_ptr
     integer(c_int64_t), intent(in), value :: d
-
     complex(dp), pointer :: H(:,:)
     integer(c_int64_t) :: i, j
     complex(dp) :: sym
+       bind(C, name="project_hermitian")
+
 
     call c_f_pointer(H_ptr, H, [d, d])
 
@@ -270,14 +270,11 @@ contains
   ! Every H update sealed to WORM via Bifrost
   !═══════════════════════════════════════════════════════════════════
   subroutine training_step(H_list_ptr, rho0_ptr, target_ptr, &
-       n_layers, d, dt, eta, sk_ptr, pk_ptr, loss_out) &
-       bind(C, name="training_step")
     type(c_ptr),        intent(in),    value :: H_list_ptr, rho0_ptr, target_ptr
     integer(c_int64_t), intent(in),    value :: n_layers, d
     real(dp),           intent(in),    value :: dt, eta
     type(c_ptr),        intent(in),    value :: sk_ptr, pk_ptr
     real(dp),           intent(out)          :: loss_out
-
     complex(dp), pointer :: H_list(:,:,:), rho0(:,:)
     complex(dp), pointer :: target(:,:)
     complex(dp), allocatable :: rho_list(:,:,:), grads(:,:,:)
@@ -285,6 +282,10 @@ contains
     integer(i8), allocatable :: receipts(:)
     integer(c_int64_t) :: k, receipt_sz
     integer(i8) :: hash_buf(32), sig_buf(64)
+      integer(c_int64_t) :: i, j
+       n_layers, d, dt, eta, sk_ptr, pk_ptr, loss_out) &
+       bind(C, name="training_step")
+
 
     call c_f_pointer(H_list_ptr, H_list, [n_layers, d, d])
     call c_f_pointer(rho0_ptr,   rho0,   [d, d])
@@ -324,7 +325,6 @@ contains
     !$omp parallel do default(none) &
     !$omp shared(H_list,grads,n_layers,d,eta) private(k)
     do k = 1, n_layers
-      integer(c_int64_t) :: i, j
       do i = 1, d; do j = 1, d
         H_list(k,i,j) = H_list(k,i,j) - eta * grads(k,i,j)
       end do; end do
@@ -356,11 +356,9 @@ contains
   !       H ← ½ × (H + ⍉ H̄)              — project Hermitian
   !═══════════════════════════════════════════════════════════════════
   subroutine adam_update(state, H_list_ptr, grads_ptr, n_layers, d) &
-       bind(C, name="adam_update")
     type(adam_state_t), intent(inout)        :: state
     type(c_ptr),        intent(in),    value :: H_list_ptr, grads_ptr
     integer(c_int64_t), intent(in),    value :: n_layers, d
-
     complex(dp), pointer :: H_list(:,:,:), grads(:,:,:)
     complex(dp), pointer :: m(:,:,:)
     real(dp),    pointer :: v(:,:,:)
@@ -368,6 +366,8 @@ contains
     integer(c_int64_t) :: k, i, j
     complex(dp) :: m_hat, g
     real(dp) :: v_hat
+       bind(C, name="adam_update")
+
 
     call c_f_pointer(H_list_ptr, H_list, [n_layers, d, d])
     call c_f_pointer(grads_ptr,  grads,  [n_layers, d, d])

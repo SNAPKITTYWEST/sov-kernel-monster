@@ -19,6 +19,7 @@ module bob_errors
     integer(i4), parameter, public :: BOB_ERROR_INVALID_STATE = 7
     integer(i4), parameter, public :: BOB_ERROR_INVALID_GATE = 8
     integer(i4), parameter, public :: BOB_ERROR_INVALID_LATTICE = 9
+    integer(i4), parameter, public :: BOB_ERROR_BUFFER_TOO_SMALL = 10
     integer(i4), parameter, public :: BOB_ERROR_INTEGRATION_FAILED = 10
     integer(i4), parameter, public :: BOB_ERROR_IO = 11
     integer(i4), parameter, public :: BOB_ERROR_NOT_IMPLEMENTED = 99
