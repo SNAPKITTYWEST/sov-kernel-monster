@@ -1,0 +1,92 @@
+<svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88"/>
+      <stop offset="100%" style="stop-color:#00aa44"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+
+  <text x="600" y="40" font-size="32" font-weight="bold" text-anchor="middle" fill="#00ff88">WORM CHAIN: Append-Only Immutable Ledger</text>
+  <text x="600" y="70" font-size="14" text-anchor="middle" fill="#888">Hash-linked | Ed25519-sealed | Tamper-evident | No deletion | No reordering</text>
+
+  <!-- GENESIS -->
+  <rect x="50" y="120" width="140" height="120" rx="8" fill="url(#grad1)" stroke="#00ff88" stroke-width="2" filter="url(#glow)"/>
+  <text x="120" y="155" font-size="16" font-weight="bold" text-anchor="middle" fill="#000">GENESIS</text>
+  <text x="120" y="180" font-size="10" text-anchor="middle" fill="#000" font-family="monospace">seq: 0</text>
+  <text x="120" y="195" font-size="10" text-anchor="middle" fill="#000" font-family="monospace">hash: a3f9b2</text>
+  <text x="120" y="210" font-size="9" text-anchor="middle" fill="#000" font-family="monospace">2026-07-24T10:00Z</text>
+
+  <!-- Arrow 1 -->
+  <path d="M 190 180 L 260 180" stroke="#00ff88" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- RECEIPT 001 -->
+  <rect x="260" y="120" width="140" height="120" rx="8" fill="#4ec9b0" stroke="#4ec9b0" stroke-width="2" filter="url(#glow)"/>
+  <text x="330" y="155" font-size="16" font-weight="bold" text-anchor="middle" fill="#fff">RECEIPT 001</text>
+  <text x="330" y="180" font-size="10" text-anchor="middle" fill="#fff" font-family="monospace">seq: 1</text>
+  <text x="330" y="195" font-size="10" text-anchor="middle" fill="#fff" font-family="monospace">hash: 7c2ef4</text>
+  <text x="330" y="210" font-size="9" text-anchor="middle" fill="#fff" font-family="monospace">BOOT_KERNEL</text>
+
+  <!-- Arrow 2 -->
+  <path d="M 400 180 L 470 180" stroke="#00ff88" stroke-width="3" fill="none"/>
+
+  <!-- RECEIPT 002 -->
+  <rect x="470" y="120" width="140" height="120" rx="8" fill="#4ec9b0" stroke="#4ec9b0" stroke-width="2" filter="url(#glow)"/>
+  <text x="540" y="155" font-size="16" font-weight="bold" text-anchor="middle" fill="#fff">RECEIPT 002</text>
+  <text x="540" y="180" font-size="10" text-anchor="middle" fill="#fff" font-family="monospace">seq: 2</text>
+  <text x="540" y="195" font-size="10" text-anchor="middle" fill="#fff" font-family="monospace">hash: f1b83a</text>
+  <text x="540" y="210" font-size="9" text-anchor="middle" fill="#fff" font-family="monospace">AGENT_SPAWN</text>
+
+  <!-- Ellipsis -->
+  <text x="660" y="185" font-size="32" fill="#666">···</text>
+
+  <!-- Arrow to N -->
+  <path d="M 700 180 L 750 180" stroke="#00ff88" stroke-width="3" fill="none"/>
+
+  <!-- RECEIPT N -->
+  <rect x="750" y="120" width="140" height="120" rx="8" fill="url(#grad1)" stroke="#00ff88" stroke-width="2" filter="url(#glow)"/>
+  <text x="820" y="155" font-size="16" font-weight="bold" text-anchor="middle" fill="#000">RECEIPT N</text>
+  <text x="820" y="180" font-size="10" text-anchor="middle" fill="#000" font-family="monospace">seq: n</text>
+  <text x="820" y="195" font-size="10" text-anchor="middle" fill="#000" font-family="monospace">hash: 2d9c7f</text>
+  <text x="820" y="210" font-size="9" text-anchor="middle" fill="#000" font-family="monospace">LATEST HEAD</text>
+
+  <!-- TIP indicator -->
+  <line x1="820" y1="240" x2="820" y2="280" stroke="#00ff88" stroke-width="2" stroke-dasharray="5,5"/>
+  <circle cx="820" cy="295" r="8" fill="#00ff88"/>
+  <text x="820" y="325" font-size="12" text-anchor="middle" fill="#00ff88" font-weight="bold">CHAIN TIP</text>
+
+  <!-- Properties -->
+  <rect x="900" y="120" width="280" height="230" rx="6" fill="#1e1e1e" stroke="#4ec9b0" stroke-width="1"/>
+  <text x="1040" y="145" font-size="13" font-weight="bold" text-anchor="middle" fill="#4ec9b0">Immutability Guarantee</text>
+
+  <circle cx="920" cy="175" r="4" fill="#00ff88"/>
+  <text x="935" y="179" font-size="11" fill="#d4d4d4">Append-only, no deletion</text>
+
+  <circle cx="920" cy="205" r="4" fill="#00ff88"/>
+  <text x="935" y="209" font-size="11" fill="#d4d4d4">Hash-linked chain</text>
+
+  <circle cx="920" cy="235" r="4" fill="#00ff88"/>
+  <text x="935" y="239" font-size="11" fill="#d4d4d4">Ed25519 cryptographic seal</text>
+
+  <circle cx="920" cy="265" r="4" fill="#00ff88"/>
+  <text x="935" y="269" font-size="11" fill="#d4d4d4">Tamper-evident design</text>
+
+  <circle cx="920" cy="295" r="4" fill="#00ff88"/>
+  <text x="935" y="299" font-size="11" fill="#d4d4d4">Deterministic replay</text>
+
+  <circle cx="920" cy="325" r="4" fill="#00ff88"/>
+  <text x="935" y="329" font-size="11" fill="#d4d4d4">Lean 4 machine-verified</text>
+
+  <!-- Legend -->
+  <text x="50" y="380" font-size="14" font-weight="bold" fill="#00ff88">Receipt Contents:</text>
+  <text x="50" y="405" font-size="11" fill="#d4d4d4" font-family="monospace">• sequence (u64) • event_type (string) • prev_hash (SHA256)</text>
+  <text x="50" y="425" font-size="11" fill="#d4d4d4" font-family="monospace">• payload (JSON) • state_hash (SHA256) • current_hash (SHA256)</text>
+  <text x="50" y="445" font-size="11" fill="#d4d4d4" font-family="monospace">• timestamp (unix_ms) • signature (Ed25519 seal)</text>
+
+  <text x="50" y="480" font-size="14" font-weight="bold" fill="#00ff88">Sealed Events:</text>
+  <text x="50" y="505" font-size="11" fill="#d4d4d4">circuit_compilations | density_matrix_steps | measurements | agent_observations</text>
+  <text x="50" y="525" font-size="11" fill="#d4d4d4">consensus_votes | game_completions | kernel_executions | AI_decisions</text>
+
+  <line x1="50" y1="560" x2="1150" y2="560" stroke="#00ff88" stroke-width="1"/>
+  <text x="600" y="585" font-size="12" text-anchor="middle" fill="#00ff88">THEOREM (Lean 4): worm_grows, worm_history ⊢ chain immutability ✓ (zero sorry)</text>
+</svg>
