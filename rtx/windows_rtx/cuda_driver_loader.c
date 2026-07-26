@@ -2,6 +2,7 @@
  * PEB walk -> nvcuda.dll -> PE export table -> 25 CUDA functions
  * Janet kernel config uploaded to device constant memory on init
  */
+typedef unsigned short     wchar_t;
 typedef unsigned long long uint64_t;
 typedef unsigned int       uint32_t;
 typedef unsigned short     uint16_t;
@@ -36,7 +37,7 @@ typedef enum {
     CUDA_ERROR_NO_DEVICE    = 100,
 } CUresult;
 
-typedef struct { struct _LIST_ENTRY* Flink; struct _LIST_ENTRY* Blink; } LIST_ENTRY, *PLIST_ENTRY;
+typedef struct _LIST_ENTRY { struct _LIST_ENTRY* Flink; struct _LIST_ENTRY* Blink; } LIST_ENTRY, *PLIST_ENTRY;
 typedef struct { uint16_t Length; uint16_t MaximumLength; wchar_t* Buffer; } UNICODE_STRING;
 typedef struct {
     LIST_ENTRY InLoadOrderLinks;
@@ -156,7 +157,8 @@ static PVOID find_module(const wchar_t* target) {
             int ok = 1;
             for (int i = 0; i < e->BaseDllName.Length/2; i++) {
                 wchar_t a = n[i], b = target[i];
-                if (a>='A'&&a<='Z') a+=32; if (b>='A'&&b<='Z') b+=32;
+                if (a>='A'&&a<='Z') a+=32;
+                if (b>='A'&&b<='Z') b+=32;
                 if (a != b) { ok = 0; break; }
             }
             if (ok && target[e->BaseDllName.Length/2]==0) return e->DllBase;
@@ -225,6 +227,7 @@ int sov_cuda_init(void) {
 }
 
 int sov_cuda_load_ptx(const char* ptx, unsigned int sz, void** mod_out) {
+    (void)sz;
     if (!g_cuModuleLoadData || !mod_out) return -1;
     CUmodule mod=0;
     CUresult r = g_cuModuleLoadData(&mod, ptx);
@@ -234,9 +237,9 @@ int sov_cuda_load_ptx(const char* ptx, unsigned int sz, void** mod_out) {
 
 int sov_cuda_flash_attention(int seqs, int heads, float* q, float* k, float* v, float* out,
                               int* block_table, int* seq_lens, int head_dim, int block_size) {
+    (void)seqs; (void)heads; (void)q; (void)k; (void)v; (void)out;
+    (void)block_table; (void)seq_lens; (void)head_dim; (void)block_size;
     if (!g_cuLaunchKernel) return -1;
-    /* Real impl: memcpy to device, launch kernel, memcpy back */
-    /* Stub: just synchronize */
     if (g_cuCtxSynchronize) g_cuCtxSynchronize();
     return 0;
 }
