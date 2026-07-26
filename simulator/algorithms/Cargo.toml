@@ -1,0 +1,29 @@
+[package]
+name = "qataaum-algorithms"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+num-complex.workspace = true
+ndarray.workspace = true
+rayon.workspace = true
+rand.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true
+
+# IR dependencies
+qataaum-ir = { path = "../../compiler/ir" }
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true
