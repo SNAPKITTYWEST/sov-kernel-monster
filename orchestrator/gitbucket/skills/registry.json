@@ -1,0 +1,30 @@
+{
+  "skills": [
+    {
+      "id": "ledger_validation_v3",
+      "memoryRef": "mem_genesis_ledger",
+      "provides": ["validateLedgerEntry"],
+      "requires": ["sha256", "stableStringify"],
+      "verifyFn": ".agentos/skills/artifacts/ledger_validation_v3/verify.mjs",
+      "implementation": ".agentos/skills/artifacts/ledger_validation_v3/impl.mjs",
+      "inputSchema": { "type": "object", "required": ["entry"] },
+      "outputSchema": { "type": "object", "required": ["valid", "proof"] },
+      "trust": "verified",
+      "created": "2026-07-03T00:00:00Z",
+      "author": "SnapKitty"
+    },
+    {
+      "id": "borrow_chain_scheduler_v1",
+      "memoryRef": "mem_genesis_borrow",
+      "provides": ["scheduleBorrows"],
+      "requires": ["topoSort"],
+      "verifyFn": ".agentos/skills/artifacts/borrow_chain_scheduler_v1/verify.mjs",
+      "implementation": ".agentos/skills/artifacts/borrow_chain_scheduler_v1/impl.mjs",
+      "inputSchema": { "type": "object", "required": ["borrowGraph"] },
+      "outputSchema": { "type": "object", "required": ["schedule", "proof"] },
+      "trust": "verified",
+      "created": "2026-07-03T00:00:00Z",
+      "author": "SnapKitty"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "id": "ledger_validation_v3",
+  "version": "3.0.0",
+  "memoryRef": "mem_genesis_ledger",
+  "provides": ["validateLedgerEntry"],
+  "requires": ["sha256", "stableStringify"]
+}

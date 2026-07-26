@@ -1,0 +1,13 @@
+FROM alpine:3.20 AS builder
+RUN apk add --no-cache rust cargo openssl-dev pkgconfig
+
+WORKDIR /build
+COPY infra/hauki-fn/ .
+RUN cargo build --release --target x86_64-unknown-linux-musl
+
+FROM scratch
+COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/hauki-fn /usr/local/bin/hauki-fn
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+USER 1000:1000
+ENTRYPOINT ["/usr/local/bin/hauki-fn"]

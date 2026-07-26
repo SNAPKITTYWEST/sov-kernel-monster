@@ -1,0 +1,14 @@
+{
+  "input": {
+    "borrowGraph": {
+      "nodes": ["A", "B", "C"],
+      "edges": [["A", "B"], ["B", "C"]]
+    }
+  },
+  "output": {
+    "schedule": ["A", "B", "C"],
+    "proof": {
+      "topological": true
+    }
+  }
+}
