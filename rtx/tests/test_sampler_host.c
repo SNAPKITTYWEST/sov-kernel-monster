@@ -2,13 +2,10 @@
 #include <string.h>
 #include <stdint.h>
 #include "sov_test_stubs.h"
-
-/* Host stub: memcpy stands in for the GPU DtoH copy */
 #include "sov_rtx.h"
-int sov_cuda_memcpy_h2d(void* dst, const void* src, size_t sz) {
-    memcpy(dst, src, sz); return 0;
-}
-/* Unused sov_rtx.h symbols — provide empty stubs so the TU links */
+
+/* Host stubs */
+int  sov_cuda_memcpy_h2d(void* dst, const void* src, size_t sz) { memcpy(dst,src,sz); return 0; }
 int  sov_cuda_init(void) { return 0; }
 int  sov_cuda_load_ptx(const char* p, unsigned int s, void** m) { (void)p;(void)s;(void)m; return 0; }
 int  sov_cuda_flash_attention(int a,int b,float*c,float*d,float*e,float*f,int*g,int*h,int i,int j)
@@ -35,27 +32,40 @@ void  sov_janet_set(int s, float v) { (void)s;(void)v; }
 
 #include "../src/sampler.c"
 
-/* -----------------------------------------------------------------------
- * greedy: index of max in flat array
- * ----------------------------------------------------------------------- */
+/* f16 encode helper */
+static uint16_t f32_to_f16(float v) {
+    uint32_t bits;
+    memcpy(&bits, &v, 4);
+    uint16_t sign = (bits >> 16) & 0x8000;
+    int exp  = ((bits >> 23) & 0xff) - 127 + 15;
+    uint32_t mant = bits & 0x7fffff;
+    if (exp <= 0)  return sign;
+    if (exp >= 31) return sign | 0x7c00;
+    return (uint16_t)(sign | ((uint16_t)exp << 10) | (mant >> 13));
+}
+
 static int test_greedy(void) {
-    float logits[8] = {0.1f, 0.5f, 0.9f, 0.2f, 0.3f, 0.8f, 0.4f, 0.6f};
-    int tok = sov_sample_greedy(logits, 8);
-    SOV_ASSERT(tok == 2);
+    float logits[8] = {0.1f,0.5f,0.9f,0.2f,0.3f,0.8f,0.4f,0.6f};
+    SOV_ASSERT(sov_sample_greedy(logits, 8) == 2);
     SOV_PASS("greedy");
     return 0;
 }
 
-/* temperature=0 greedy path through sov_sample_token */
+static int test_greedy_f16(void) {
+    uint16_t logits[4] = { f32_to_f16(0.1f), f32_to_f16(5.0f),
+                           f32_to_f16(1.0f), f32_to_f16(2.0f) };
+    SOV_ASSERT(sov_sample_greedy_f16(logits, 4) == 1);
+    SOV_PASS("greedy_f16");
+    return 0;
+}
+
 static int test_sample_token_greedy(void) {
-    float logits[4] = {0.0f, 5.0f, 1.0f, 2.0f};
-    int tok = sov_sample_token(logits, 4, 0.0f, 1.0f, 0, 0);
-    SOV_ASSERT(tok == 1);
+    float logits[4] = {0.0f,5.0f,1.0f,2.0f};
+    SOV_ASSERT(sov_sample_token(logits, 4, 0.0f, 1.0f, 0, 0) == 1);
     SOV_PASS("sample_token_greedy");
     return 0;
 }
 
-/* flat distribution: result must be in [0, vocab) */
 static int test_flat_distribution(void) {
     static float logits[256];
     uint64_t rng = UINT64_C(0xdeadbeefcafe1234);
@@ -67,8 +77,8 @@ static int test_flat_distribution(void) {
     return 0;
 }
 
-/* top_k > 64 honored — no 64 cap (Codex correction) */
-static int test_topk_above_64(void) {
+/* top_k=128 uses heapsort path; spike at 100 must always win */
+static int test_topk_heapsort_path(void) {
     static float logits[256];
     uint64_t rng = UINT64_C(0x1234567890abcdef);
     int i, tok;
@@ -78,28 +88,45 @@ static int test_topk_above_64(void) {
         tok = sov_sample_token(logits, 256, 1.0f, 1.0f, 128, &rng);
         SOV_ASSERT(tok == 100);
     }
-    SOV_PASS("topk_above_64");
+    SOV_PASS("topk_heapsort_path");
     return 0;
 }
 
-/* vocab ceiling is 131072 and over-limit is rejected */
+/* flat 128-tok dist, top_k=0, top_p=0.75 → tokens 0..95 only,
+ * and tokens 64..95 must appear (old 64-cap would never reach them) */
+static int test_topk_zero_above_64_reachable(void) {
+    static float logits[128];
+    uint64_t rng = UINT64_C(0xabcdef1234567890);
+    int i, tok, saw_upper = 0;
+    for (i = 0; i < 128; i++) logits[i] = 0.0f;
+    for (i = 0; i < 4096; i++) {
+        tok = sov_sample_token(logits, 128, 1.0f, 0.75f, 0, &rng);
+        SOV_ASSERT(tok >= 0 && tok < 96);
+        if (tok >= 64) saw_upper = 1;
+    }
+    SOV_ASSERT(saw_upper);
+    SOV_PASS("topk_zero_above_64_reachable");
+    return 0;
+}
+
 static int test_vocab_ceiling(void) {
-    float one_logit = 1.0f;
+    float one = 1.0f;
     SOV_ASSERT(SOV_SAMPLER_MAX_VOCAB == 131072);
-    SOV_ASSERT(sov_sample_greedy(&one_logit, 131073) == -1);
+    SOV_ASSERT(sov_sample_greedy(&one, 131073) == -1);
     SOV_PASS("vocab_ceiling");
     return 0;
 }
 
-/* bad args rejected */
 static int test_bad_args(void) {
     float logits[4] = {1,2,3,4};
-    uint64_t rng = 1;
-    SOV_ASSERT(sov_sample_greedy(NULL, 4)            == -1);
-    SOV_ASSERT(sov_sample_greedy(logits, 0)           == -1);
-    SOV_ASSERT(sov_sample_token(NULL, 4, 1,1,0,&rng)  == -1);
-    SOV_ASSERT(sov_sample_token(logits,4,1,1,-1,&rng) == -1);
-    SOV_ASSERT(sov_sample_token(logits,4,-1,1,0,&rng) == -1);
+    uint64_t rng = 1, zero = 0;
+    SOV_ASSERT(sov_sample_greedy(NULL, 4)              == -1);
+    SOV_ASSERT(sov_sample_greedy(logits, 0)             == -1);
+    SOV_ASSERT(sov_sample_token(NULL, 4,1,1,0,&rng)     == -1);
+    SOV_ASSERT(sov_sample_token(logits,4,1,1,-1,&rng)   == -1);
+    SOV_ASSERT(sov_sample_token(logits,4,-1,1,0,&rng)   == -1);
+    SOV_ASSERT(sov_sample_token(logits,4,1,1,0,NULL)    == -1);
+    SOV_ASSERT(sov_sample_token(logits,4,1,1,0,&zero)   == -1);
     SOV_PASS("bad_args");
     return 0;
 }
@@ -107,9 +134,11 @@ static int test_bad_args(void) {
 int main(void) {
     int fail = 0;
     fail |= test_greedy();
+    fail |= test_greedy_f16();
     fail |= test_sample_token_greedy();
     fail |= test_flat_distribution();
-    fail |= test_topk_above_64();
+    fail |= test_topk_heapsort_path();
+    fail |= test_topk_zero_above_64_reachable();
     fail |= test_vocab_ceiling();
     fail |= test_bad_args();
     if (!fail) printf("ALL PASS\n");
