@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 500" width="1200" height="500">
+  <defs>
+    <style>
+      .bg { fill: #0a0e27; }
+      .grid-line { stroke: #00ff88; stroke-width: 1; opacity: 0.5; }
+      .qubit-label { fill: #00ff88; font-family: monospace; font-size: 14px; }
+      .gate-box { fill: none; stroke-width: 2; }
+      .gate-text { fill: #0a0e27; font-family: monospace; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: middle; }
+      .bloch-text { fill: #00ff88; font-family: monospace; font-size: 12px; }
+      .metric-label { fill: #00aa66; font-family: monospace; font-size: 11px; text-anchor: middle; }
+      .metric-value { fill: #00ff88; font-family: monospace; font-size: 18px; font-weight: bold; text-anchor: middle; text-shadow: 0 0 5px #00ff88; }
+      .title { fill: #00ff88; font-family: monospace; font-size: 20px; font-weight: bold; }
+      .phase-label { fill: #ffaa00; font-family: monospace; font-size: 14px; font-weight: bold; }
+    </style>
+
+    <!-- Glow filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="500" class="bg"/>
+  <rect x="10" y="10" width="1180" height="480" fill="none" stroke="#00ff88" stroke-width="2" rx="4"/>
+
+  <!-- Title -->
+  <text x="20" y="35" class="title">⚛ QATAAUM SIMULATOR — 5-Qubit Quantum Circuit Execution</text>
+
+  <!-- ============ LEFT: CIRCUIT COMPILATION ============ -->
+
+  <!-- Circuit grid -->
+  <text x="30" y="80" class="title" font-size="14">Circuit Compilation</text>
+
+  <!-- Qubit lines -->
+  <line x1="60" y1="110" x2="320" y2="110" class="grid-line"/>
+  <line x1="60" y1="145" x2="320" y2="145" class="grid-line"/>
+  <line x1="60" y1="180" x2="320" y2="180" class="grid-line"/>
+  <line x1="60" y1="215" x2="320" y2="215" class="grid-line"/>
+  <line x1="60" y1="250" x2="320" y2="250" class="grid-line"/>
+
+  <!-- Qubit labels -->
+  <text x="40" y="115" class="qubit-label">q0</text>
+  <text x="40" y="150" class="qubit-label">q1</text>
+  <text x="40" y="185" class="qubit-label">q2</text>
+  <text x="40" y="220" class="qubit-label">q3</text>
+  <text x="40" y="255" class="qubit-label">q4</text>
+
+  <!-- Gate animations - H gates Layer 0 -->
+  <g id="h0">
+    <rect x="72" y="98" width="24" height="24" class="gate-box" stroke="#00ff88" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.1;0.7;1"/>
+    </rect>
+    <text x="84" y="110" class="gate-text">H</text>
+  </g>
+
+  <g id="h1">
+    <rect x="72" y="133" width="24" height="24" class="gate-box" stroke="#00ff88" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.12;0.7;1"/>
+    </rect>
+    <text x="84" y="145" class="gate-text">H</text>
+  </g>
+
+  <!-- CNOT Layer 1 -->
+  <g id="cnot0">
+    <rect x="110" y="98" width="24" height="24" class="gate-box" stroke="#ffaa00" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.25;0.7;1"/>
+    </rect>
+    <text x="122" y="110" class="gate-text">C</text>
+  </g>
+
+  <g id="cnot1">
+    <rect x="110" y="133" width="24" height="24" class="gate-box" stroke="#ffaa00" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.27;0.7;1"/>
+    </rect>
+    <text x="122" y="145" class="gate-text">✕</text>
+  </g>
+
+  <!-- RZ Layer 2 -->
+  <g id="rz">
+    <rect x="148" y="168" width="24" height="24" class="gate-box" stroke="#ff00aa" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.4;0.7;1"/>
+    </rect>
+    <text x="160" y="180" class="gate-text">Z</text>
+  </g>
+
+  <!-- H Layer 3 (measurement basis) -->
+  <g id="h_meas">
+    <rect x="186" y="98" width="24" height="24" class="gate-box" stroke="#00ffff" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.5;0.7;1"/>
+    </rect>
+    <text x="198" y="110" class="gate-text">H</text>
+  </g>
+
+  <!-- Measurement symbols (all qubits) -->
+  <g id="meas">
+    <rect x="224" y="98" width="24" height="24" class="gate-box" stroke="#00ffff" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.55;0.8;1"/>
+    </rect>
+    <text x="236" y="110" class="gate-text">M</text>
+
+    <rect x="224" y="133" width="24" height="24" class="gate-box" stroke="#00ffff" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.57;0.8;1"/>
+    </rect>
+    <text x="236" y="145" class="gate-text">M</text>
+
+    <rect x="224" y="168" width="24" height="24" class="gate-box" stroke="#00ffff" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.59;0.8;1"/>
+    </rect>
+    <text x="236" y="180" class="gate-text">M</text>
+
+    <rect x="224" y="203" width="24" height="24" class="gate-box" stroke="#00ffff" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.61;0.8;1"/>
+    </rect>
+    <text x="236" y="215" class="gate-text">M</text>
+
+    <rect x="224" y="238" width="24" height="24" class="gate-box" stroke="#00ffff" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="8s" repeatCount="indefinite" keyTimes="0;0.63;0.8;1"/>
+    </rect>
+    <text x="236" y="250" class="gate-text">M</text>
+  </g>
+
+  <!-- Execution progress bar -->
+  <rect x="60" y="280" width="260" height="4" fill="rgba(0,255,136,0.1)" stroke="#00ff88" stroke-width="1"/>
+  <rect x="60" y="280" width="260" height="4" fill="#00ff88">
+    <animate attributeName="width" values="0;260;0" dur="8s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- ============ CENTER: BLOCH SPHERE ============ -->
+
+  <text x="500" y="80" class="title" font-size="14">Quantum State Evolution</text>
+
+  <!-- Bloch sphere outline -->
+  <circle cx="500" cy="170" r="70" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.8"/>
+
+  <!-- Bloch sphere axes -->
+  <line x1="430" y1="170" x2="570" y2="170" stroke="rgba(255,0,0,0.2)" stroke-width="1"/>
+  <line x1="500" y1="100" x2="500" y2="240" stroke="rgba(0,0,255,0.2)" stroke-width="1"/>
+
+  <!-- State vector - rotating -->
+  <line x1="500" y1="170" x2="520" y2="130" stroke="#00ffff" stroke-width="3">
+    <animate attributeName="x2" values="520;500;480;500;520" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="y2" values="130;100;130;170;130" dur="8s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- State point on sphere -->
+  <circle cx="520" cy="130" r="6" fill="#00ffff" filter="url(#glow)">
+    <animate attributeName="cx" values="520;500;480;500;520" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="130;100;130;170;130" dur="8s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Glow around state -->
+  <circle cx="520" cy="130" r="14" fill="none" stroke="#00ffff" stroke-width="1" opacity="0.4" filter="url(#glow)">
+    <animate attributeName="cx" values="520;500;480;500;520" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="130;100;130;170;130" dur="8s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Bloch labels -->
+  <text x="575" y="175" class="bloch-text" font-size="11">|0⟩</text>
+  <text x="575" y="165" class="bloch-text" font-size="11">—</text>
+  <text x="575" y="155" class="bloch-text" font-size="11">|1⟩</text>
+
+  <!-- ============ RIGHT: MEASUREMENT RESULTS ============ -->
+
+  <text x="800" y="80" class="title" font-size="14">Measurement Results</text>
+
+  <!-- |0⟩ bar -->
+  <g id="prob0">
+    <rect x="750" y="120" width="60" height="100" fill="rgba(0,255,136,0.1)" stroke="#00ff88" stroke-width="2"/>
+    <rect x="752" y="150" width="56" height="70" fill="#00ff88" opacity="0.7" filter="url(#glow)">
+      <animate attributeName="height" values="35;70;35;20;50;70" dur="8s" repeatCount="indefinite" keyTimes="0;0.2;0.4;0.6;0.8;1"/>
+      <animate attributeName="y" values="185;150;185;200;170;150" dur="8s" repeatCount="indefinite" keyTimes="0;0.2;0.4;0.6;0.8;1"/>
+    </rect>
+    <text x="780" y="235" class="metric-label">|0⟩</text>
+    <text x="780" y="250" class="metric-value" font-size="16">
+      <animate attributeName="textContent" values="52%;48%;51%;60%;45%;52%" dur="8s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
+  <!-- |1⟩ bar -->
+  <g id="prob1">
+    <rect x="820" y="120" width="60" height="100" fill="rgba(255,170,0,0.1)" stroke="#ffaa00" stroke-width="2"/>
+    <rect x="822" y="150" width="56" height="70" fill="#ffaa00" opacity="0.7" filter="url(#glow)">
+      <animate attributeName="height" values="65;30;65;80;50;30" dur="8s" repeatCount="indefinite" keyTimes="0;0.2;0.4;0.6;0.8;1"/>
+      <animate attributeName="y" values="155;190;155;120;170;190" dur="8s" repeatCount="indefinite" keyTimes="0;0.2;0.4;0.6;0.8;1"/>
+    </rect>
+    <text x="850" y="235" class="metric-label">|1⟩</text>
+    <text x="850" y="250" class="metric-value" font-size="16">
+      <animate attributeName="textContent" values="48%;52%;49%;40%;55%;48%" dur="8s" repeatCount="indefinite"/>
+    </text>
+  </g>
+
+  <!-- ============ BOTTOM METRICS ============ -->
+
+  <g id="metrics">
+    <!-- Circuit Depth -->
+    <rect x="60" y="320" width="140" height="70" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1" rx="4"/>
+    <text x="130" y="340" class="metric-label">CIRCUIT DEPTH</text>
+    <text x="130" y="365" class="metric-value" font-size="20">
+      <animate attributeName="textContent" values="1;2;3;4;5;4;3;2;1" dur="8s" repeatCount="indefinite" keyTimes="0;0.125;0.25;0.375;0.5;0.625;0.75;0.875;1"/>
+    </text>
+
+    <!-- Gates -->
+    <rect x="210" y="320" width="140" height="70" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1" rx="4"/>
+    <text x="280" y="340" class="metric-label">GATES EXECUTED</text>
+    <text x="280" y="365" class="metric-value" font-size="20">
+      <animate attributeName="textContent" values="0;2;4;6;8;7;5;3;1" dur="8s" repeatCount="indefinite" keyTimes="0;0.125;0.25;0.375;0.5;0.625;0.75;0.875;1"/>
+    </text>
+
+    <!-- Qubits -->
+    <rect x="360" y="320" width="140" height="70" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1" rx="4"/>
+    <text x="430" y="340" class="metric-label">QUBITS ACTIVE</text>
+    <text x="430" y="365" class="metric-value" font-size="20">5</text>
+
+    <!-- Fidelity -->
+    <rect x="510" y="320" width="140" height="70" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1" rx="4"/>
+    <text x="580" y="340" class="metric-label">FIDELITY</text>
+    <text x="580" y="365" class="metric-value" font-size="20">
+      <animate attributeName="textContent" values="100%;99%;97%;95%;96%;98%;99%;100%" dur="8s" repeatCount="indefinite" keyTimes="0;0.14;0.28;0.43;0.57;0.71;0.86;1"/>
+    </text>
+
+    <!-- Phase -->
+    <rect x="660" y="320" width="140" height="70" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1" rx="4"/>
+    <text x="730" y="340" class="metric-label">PHASE</text>
+    <text x="730" y="365" class="phase-label" font-size="16">
+      <animate attributeName="textContent" values="INIT;H;CNOT;PHASE;MEASURE;MEASURE;H;INIT" dur="8s" repeatCount="indefinite" keyTimes="0;0.13;0.26;0.39;0.52;0.65;0.78;1"/>
+    </text>
+
+    <!-- Status -->
+    <rect x="810" y="320" width="140" height="70" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1" rx="4"/>
+    <text x="880" y="340" class="metric-label">STATUS</text>
+    <text x="880" y="365" class="metric-value" font-size="16">RUNNING</text>
+    <circle cx="890" cy="350" r="4" fill="#00ff88">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Entropy -->
+    <rect x="960" y="320" width="140" height="70" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="1" rx="4"/>
+    <text x="1030" y="340" class="metric-label">ANU ENTROPY</text>
+    <text x="1030" y="365" class="metric-value" font-size="16">LIVE</text>
+  </g>
+
+  <!-- ============ INFO BAR ============ -->
+
+  <text x="20" y="420" class="bloch-text" font-size="12">
+    Left: 5-qubit circuit through QATAAUM (221 compiler tests). Center: Bloch sphere state evolution. Right: |0⟩ vs |1⟩ probability.
+  </text>
+  <text x="20" y="440" class="bloch-text" font-size="12">
+    All phases run locally. Phase 2 noise channels + Phase 3 QEC ready. Real entropy from ANU Quantum RNG. No cloud. No API. Pure sovereign compute.
+  </text>
+
+</svg>

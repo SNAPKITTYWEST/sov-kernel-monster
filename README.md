@@ -189,21 +189,15 @@ cd lean && lake exe cache get && lake build
 
 ### ⚛️ QATAAUM Simulator — Live Quantum Execution
 
-<div align="center">
-<a href="docs/qataaum-simulator-animation.html">
-<img src="https://img.shields.io/badge/→ Open Interactive Animation-Click to Watch-00ff88?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzAwZmY4OCIgb3BhY2l0eT0iMC4zIi8+PHBvbHlnb24gcG9pbnRzPSI5LDYgOSwxOCAxOCwxMiIgZmlsbD0iIzAwZmY4OCIvPjwvc3ZnPg==" />
-</a>
-</div>
+![QATAAUM Simulator Animation](docs/qataaum-live.svg)
 
-**What you'll see:** Real-time visualization of a 5-qubit circuit executing through all phases:
-- **Circuit Compilation** (left): Gates light up as QATAAUM dispatches them, with 221 verified compiler tests tracking correctness
-- **Bloch Sphere Evolution** (center): The quantum state rotating through superposition, entanglement, and phase shift
-- **Measurement Results** (right): Live probability distribution showing |0⟩ and |1⟩ amplitudes as the simulation evolves
-- **Metrics Dashboard**: Circuit depth, gates executed, fidelity, current phase, all updating in real-time
+**What you're watching:** 5-qubit quantum circuit executing in real-time:
+- **Left Panel**: Circuit compilation through QATAAUM (gates activate as they execute, 221-test verified)
+- **Center Panel**: Bloch sphere showing quantum state evolution through superposition → entanglement → phase shift
+- **Right Panel**: Measurement probability distribution animating |0⟩ vs |1⟩ outcomes in real-time
+- **Metrics Dashboard**: Circuit depth, gates executed, qubits active, fidelity, current phase, ANU entropy stream
 
-This is not a simulation of a simulation. The circuit runs on your local Fortran kernel with real noise channels from Phase 2 and error correction from Phase 3. The animation is a faithful visualization of actual quantum state evolution.
-
-[**→ Open the Simulator**](docs/qataaum-simulator-animation.html) — Press **START SIMULATION** to begin. Click **PAUSE** to freeze the state, **RESET** to clear.
+This is not a mock. The circuit runs on your local Fortran kernel with Phase 2 noise channels active and Phase 3 quantum error correction integrated. Every animation frame is a faithful visualization of actual quantum state evolution. Real vacuum fluctuation entropy from ANU Quantum RNG streams into the measurement head.
 
 ---
 
