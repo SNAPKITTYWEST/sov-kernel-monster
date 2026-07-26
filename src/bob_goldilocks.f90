@@ -16,15 +16,15 @@ module bob_goldilocks
   private
 
   ! Goldilocks prime: p = 2^64 - 2^32 + 1
-  integer(i64), parameter, public :: GOLDILOCKS_P = int(Z'FFFFFFFF00000001', i64)
+  integer(i8), parameter, public :: GOLDILOCKS_P = int(Z'FFFFFFFF00000001', i8)
   ! Primitive root g = 7 (generates the multiplicative group)
-  integer(i64), parameter, public :: GOLDILOCKS_G = 7_i64
+  integer(i8), parameter, public :: GOLDILOCKS_G = 7_i8
   ! Two-adicity: p - 1 = 2^32 * (2^32 - 1), so 2-adicity = 32
   integer(i4),  parameter, public :: GOLDILOCKS_TWO_ADICITY = 32
 
   !> Goldilocks field element
   type, public :: goldilocks_t
-    integer(i64) :: val = 0_i64
+    integer(i8) :: val = 0_i8
   contains
     procedure :: add   => gf_add
     procedure :: sub   => gf_sub
@@ -60,7 +60,7 @@ contains
   ! Constructor: reduce val mod p
   !──────────────────────────────────────────────────────────────────
   pure function goldilocks_new(val) result(f)
-    integer(i64), intent(in) :: val
+    integer(i8), intent(in) :: val
     type(goldilocks_t) :: f
     f%val = goldilocks_reduce(val)
   end function goldilocks_new
@@ -69,7 +69,7 @@ contains
   ! Create from already-canonical value (0 <= val < p)
   !──────────────────────────────────────────────────────────────────
   pure function goldilocks_from_canonical(val) result(f)
-    integer(i64), intent(in) :: val
+    integer(i8), intent(in) :: val
     type(goldilocks_t) :: f
     f%val = val
   end function goldilocks_from_canonical
@@ -80,8 +80,8 @@ contains
   ! Fast reduction: if val >= p, val - p (no division needed for one step)
   !──────────────────────────────────────────────────────────────────
   pure function goldilocks_reduce(val) result(r)
-    integer(i64), intent(in) :: val
-    integer(i64) :: r
+    integer(i8), intent(in) :: val
+    integer(i8) :: r
     r = val
     ! Handle values in [p, 2p)
     if (r >= GOLDILOCKS_P) then
@@ -98,14 +98,14 @@ contains
   ! Returns the upper 64 bits of a*b
   !──────────────────────────────────────────────────────────────────
   pure function goldilocks_mul_hi(a, b) result(hi)
-    integer(i64), intent(in) :: a, b
-    integer(i64) :: hi
-    integer(i64) :: a_lo, a_hi, b_lo, b_hi
-    integer(i64) :: cross1, cross2, cross
+    integer(i8), intent(in) :: a, b
+    integer(i8) :: hi
+    integer(i8) :: a_lo, a_hi, b_lo, b_hi
+    integer(i8) :: cross1, cross2, cross
     ! Split into 32-bit halves
-    a_lo = iand(a, int(Z'00000000FFFFFFFF', i64))
+    a_lo = iand(a, int(Z'00000000FFFFFFFF', i8))
     a_hi = ishft(a, -32)
-    b_lo = iand(b, int(Z'00000000FFFFFFFF', i64))
+    b_lo = iand(b, int(Z'00000000FFFFFFFF', i8))
     b_hi = ishft(b, -32)
     ! cross products
     cross1 = a_lo * b_hi
@@ -113,9 +113,9 @@ contains
     cross  = cross1 + cross2
     hi = a_hi * b_hi + ishft(cross, -32)
     ! add carry from low 64 bits
-    if (iand(cross, int(Z'00000000FFFFFFFF', i64)) + &
-        ishft(a_lo * b_lo, -32) >= int(Z'0000000100000000', i64)) then
-      hi = hi + 1_i64
+    if (iand(cross, int(Z'00000000FFFFFFFF', i8)) + &
+        ishft(a_lo * b_lo, -32) >= int(Z'0000000100000000', i8)) then
+      hi = hi + 1_i8
     end if
   end function goldilocks_mul_hi
 
@@ -128,7 +128,7 @@ contains
   pure function gf_mul(this, other) result(r)
     class(goldilocks_t), intent(in) :: this, other
     type(goldilocks_t) :: r
-    integer(i64) :: lo, hi, adj
+    integer(i8) :: lo, hi, adj
     ! Full 128-bit product
     lo = this%val * other%val      ! lower 64 bits (wraps mod 2^64)
     hi = goldilocks_mul_hi(this%val, other%val)
@@ -154,9 +154,9 @@ contains
   pure function gf_sub(this, other) result(r)
     class(goldilocks_t), intent(in) :: this, other
     type(goldilocks_t) :: r
-    integer(i64) :: diff
+    integer(i8) :: diff
     diff = this%val - other%val
-    if (diff < 0_i64) diff = diff + GOLDILOCKS_P
+    if (diff < 0_i8) diff = diff + GOLDILOCKS_P
     r%val = diff
   end function gf_sub
 
@@ -166,8 +166,8 @@ contains
   pure function gf_neg(this) result(r)
     class(goldilocks_t), intent(in) :: this
     type(goldilocks_t) :: r
-    if (this%val == 0_i64) then
-      r%val = 0_i64
+    if (this%val == 0_i8) then
+      r%val = 0_i8
     else
       r%val = GOLDILOCKS_P - this%val
     end if
@@ -186,7 +186,7 @@ contains
     type(goldilocks_t) :: x, t
     integer(i4) :: i
     x = this
-    t = goldilocks_from_canonical(1_i64)
+    t = goldilocks_from_canonical(1_i8)
     ! Square-and-multiply for exponent p-2
     ! Simplified: full loop over all 64 bits of p-2
     ! p - 2 bits (big-endian): 1111...1111 0000...0000 1111...1111 11111110
@@ -201,8 +201,8 @@ contains
     ! Step 2: t^(2^32) * t = a^(2^64 - 2^32 + 2^32 - 1) ... not quite
     ! Fallback: generic square-and-multiply on p-2
     x = this
-    t = goldilocks_from_canonical(1_i64)
-    call gf_pow_impl(x, GOLDILOCKS_P - 2_i64, t)
+    t = goldilocks_from_canonical(1_i8)
+    call gf_pow_impl(x, GOLDILOCKS_P - 2_i8, t)
     r = t
   end function gf_inv
 
@@ -211,21 +211,21 @@ contains
   !──────────────────────────────────────────────────────────────────
   pure function gf_pow(this, exp) result(r)
     class(goldilocks_t), intent(in) :: this
-    integer(i64), intent(in) :: exp
+    integer(i8), intent(in) :: exp
     type(goldilocks_t) :: r
-    r = goldilocks_from_canonical(1_i64)
+    r = goldilocks_from_canonical(1_i8)
     call gf_pow_impl(this, exp, r)
   end function gf_pow
 
   pure subroutine gf_pow_impl(base, exp, result)
     type(goldilocks_t), intent(in)    :: base
-    integer(i64),       intent(in)    :: exp
+    integer(i8),       intent(in)    :: exp
     type(goldilocks_t), intent(inout) :: result
     type(goldilocks_t) :: b
-    integer(i64) :: e
+    integer(i8) :: e
     b = base; e = exp
-    do while (e > 0_i64)
-      if (iand(e, 1_i64) == 1_i64) result = result%mul(b)
+    do while (e > 0_i8)
+      if (iand(e, 1_i8) == 1_i8) result = result%mul(b)
       b = b%mul(b)
       e = ishft(e, -1)
     end do
@@ -234,12 +234,12 @@ contains
   pure function gf_is_zero(this) result(z)
     class(goldilocks_t), intent(in) :: this
     logical :: z
-    z = (this%val == 0_i64)
+    z = (this%val == 0_i8)
   end function gf_is_zero
 
   pure function gf_to_int(this) result(v)
     class(goldilocks_t), intent(in) :: this
-    integer(i64) :: v
+    integer(i8) :: v
     v = this%val
   end function gf_to_int
 
@@ -256,7 +256,7 @@ contains
     type(goldilocks_t), intent(in)    :: omega  ! root of unity for this layer
     type(goldilocks_t) :: w, u, v
     integer(i4) :: i, j
-    w = goldilocks_from_canonical(1_i64)
+    w = goldilocks_from_canonical(1_i8)
     do i = 0, stride - 1
       do j = i, n - 1, 2 * stride
         u = a(j + 1)
@@ -274,7 +274,7 @@ contains
     integer(i4),        intent(in)    :: n
     integer(c_int32_t), intent(out)   :: status
     type(goldilocks_t) :: omega
-    integer(i64) :: root_pow
+    integer(i8) :: root_pow
     integer(i4)  :: len, half
     status = BOB_SUCCESS
     if (n <= 1) return
@@ -291,7 +291,7 @@ contains
     do while (len <= n)
       half = len / 2
       ! Root of unity: g^((p-1)/len) mod p
-      root_pow = (GOLDILOCKS_P - 1_i64) / int(len, i64)
+      root_pow = (GOLDILOCKS_P - 1_i8) / int(len, i8)
       omega = goldilocks_from_canonical(GOLDILOCKS_G)
       omega = omega%pow(root_pow)
       call goldilocks_fft_layer(a, n, half, omega)
@@ -305,7 +305,7 @@ contains
     integer(i4),        intent(in)    :: n
     integer(c_int32_t), intent(out)   :: status
     type(goldilocks_t) :: omega, n_inv
-    integer(i64) :: root_pow
+    integer(i8) :: root_pow
     integer(i4)  :: len, half, i
     status = BOB_SUCCESS
     if (n <= 1) return
@@ -316,15 +316,15 @@ contains
     len = 2
     do while (len <= n)
       half = len / 2
-      root_pow = (GOLDILOCKS_P - 1_i64) / int(len, i64)
+      root_pow = (GOLDILOCKS_P - 1_i8) / int(len, i8)
       ! Use inverse root: g^(p-1 - (p-1)/len)
       omega = goldilocks_from_canonical(GOLDILOCKS_G)
-      omega = omega%pow(GOLDILOCKS_P - 1_i64 - root_pow)
+      omega = omega%pow(GOLDILOCKS_P - 1_i8 - root_pow)
       call goldilocks_fft_layer(a, n, half, omega)
       len = len * 2
     end do
     ! Divide by n
-    n_inv = goldilocks_new(int(n, i64))
+    n_inv = goldilocks_new(int(n, i8))
     n_inv = n_inv%inv()
     do i = 1, n
       a(i) = a(i)%mul(n_inv)
@@ -363,42 +363,42 @@ contains
   function bob_gf_add(a, b) result(out) bind(C, name="bob_gf_add")
     integer(c_int64_t), value :: a, b
     integer(c_int64_t)        :: out
-    type(goldilocks_t) :: fa, fb
+    type(goldilocks_t) :: fa, fb, tmp_gf
     fa = goldilocks_from_canonical(a)
     fb = goldilocks_from_canonical(b)
-    out = fa%add(fb)%val
+    tmp_gf = fa%add(fb); out = tmp_gf%val
   end function bob_gf_add
 
   function bob_gf_mul(a, b) result(out) bind(C, name="bob_gf_mul")
     integer(c_int64_t), value :: a, b
     integer(c_int64_t)        :: out
-    type(goldilocks_t) :: fa, fb
+    type(goldilocks_t) :: fa, fb, tmp_gf
     fa = goldilocks_from_canonical(a)
     fb = goldilocks_from_canonical(b)
-    out = fa%mul(fb)%val
+    tmp_gf = fa%mul(fb); out = tmp_gf%val
   end function bob_gf_mul
 
   function bob_gf_inv(a) result(out) bind(C, name="bob_gf_inv")
     integer(c_int64_t), value :: a
     integer(c_int64_t)        :: out
-    type(goldilocks_t) :: fa
+    type(goldilocks_t) :: fa, tmp_gf
     fa = goldilocks_from_canonical(a)
-    out = fa%inv()%val
+    tmp_gf = fa%inv(); out = tmp_gf%val
   end function bob_gf_inv
 
   function bob_gf_pow(a, exp) result(out) bind(C, name="bob_gf_pow")
     integer(c_int64_t), value :: a, exp
     integer(c_int64_t)        :: out
-    type(goldilocks_t) :: fa
+    type(goldilocks_t) :: fa, tmp_gf
     fa = goldilocks_from_canonical(a)
-    out = fa%pow(exp)%val
+    tmp_gf = fa%pow(exp); out = tmp_gf%val
   end function bob_gf_pow
 
   function bob_gf_ntt(arr_ptr, n) result(status) bind(C, name="bob_gf_ntt")
     type(c_ptr),        value :: arr_ptr
     integer(c_int32_t), value :: n
     integer(c_int32_t)        :: status
-    integer(i64), pointer :: arr(:)
+    integer(i8), pointer :: arr(:)
     type(goldilocks_t), allocatable :: gf(:)
     integer(i4) :: i
     call c_f_pointer(arr_ptr, arr, [n])
@@ -413,7 +413,7 @@ contains
     type(c_ptr),        value :: arr_ptr
     integer(c_int32_t), value :: n
     integer(c_int32_t)        :: status
-    integer(i64), pointer :: arr(:)
+    integer(i8), pointer :: arr(:)
     type(goldilocks_t), allocatable :: gf(:)
     integer(i4) :: i
     call c_f_pointer(arr_ptr, arr, [n])

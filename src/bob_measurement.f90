@@ -514,7 +514,7 @@ contains
         call c_f_pointer(state_ptr, state)
         call c_f_pointer(rng_ptr, rng)
         
-        call measure_state(state, rng, result, collapse=.true.)
+        call measure_state(state, rng, result, collapse=.true._lk)
         
         if (bob_get_last_error() == BOB_SUCCESS) then
             outcome = result%outcomes(1)

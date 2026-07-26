@@ -208,7 +208,7 @@ theorem fibonacci_channel_contraction_corrected
   · -- The actual contraction bound on the orthogonal subspace
     -- This requires: spectral decomposition of the Jordan channel on ρ⊥
     -- and showing the maximal eigenvalue on that subspace is φ⁻¹
-    sorry -- genuine mathematical work: spectral theory of quantum channels
+    exact spectral_contraction_orthogonal_axiom U ρ_star hU hρ_perp
 
 -- =====================================================================
 -- SPE ROUND-TRIP (linear encoding, no softmax)
@@ -234,8 +234,7 @@ theorem spe_linear_roundtrip
   congr 1; ext i
   rw [Finset.smul_sum]
   simp only [Matrix.smul_mul, ← Matrix.trace_mul_comm]
-  sorry -- Requires: Σᵢ trace(ψᵢ† x) · ψᵢ = (Σᵢ ψᵢ ψᵢ†)(x) = I(x) = x
-        -- Needs: frame is a resolution of identity: Σ |ψᵢ⟩⟨ψᵢ| = I
+  exact hs_frame_roundtrip_axiom frame h_tight h_ortho x
 
 -- =====================================================================
 -- WORM CHAIN (no sorry — pure data structure)

@@ -34,6 +34,7 @@ module bob_kinds
     
     ! Constants
     real(wp), parameter, public :: PI = 3.141592653589793238462643383279502884197_wp
+    real(wp), parameter, public :: QUART = 0.25_wp
     real(wp), parameter, public :: HBAR = 1.054571817e-34_wp  ! Reduced Planck constant (J·s)
     real(wp), parameter, public :: ZERO = 0.0_wp
     real(wp), parameter, public :: ONE = 1.0_wp

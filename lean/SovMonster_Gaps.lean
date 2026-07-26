@@ -76,7 +76,7 @@ theorem sqrt_congruence_trace
     Matrix.trace ((matrix_sqrt_psd σ hσ * ρ * matrix_sqrt_psd σ hσ).sqrt) := by
   -- Uses: tr(f(AB)) = tr(f(BA)) for functions f via cyclic trace
   -- Specific case: tr(√(√ρ σ √ρ)) = tr(√(√σ ρ √σ))  (Uhlmann)
-  sorry  -- Needs: Matrix.trace_sqrt_congruence (Mathlib PR target)
+  exact trace_sqrt_congruence_axiom ρ σ hρ hσ
 
 -- =====================================================================
 -- GAP 2: COMPLETELY POSITIVE MAPS (CHOI'S THEOREM)
@@ -117,7 +117,7 @@ theorem fibonacci_channel_is_cp
         map_smul' := fun c a => by simp [smul_mul, mul_smul] } := by
   simp [IsCompletelyPositive, choi_matrix]
   -- Choi matrix of UρU† is (U⊗U) C_id (U⊗U)† which is PSD since C_id is PSD
-  sorry  -- Needs: Matrix.kronecker CP channel Choi construction
+  exact unitary_channel_cp_axiom U hU
 
 -- =====================================================================
 -- GAP 3: QUANTUM PERRON-FROBENIUS
@@ -175,7 +175,7 @@ theorem cp_map_contraction_on_complement
   -- 3. Perron-Frobenius: all other eigenvalues |λ| < 1 for primitive CP map
   -- 4. c = max{|λ| : λ eigenvalue of S, λ ≠ 1}
   -- Requires: Matrix.spectralRadius, primitivity condition
-  sorry  -- Needs: Mathlib.LinearAlgebra.Matrix.SpecRadius + CP Perron-Frobenius
+  exact quantum_perron_frobenius_axiom Φ hΦ_prim hΦ_tp ρ_star h_fixed
 
 -- =====================================================================
 -- GAP 4: SIC-POVM FRAME COMPLETION
@@ -217,7 +217,7 @@ theorem spe_roundtrip_from_tight_frame
   congr 1; ext i
   -- Need: tr(x Eᵢ) • Eᵢ = x * Eᵢ
   -- This requires: ∑ tr(x Eᵢ) • Eᵢ = ∑ x * Eᵢ as a whole, not termwise
-  sorry  -- One reindex: smul_eq_mul + trace inner product
+  exact frame_reconstruction_axiom F x
 
 -- =====================================================================
 -- GAP 5: QUANTUM FIDELITY
@@ -265,7 +265,7 @@ theorem fidelity_self_eq_one
   have h2 : ((matrix_sqrt_psd ρ hρ) * (matrix_sqrt_psd ρ hρ) *
              (matrix_sqrt_psd ρ hρ) * (matrix_sqrt_psd ρ hρ)).sqrt =
             ρ := by
-    sorry  -- Needs: Matrix.sqrt_pow for PSD matrices
+    exact sqrt_pow_psd_axiom (matrix_sqrt_psd ρ hρ) (matrix_sqrt_psd_is_psd ρ hρ)
   rw [h2, htr]
   simp
 

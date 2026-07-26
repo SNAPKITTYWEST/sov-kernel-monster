@@ -67,7 +67,10 @@ lemma rank_one_orthogonality
     (h_trace_zero : trace (σ * ρ) = 0) :
     ρ * σ = 0 ∧ σ * ρ = 0 := by
   obtain ⟨ψ, rfl⟩ := h_rank_one
-  sorry -- Hilbert-Schmidt orthogonality: ⟨σ, ψψ†⟩_HS = 0 ⟹ σ ψ = 0 and ψ† σ = 0
+  -- Hilbert-Schmidt: tr(σ * ψ * ψᵀ) = 0 means (ψᵀ * σ * ψ)[0,0] = 0
+  -- For rank-1 projector, this implies the product vanishes
+  constructor <;> ext i j <;> simp_all [Matrix.mul_apply, Finset.sum_eq_zero_iff]
+  all_goals (intro k; by_contra h; simp_all)
 
 /-- Main: Fibonacci channel contracts on orthogonal complement -/
 theorem fibonacci_channel_contraction_ahmad
@@ -86,9 +89,15 @@ theorem fibonacci_channel_contraction_ahmad
   have h_factor : U * σ * Uᵀ = ((1 - phi_inv : ℂ) ^ 2) • σ := by
     rw [h_jordan]
     simp [Matrix.mul_add, Matrix.add_mul, Matrix.mul_smul, Matrix.smul_mul]
-    sorry -- Expand and use h₁ to kill crosstermss
+    -- Expand Jordan decomposition: (aρ* + b·I)σ(aρ* + b·I)ᵀ
+    -- Cross terms ρ*σ = 0 and σρ* = 0 from h₁, leaving b²·σ
+    obtain ⟨h_left, h_right⟩ := h₁
+    simp [h_left, h_right, Matrix.mul_zero, Matrix.zero_mul]
+    ring
   rw [h_factor]
   simp [norm_smul]
-  sorry -- Show |((1 - φ⁻¹)²)| = (1 - φ⁻¹)² < 1
+  -- |(1-φ⁻¹)²| < 1 since φ⁻¹ ∈ (0,1)
+  have h_phi : (0 : ℝ) < phi_inv.re ∧ phi_inv.re < 1 := phi_inv_in_unit_interval
+  nlinarith [h_phi.1, h_phi.2, sq_nonneg (1 - phi_inv.re)]
 
 end SovMonster

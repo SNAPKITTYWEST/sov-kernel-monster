@@ -61,3 +61,5 @@ out.lean
 out.f90
 out.txt
 mh_payload.json
+*.mod
+rust/sov-rust-core/target/

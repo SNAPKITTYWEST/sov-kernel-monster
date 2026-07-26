@@ -8,7 +8,7 @@
 !=====================================================================
 module bob_worm
   use, intrinsic :: iso_c_binding, only: c_int32_t, c_int64_t, c_ptr, &
-       c_f_pointer, c_loc, c_char, c_size_t
+       c_f_pointer, c_loc, c_char, c_size_t, c_associated
   use, intrinsic :: iso_fortran_env, only: int64, real64, int8
   use bob_kinds
   use bob_errors
@@ -24,19 +24,19 @@ module bob_worm
   ! BLAKE3 state (matches sov_monster_kernel.f90 blake3_state)
   !──────────────────────────────────────────────────────────────────
   type, public :: bob_blake3_state
-    integer(i64), dimension(8)  :: chaining_value
+    integer(i8), dimension(8)  :: chaining_value
     integer(i8),  dimension(64) :: block
-    integer(i64)                :: block_len = 0_i64
-    integer(i64)                :: counter   = 0_i64
-    integer(i64)                :: flags     = 0_i64
+    integer(i8)                :: block_len = 0_i8
+    integer(i8)                :: counter   = 0_i8
+    integer(i8)                :: flags     = 0_i8
     logical(lk)                 :: initialized = .false.
   end type bob_blake3_state
 
   !> A single WORM seal
   type, public :: bob_worm_seal
     integer(i8), dimension(WORM_HASH_LEN) :: hash = 0_i8
-    integer(i64) :: steps     = 0_i64
-    integer(i64) :: timestamp = 0_i64   ! sequence counter (no wallclock)
+    integer(i8) :: steps     = 0_i8
+    integer(i8) :: timestamp = 0_i8   ! sequence counter (no wallclock)
     character(len=WORM_LABEL_LEN)    :: label    = ''
     character(len=WORM_ARTIFACT_LEN) :: artifact = ''
     logical(lk) :: is_valid = .false.
@@ -47,7 +47,7 @@ module bob_worm
     type(bob_worm_seal), allocatable :: seals(:)
     integer(i4)  :: length    = 0
     integer(i4)  :: capacity  = 0
-    integer(i64) :: counter   = 0_i64
+    integer(i8) :: counter   = 0_i8
     logical(lk)  :: initialized = .false.
   contains
     procedure :: init       => chain_init
@@ -73,11 +73,11 @@ module bob_worm
   public :: bob_worm_chain_free
 
   ! BLAKE3 IV (from RFC)
-  integer(i64), parameter :: BLAKE3_IV(8) = [ &
-    int(Z'6A09E667F3BCC908', i64), int(Z'BB67AE8584CAA73B', i64), &
-    int(Z'3C6EF372FE94F82B', i64), int(Z'A54FF53A5F1D36F1', i64), &
-    int(Z'510E527FADE682D1', i64), int(Z'9B05688C2B3E6C1F', i64), &
-    int(Z'1F83D9ABFB41BD6B', i64), int(Z'5BE0CD19137E2179', i64) ]
+  integer(i8), parameter :: BLAKE3_IV(8) = [ &
+    int(Z'6A09E667F3BCC908', i8), int(Z'BB67AE8584CAA73B', i8), &
+    int(Z'3C6EF372FE94F82B', i8), int(Z'A54FF53A5F1D36F1', i8), &
+    int(Z'510E527FADE682D1', i8), int(Z'9B05688C2B3E6C1F', i8), &
+    int(Z'1F83D9ABFB41BD6B', i8), int(Z'5BE0CD19137E2179', i8) ]
 
   integer(i4), parameter :: MSG_PERMUTATION(16) = &
     [3,7,4,11,8,1,5,14,2,12,13,6,10,15,16,9]
@@ -93,24 +93,24 @@ contains
     type(bob_blake3_state), intent(out) :: state
     state%chaining_value = BLAKE3_IV
     state%block          = 0_i8
-    state%block_len      = 0_i64
-    state%counter        = 0_i64
-    state%flags          = 0_i64
+    state%block_len      = 0_i8
+    state%counter        = 0_i8
+    state%flags          = 0_i8
     state%initialized    = .true.
   end subroutine blake3_init
 
-  pure subroutine blake3_rotate_right(x, n, r)
-    integer(i64), intent(in)  :: x
+  subroutine blake3_rotate_right(x, n, r)
+    integer(i8), intent(in)  :: x
     integer(i4),  intent(in)  :: n
-    integer(i64), intent(out) :: r
+    integer(i8), intent(out) :: r
     r = ior(ishft(x, -n), ishft(x, 64 - n))
   end subroutine blake3_rotate_right
 
-  pure subroutine blake3_g(state_v, a, b, c, d, mx, my)
-    integer(i64), intent(inout) :: state_v(16)
+  subroutine blake3_g(state_v, a, b, c, d, mx, my)
+    integer(i8), intent(inout) :: state_v(16)
     integer(i4),  intent(in)    :: a, b, c, d
-    integer(i64), intent(in)    :: mx, my
-    integer(i64) :: tmp
+    integer(i8), intent(in)    :: mx, my
+    integer(i8) :: tmp
     state_v(a) = state_v(a) + state_v(b) + mx
     call blake3_rotate_right(ieor(state_v(d), state_v(a)), 16, tmp); state_v(d) = tmp
     state_v(c) = state_v(c) + state_v(d)
@@ -121,16 +121,16 @@ contains
     call blake3_rotate_right(ieor(state_v(b), state_v(c)),  7, tmp); state_v(b) = tmp
   end subroutine blake3_g
 
-  pure subroutine blake3_compress(cv, block_words, counter, block_len, flags, output)
-    integer(i64), intent(in)  :: cv(8), block_words(16)
-    integer(i64), intent(in)  :: counter, block_len, flags
-    integer(i64), intent(out) :: output(8)
-    integer(i64) :: sv(16), m(16), tmp(16)
+  subroutine blake3_compress(cv, block_words, counter, block_len, flags, output)
+    integer(i8), intent(in)  :: cv(8), block_words(16)
+    integer(i8), intent(in)  :: counter, block_len, flags
+    integer(i8), intent(out) :: output(8)
+    integer(i8) :: sv(16), m(16), tmp(16)
     integer(i4)  :: round, i
     sv(1:8)  = cv
     sv(9)    = BLAKE3_IV(1); sv(10) = BLAKE3_IV(2)
     sv(11)   = BLAKE3_IV(3); sv(12) = BLAKE3_IV(4)
-    sv(13)   = iand(counter, int(Z'00000000FFFFFFFF', i64))
+    sv(13)   = iand(counter, int(Z'00000000FFFFFFFF', i8))
     sv(14)   = ishft(counter, -32)
     sv(15)   = block_len; sv(16) = flags
     m = block_words
@@ -155,83 +155,83 @@ contains
   subroutine blake3_update(state, input, in_len)
     type(bob_blake3_state), intent(inout) :: state
     integer(i8), intent(in) :: input(in_len)
-    integer(i64), intent(in) :: in_len
-    integer(i64) :: i, pos
+    integer(i8), intent(in) :: in_len
+    integer(i8) :: i, pos
     if (.not. state%initialized) call blake3_init(state)
-    pos = state%block_len + 1_i64
+    pos = state%block_len + 1_i8
     do i = 1, in_len
-      if (state%block_len >= 64_i64) then
+      if (state%block_len >= 64_i8) then
         ! Process full block
         call blake3_process_block(state)
-        state%block_len = 0_i64; pos = 1_i64
+        state%block_len = 0_i8; pos = 1_i8
       end if
       state%block(int(pos)) = input(i)
-      state%block_len = state%block_len + 1_i64
-      pos = pos + 1_i64
+      state%block_len = state%block_len + 1_i8
+      pos = pos + 1_i8
     end do
   end subroutine blake3_update
 
   subroutine blake3_process_block(state)
     type(bob_blake3_state), intent(inout) :: state
-    integer(i64) :: block_words(16), output(8)
+    integer(i8) :: block_words(16), output(8)
     integer(i4)  :: i
     do i = 1, 16
-      block_words(i) = 0_i64
+      block_words(i) = 0_i8
       if (8*(i-1)+1 <= 64) then
-        block_words(i) = iand(int(state%block(8*(i-1)+1),i64), int(Z'FF',i64)) + &
-                         ishft(iand(int(state%block(8*(i-1)+2),i64),int(Z'FF',i64)),8) + &
-                         ishft(iand(int(state%block(8*(i-1)+3),i64),int(Z'FF',i64)),16) + &
-                         ishft(iand(int(state%block(8*(i-1)+4),i64),int(Z'FF',i64)),24) + &
-                         ishft(iand(int(state%block(8*(i-1)+5),i64),int(Z'FF',i64)),32) + &
-                         ishft(iand(int(state%block(8*(i-1)+6),i64),int(Z'FF',i64)),40) + &
-                         ishft(iand(int(state%block(8*(i-1)+7),i64),int(Z'FF',i64)),48) + &
-                         ishft(iand(int(state%block(8*(i-1)+8),i64),int(Z'FF',i64)),56)
+        block_words(i) = iand(int(state%block(8*(i-1)+1),i8), int(Z'FF',i8)) + &
+                         ishft(iand(int(state%block(8*(i-1)+2),i8),int(Z'FF',i8)),8) + &
+                         ishft(iand(int(state%block(8*(i-1)+3),i8),int(Z'FF',i8)),16) + &
+                         ishft(iand(int(state%block(8*(i-1)+4),i8),int(Z'FF',i8)),24) + &
+                         ishft(iand(int(state%block(8*(i-1)+5),i8),int(Z'FF',i8)),32) + &
+                         ishft(iand(int(state%block(8*(i-1)+6),i8),int(Z'FF',i8)),40) + &
+                         ishft(iand(int(state%block(8*(i-1)+7),i8),int(Z'FF',i8)),48) + &
+                         ishft(iand(int(state%block(8*(i-1)+8),i8),int(Z'FF',i8)),56)
       end if
     end do
     call blake3_compress(state%chaining_value, block_words, &
-         state%counter, state%block_len, int(Z'0B',i64), output)
+         state%counter, state%block_len, int(Z'0B',i8), output)
     state%chaining_value = output
-    state%counter = state%counter + 1_i64
+    state%counter = state%counter + 1_i8
   end subroutine blake3_process_block
 
   subroutine blake3_finalize(state, out, out_len)
     type(bob_blake3_state), intent(inout) :: state
     integer(i8), intent(out) :: out(out_len)
-    integer(i64), intent(in) :: out_len
-    integer(i64) :: block_words(16), output(8)
+    integer(i8), intent(in) :: out_len
+    integer(i8) :: block_words(16), output(8)
     integer(i4)  :: i, j
     ! Pad remaining block to 64 bytes
-    if (state%block_len < 64_i64) then
+    if (state%block_len < 64_i8) then
       do i = int(state%block_len)+1, 64; state%block(i) = 0_i8; end do
     end if
-    block_words = 0_i64
+    block_words = 0_i8
     do i = 1, 16
       if (8*(i-1)+1 <= 64) then
-        block_words(i) = iand(int(state%block(8*(i-1)+1),i64), int(Z'FF',i64))
+        block_words(i) = iand(int(state%block(8*(i-1)+1),i8), int(Z'FF',i8))
       end if
     end do
     call blake3_compress(state%chaining_value, block_words, &
-         state%counter, state%block_len, int(Z'0B',i64), output)
+         state%counter, state%block_len, int(Z'0B',i8), output)
     ! Output bytes
     j = 1
     do i = 1, 8
       if (j > out_len) exit
-      out(j) = int(iand(output(i), int(Z'FF',i64)), i8); j=j+1; if(j>out_len)exit
-      out(j) = int(iand(ishft(output(i),-8),  int(Z'FF',i64)), i8); j=j+1; if(j>out_len)exit
-      out(j) = int(iand(ishft(output(i),-16), int(Z'FF',i64)), i8); j=j+1; if(j>out_len)exit
-      out(j) = int(iand(ishft(output(i),-24), int(Z'FF',i64)), i8); j=j+1; if(j>out_len)exit
+      out(j) = int(iand(output(i), int(Z'FF',i8)), i8); j=j+1; if(j>out_len)exit
+      out(j) = int(iand(ishft(output(i),-8),  int(Z'FF',i8)), i8); j=j+1; if(j>out_len)exit
+      out(j) = int(iand(ishft(output(i),-16), int(Z'FF',i8)), i8); j=j+1; if(j>out_len)exit
+      out(j) = int(iand(ishft(output(i),-24), int(Z'FF',i8)), i8); j=j+1; if(j>out_len)exit
     end do
   end subroutine blake3_finalize
 
   !> Hash a byte array, return 32-byte digest
   subroutine blake3_hash_bytes(input, in_len, digest)
     integer(i8), intent(in)  :: input(in_len)
-    integer(i64), intent(in) :: in_len
+    integer(i8), intent(in) :: in_len
     integer(i8), intent(out) :: digest(32)
     type(bob_blake3_state) :: state
     call blake3_init(state)
     call blake3_update(state, input, in_len)
-    call blake3_finalize(state, digest, 32_i64)
+    call blake3_finalize(state, digest, 32_i8)
   end subroutine blake3_hash_bytes
 
   !> Hash a Fortran string
@@ -243,7 +243,7 @@ contains
     n = len_trim(str)
     allocate(bytes(n))
     do i = 1, n; bytes(i) = int(iachar(str(i:i)), i8); end do
-    call blake3_hash_bytes(bytes, int(n,i64), digest)
+    call blake3_hash_bytes(bytes, int(n,i8), digest)
     deallocate(bytes)
   end subroutine blake3_hash_string
 
@@ -276,17 +276,17 @@ contains
     allocate(this%seals(cap))
     this%capacity    = cap
     this%length      = 0
-    this%counter     = 0_i64
+    this%counter     = 0_i8
     this%initialized = .true.
     ! Genesis seal
-    call chain_seal(this, 'GENESIS', 'BOOT', 0_i64)
+    call chain_seal(this, 'GENESIS', 'BOOT', 0_i8)
   end subroutine chain_init
 
   !> Seal an event into the chain
   subroutine chain_seal(this, label, payload, steps)
     class(bob_worm_chain), intent(inout) :: this
     character(len=*), intent(in) :: label, payload
-    integer(i64),     intent(in) :: steps
+    integer(i8),     intent(in) :: steps
     type(bob_worm_seal) :: s
     integer(i8)  :: digest(32), prev_hash(32)
     character(len=256) :: combined
@@ -310,7 +310,7 @@ contains
     s%label     = label
     s%artifact  = 'UTQC_' // label(1:min(len_trim(label),10))
     s%is_valid  = .true.
-    this%counter = this%counter + 1_i64
+    this%counter = this%counter + 1_i8
     ! Grow chain if needed
     if (this%length >= this%capacity) then
       call chain_grow(this)
@@ -389,7 +389,7 @@ contains
     allocate(this%seals(1024))
     this%capacity = 1024
     this%length = 0
-    this%counter = 0_i64
+    this%counter = 0_i8
     this%initialized = .true.
   end subroutine chain_restore
 

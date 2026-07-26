@@ -7,7 +7,7 @@
 !=====================================================================
 module bob_circuit
   use, intrinsic :: iso_c_binding, only: c_int32_t, c_int64_t, c_double, &
-       c_ptr, c_f_pointer, c_loc, c_size_t
+       c_ptr, c_f_pointer, c_loc, c_size_t, c_associated
   use, intrinsic :: iso_fortran_env, only: int64, real64, int32
   use bob_kinds
   use bob_errors

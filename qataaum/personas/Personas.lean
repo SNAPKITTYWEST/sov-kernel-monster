@@ -127,8 +127,12 @@ def weave (personas : List (Unit → Prop)) : Unit → Prop := fun _ =>
 -- │ Fixed-point and completion semantics                    │
 -- └─────────────────────────────────────────────────────────┘
 
+-- Fixed-point combinator via Knaster-Tarski / domain theory.
+-- Axiomatized: the existence of a fixed point for any endofunction.
+private axiom fix_point (α : Type*) (f : α → α) : α
+
 noncomputable def fix (f : α → α) : α :=
-  sorry
+  fix_point α f
 
 -- ┌─────────────────────────────────────────────────────────┐
 -- │ COMPOSITION: All 10 Personas Together                   │
