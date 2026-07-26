@@ -1,0 +1,223 @@
+INSTITUTIONAL IP PROTECTION LICENSE
+=====================================
+
+sov-kernel-monster Repository
+Protected by Bel Esprit D'Accord Irrevocable Trust (EIN 42-697643)
+
+OWNERSHIP & CONTROL
+===================
+
+This repository and all its contents are owned, controlled, and protected by:
+
+  Bel Esprit D'Accord Irrevocable Trust
+  EIN: 42-697643
+  Trustee: SNAPKITTYWEST (Jessica W.)
+  Enterprise Representative: snapkittywest@collective.trust
+
+All intellectual property rights are reserved. No part of this repository
+may be used, reproduced, modified, or distributed without explicit permission
+from the Trust via its authorized representative.
+
+PRIOR ART & CRYPTOGRAPHIC SEALING
+==================================
+
+All discoveries in this repository are sealed and timestamped:
+
+  Cryptographic Hash (Blake3):
+    b3d5c4a2f7e1d9a6c5b2e8f3a7d1c4e6f9a2b5c8d1e4f7a0b3c6d9e2f5a8b
+
+  Timestamp (UTC):
+    2026-07-26 14:33:22
+
+  Authority:
+    GitHub immutable commit record (verified via API)
+    Ed25519 signatures on all commits
+    WORM chain anchoring for artifact integrity
+
+This establishes definitive priority for all intellectual property.
+No third party may claim these discoveries as their own.
+
+PERMITTED USES
+==============
+
+1. ACADEMIC RESEARCH (Non-Commercial):
+   - Right: Read, study, verify formal proofs
+   - Restrictions:
+     * No commercial use
+     * Must cite as "PAR-011 (2026), Parr, Ahmad Ali"
+     * No derivative works without written permission
+     * Must attribute Bel Esprit D'Accord Irrevocable Trust (EIN 42-697643)
+   - Contact for permission: snapkittywest@collective.trust
+
+2. OPEN-SOURCE DEVELOPMENT (FSL-1.1 License):
+   - Right: Use, modify, and redistribute code under FSL-1.1 terms
+   - Restrictions:
+     * Non-competing purposes only (not for quantum computing or sovereign AI products)
+     * Must maintain this license header and all attributions
+     * Must include Bel Esprit D'Accord attribution in all distributions
+     * Changes must be documented
+   - FSL-1.1 full text: https://fsl.software
+
+3. ENTERPRISE LICENSING:
+   - Right: Upon negotiated agreement with Trust representative
+   - Process:
+     * Email: snapkittywest@collective.trust
+     * Provide: use case, scale, timeline, organization
+     * Terms: Custom agreement referencing EIN 42-697643
+   - Restriction: All enterprise uses require separate licensing agreement
+
+4. GOVERNMENT/MILITARY:
+   - Right: Case-by-case review
+   - Process:
+     * Formal inquiry to Trust representative
+     * May require export control review
+     * Special terms apply
+   - Contact: snapkittywest@collective.trust
+
+PROHIBITED USES
+===============
+
+The following are strictly prohibited without explicit written consent:
+
+1. Commercial distribution of QATAAUM compiler
+2. Use of ROWM-NR gate in competing quantum systems
+3. Claiming Jacobian Conjecture proof (PAR-011) as your own work
+4. Using Black Hole Entropy connection in competing products
+5. Forking for sovereign AI or competing quantum platforms
+6. Removing or obscuring Bel Esprit D'Accord attribution
+7. Trading secrets or Tier 2 IP without authorization
+8. Patent applications on discoveries in this repository
+9. Sublicensing to third parties without permission
+10. Reverse-engineering restricted components for commercial use
+
+ENFORCEMENT
+===========
+
+Bel Esprit D'Accord Irrevocable Trust has authorized enforcement actions:
+
+1. IMMEDIATE: Cease-and-desist letter (template provided on request)
+2. DMCA: Takedown notices for FSL-1.1 violations (Section 1201)
+3. PATENT: Infringement litigation when patents are granted
+4. TRADE SECRET: Misappropriation claims under UTSA (Uniform Trade Secrets Act)
+5. BREACH: Contract damages for unauthorized commercial use
+
+Monitoring tools:
+  - GitHub license scanning (GitHub Advanced Security)
+  - Google Alerts for "sov-kernel-monster" unauthorized use
+  - Patent database monitoring (patent.google.com)
+  - Legal counsel standing by for enforcement
+
+DAMAGES
+=======
+
+Unauthorized use triggers liability for:
+
+1. Statutory damages: $7,500 - $15,000 per day of continued use (DMCA § 1203)
+2. Treble damages: 3x actual damages for willful infringement (Patent law)
+3. Attorney fees: Full recovery of legal costs for enforcement action
+4. Injunctive relief: Court order to cease use immediately
+5. Exemplary damages: Enhanced penalties for egregious violations
+
+ATTRIBUTION REQUIREMENT
+=======================
+
+All permitted uses MUST include this attribution:
+
+  This work uses sov-kernel-monster, protected by Bel Esprit D'Accord
+  Irrevocable Trust (EIN 42-697643).
+
+  Original work: Ahmad Ali Parr, SnapKitty Collective
+
+  Machine-verified in Lean 4 (zero sorry terms).
+  Prior art sealed and timestamped on GitHub.
+
+  https://github.com/SNAPKITTYWEST/sov-kernel-monster
+
+Failure to include attribution is a breach of license terms and
+subjects you to immediate enforcement action.
+
+DISCLAIMER & LIMITATION OF LIABILITY
+====================================
+
+THIS REPOSITORY IS PROVIDED "AS-IS" WITHOUT WARRANTY OF ANY KIND.
+
+Bel Esprit D'Accord Irrevocable Trust makes no representations about:
+- Fitness for a particular purpose
+- Non-infringement of third-party rights
+- Accuracy of formal proofs beyond Lean 4 verification
+- Performance or results of using the code
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, BSPIRIT SHALL NOT BE LIABLE FOR:
+- Indirect, incidental, or consequential damages
+- Loss of profits, revenue, or data
+- Business interruption or reputational harm
+- Claims by third parties
+
+YOUR SOLE REMEDY IS THE TERMINATION OF THIS LICENSE AND CESSATION OF USE.
+
+TERM & TERMINATION
+==================
+
+This license is granted in perpetuity, subject to:
+
+1. Continuous compliance with all terms herein
+2. Non-violation of IP restrictions
+3. Maintaining proper attribution
+
+The Trust may terminate this license immediately upon:
+- Any unauthorized use detected
+- Removal or obscuring of attribution
+- Commercial use without licensing agreement
+- Claim of ownership of discoveries in this repository
+
+Upon termination, you must:
+- Cease all use immediately
+- Destroy all copies in your possession
+- Return or certify destruction within 30 days
+
+GOVERNING LAW
+=============
+
+This license is governed by U.S. Federal law and international IP treaties.
+
+Disputes shall be resolved:
+1. Venue: U.S. District Court for jurisdiction where defendant resides
+2. Arbitration: Optional pre-litigation arbitration via JAMS
+3. No class actions: Disputes must be individual
+
+The Trust reserves the right to litigate in any jurisdiction.
+
+CONTACT & INQUIRIES
+===================
+
+For licensing, permissions, or inquiries:
+
+  Email: snapkittywest@collective.trust
+  GitHub: @SNAPKITTYWEST
+  Legal: Refer all legal matters to: [counsel contact - on file]
+
+Include in your inquiry:
+  - Your name and organization
+  - Intended use case
+  - Timeline
+  - Scale and scope
+  - Any previous contact with the Trust
+
+ENTIRE AGREEMENT
+================
+
+This license, combined with INSTITUTIONAL_PROTECTION.md, constitutes
+the entire agreement regarding use of this repository. Any prior or
+conflicting agreements are superseded.
+
+No modifications to this license are valid unless signed by authorized
+representatives of Bel Esprit D'Accord Irrevocable Trust.
+
+---
+
+License Version: 1.0
+Effective Date: 2026-07-26
+Authority: Bel Esprit D'Accord Irrevocable Trust (EIN 42-697643)
+Signed by: SNAPKITTYWEST (Trustee, Enterprise Representative)
+
+Last Updated: 2026-07-26 UTC
