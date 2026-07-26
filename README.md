@@ -337,7 +337,7 @@ cmake --build . --config Release
 ## WORM: The Memory of the Machine
 
 <div align="center">
-<img src="docs/assets/readme/worm-chain.svg" alt="WORM chain diagram showing GENESIS block linking to RECEIPT 001 linking to RECEIPT 002 linking to RECEIPT N via hash arrows. Each receipt contains previous hash, current hash, and Ed25519 signature. Properties panel shows: append-only, hash-linked, Ed25519 signed, tamper-evident, deterministic replay, no deletion." width="900"/>
+<img src="docs/worm-chain-architecture.svg" alt="WORM chain diagram showing GENESIS block linking to RECEIPT 001 linking to RECEIPT 002 linking to RECEIPT N via hash arrows. Each receipt contains previous hash, current hash, and Ed25519 signature. Properties panel shows: append-only, hash-linked, Ed25519 signed, tamper-evident, deterministic replay, no deletion." width="900"/>
 </div>
 
 Every execution produces a receipt. Every receipt references the previous receipt's hash. The chain cannot be broken, reordered, or deleted.
