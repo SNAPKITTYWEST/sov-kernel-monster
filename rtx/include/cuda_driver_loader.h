@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include "rowm_cuda_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,6 +16,16 @@ typedef struct CUmod_st*    CUmodule;
 typedef struct CUfunc_st*   CUfunction;
 typedef struct CUstream_st* CUstream;
 typedef struct CUevent_st*  CUevent;
+
+typedef struct {
+    uint32_t driver_version;
+    uint32_t device_ordinal;
+    uint32_t compute_capability_major;
+    uint32_t compute_capability_minor;
+    uint8_t  device_uuid[16];
+    char     device_name[64];
+    uint64_t context_generation;
+} sov_cuda_runtime_identity_t;
 
 enum {
     CUDA_SUCCESS               = 0,
@@ -31,25 +42,11 @@ enum {
 };
 
 /* Driver and primary-context lifetime */
-int  sov_cuda_init(void);
-void sov_cuda_shutdown(void);
-int  sov_cuda_is_initialized(void);
-
-/* Runtime identity — used by the ROWM-NR authorization path */
-typedef struct {
-    uint32_t driver_version;
-    uint32_t compute_capability_major;
-    uint32_t compute_capability_minor;
-    uint64_t context_generation;
-    uint8_t  device_uuid[16];
-} sov_cuda_runtime_identity_t;
-
+int      sov_cuda_init(void);
+void     sov_cuda_shutdown(void);
+int      sov_cuda_is_initialized(void);
 uint64_t sov_cuda_context_generation(void);
-CUresult sov_cuda_get_runtime_identity(sov_cuda_runtime_identity_t* out);
-
-#define SOV_CUDA_BACKEND_SOV_RTX    1u
-#define SOV_CUDA_REQUIRED_KERNEL_MASK \
-    ((uint64_t)0x07u)   /* flash_attention_paged | rmsnorm_fused | silu_fused */
+CUresult sov_cuda_get_runtime_identity(sov_cuda_runtime_identity_t* identity_out);
 
 /* Checked access to the dynamically resolved CUDA Driver API */
 CUresult sov_cuda_module_load_data(CUmodule* module, const void* image);
@@ -58,6 +55,10 @@ CUresult sov_cuda_module_get_function(CUfunction* function, CUmodule module,
 CUresult sov_cuda_module_get_global(CUdeviceptr* device_ptr, size_t* bytes,
                                     CUmodule module, const char* name);
 CUresult sov_cuda_module_unload(CUmodule module);
+/*
+ * The raw launch boundary is fail-closed: even callers that bypass the
+ * higher-level dispatchers need a ROWM-NR commit for the active context.
+ */
 CUresult sov_cuda_launch_kernel(CUfunction function,
                                 unsigned int grid_x,
                                 unsigned int grid_y,
@@ -80,11 +81,12 @@ CUresult sov_cuda_sync_power_state(void);
 
 /* PTX module dispatch */
 int  sov_cuda_kernels_init(void);
+int  sov_cuda_kernels_authorize_rowm(sov_rowm_commit_cuda_validation_fn commit_fn,
+                                      void* rowm_context);
 void sov_cuda_kernels_shutdown(void);
 int  sov_cuda_rmsnorm_fused(CUdeviceptr x, CUdeviceptr weight,
                             CUdeviceptr out, uint32_t element_count);
-int  sov_cuda_silu_fused(CUdeviceptr x, CUdeviceptr out,
-                         uint32_t element_count);
+int  sov_cuda_silu_fused(CUdeviceptr x, CUdeviceptr out, uint32_t element_count);
 
 /* GEMM dispatch */
 int  sov_cuda_gemm_init(void);
@@ -92,19 +94,7 @@ void sov_cuda_gemm_shutdown(void);
 int  sov_cuda_gemm(CUdeviceptr A, CUdeviceptr B, CUdeviceptr C,
                    int M, int N, int K);
 int  sov_cuda_gemm_ex(CUdeviceptr A, CUdeviceptr B, CUdeviceptr C,
-                      int M, int N, int K,
-                      int lda, int ldb, int ldc);
-
-/* ROWM-NR kernel authorization */
-struct sov_rowm_cuda_validation_commit_t;
-typedef int (*sov_rowm_commit_cuda_validation_fn)(
-    void* rowm_context,
-    const void* evidence,
-    struct sov_rowm_cuda_validation_commit_t* commit_out);
-
-int sov_cuda_kernels_authorize_rowm(
-    sov_rowm_commit_cuda_validation_fn commit_fn,
-    void* rowm_context);
+                      int M, int N, int K, int lda, int ldb, int ldc);
 
 /* Compatibility entry points retained for the existing RTX public API */
 int   sov_cuda_load_ptx(const char* ptx_data, unsigned int ptx_size,

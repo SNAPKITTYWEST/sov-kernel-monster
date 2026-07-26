@@ -3,11 +3,11 @@
 #include <stddef.h>
 
 typedef struct {
-    sov_rowm_commit_cuda_validation_fn    commit_fn;
-    void*                                 rowm_context;
-    sov_cuda_validation_evidence_t        evidence;
-    sov_rowm_cuda_validation_commit_t     commit;
-    int                                   authorized;
+    sov_rowm_commit_cuda_validation_fn   commit_fn;
+    void*                                rowm_context;
+    sov_cuda_validation_evidence_t       evidence;
+    sov_rowm_cuda_validation_commit_t    commit;
+    int                                  authorized;
 } sov_cuda_validation_state_t;
 
 static sov_cuda_validation_state_t g_validation;
@@ -29,15 +29,14 @@ static int bytes_are_nonzero(const uint8_t* bytes, size_t size) {
 static int bytes_equal(const uint8_t* left, const uint8_t* right, size_t size) {
     size_t i;
     if (!left || !right) return 0;
-    for (i = 0; i < size; ++i)
-        if (left[i] != right[i]) return 0;
+    for (i = 0; i < size; ++i) if (left[i] != right[i]) return 0;
     return 1;
 }
 
 static int evidence_is_valid(const sov_cuda_validation_evidence_t* ev) {
     if (!ev
             || ev->schema_version != SOV_CUDA_VALIDATION_SCHEMA_VERSION
-            || ev->backend_id == 0
+            || ev->backend_id != SOV_CUDA_BACKEND_SOV_RTX
             || ev->driver_version == 0
             || ev->compute_capability_major == 0
             || ev->ptx_target == 0
@@ -48,11 +47,12 @@ static int evidence_is_valid(const sov_cuda_validation_evidence_t* ev) {
             || ev->validation_result != 0
             || (ev->validation_flags & SOV_CUDA_VALIDATION_REQUIRED_FLAGS)
                 != SOV_CUDA_VALIDATION_REQUIRED_FLAGS
-            || ev->resolved_kernel_mask == 0
+            || (ev->resolved_kernel_mask & SOV_CUDA_REQUIRED_KERNEL_MASK)
+                != SOV_CUDA_REQUIRED_KERNEL_MASK
             || ev->cuda_context_generation == 0
             || !bytes_are_nonzero(ev->device_uuid, sizeof(ev->device_uuid))
             || !ev->flash_ptx.bytes || ev->flash_ptx.size == 0
-            || !ev->gemm_ptx.bytes  || ev->gemm_ptx.size == 0) {
+            || !ev->gemm_ptx.bytes  || ev->gemm_ptx.size  == 0) {
         return 0;
     }
     return 1;
@@ -98,8 +98,7 @@ static int evidence_equal(const sov_cuda_validation_evidence_t* l,
 
 int sov_cuda_validation_bind_rowm(sov_rowm_commit_cuda_validation_fn commit_fn,
                                    void* rowm_context) {
-    if (!commit_fn || !rowm_context)       return SOV_CUDA_ROWM_INVALID_ARGUMENT;
-    if (g_validation.authorized)           return SOV_CUDA_ROWM_BIND_CONFLICT;
+    if (!commit_fn || !rowm_context) return SOV_CUDA_ROWM_INVALID_ARGUMENT;
     if (g_validation.commit_fn) {
         return (g_validation.commit_fn == commit_fn
                 && g_validation.rowm_context == rowm_context)
@@ -134,7 +133,7 @@ int sov_cuda_validation_commit_rowm(const sov_cuda_validation_evidence_t* eviden
 
     zero_bytes(&commit, sizeof(commit));
     result = g_validation.commit_fn(g_validation.rowm_context, evidence, &commit);
-    if (result != 0)              return SOV_CUDA_ROWM_COMMIT_FAILED;
+    if (result != 0)               return SOV_CUDA_ROWM_COMMIT_FAILED;
     if (!commit_is_valid(&commit)) return SOV_CUDA_ROWM_INVALID_PROOF;
 
     g_validation.evidence   = *evidence;
