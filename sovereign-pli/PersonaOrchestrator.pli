@@ -1,0 +1,181 @@
+/*============================================================================
+  PERSONAORCHESTRATOR.PL/I - BIFROST Axiom Personas Orchestration Layer
+
+  Non-recursive PL/I orchestrator that:
+  - Selects active persona based on operational context
+  - Invokes Prolog logic for each persona via C ABI bridge
+  - Returns persona decision + confidence score
+  - Seals decision in WORM (blake3 + ed25519)
+  - Enforces INTERCOL domain isolation
+
+  Entry point: PersonaDecision(CONTEXT, CONTEXT_LEN) -> DECISION_SEALED
+  ============================================================================*/
+
+PersonaOrchestrator: package options(reorder);
+
+  declare builtin (FLOAT, HEX, FIXED, BINARY);
+
+  declare MAX_CONTEXT_LEN       fixed bin(31) value(2048);
+  declare MAX_DECISION_LEN      fixed bin(31) value(4096);
+  declare BLAKE3_HASH_LEN       fixed bin(31) value(32);
+  declare ED25519_SIG_LEN       fixed bin(31) value(64);
+  declare NUM_PERSONAS          fixed bin(31) value(10);
+  declare NUM_DOMAINS           fixed bin(31) value(4);
+
+  /* Persona IDs */
+  declare PERSONA_NULL_ARCHITECT      fixed bin(31) value(1);
+  declare PERSONA_BIFROST_WARDEN      fixed bin(31) value(2);
+  declare PERSONA_INVERTED_SOFTMAX    fixed bin(31) value(3);
+  declare PERSONA_CHAOS_INJECTOR      fixed bin(31) value(4);
+  declare PERSONA_MEMORY_REVERSER     fixed bin(31) value(5);
+  declare PERSONA_WORM_SEAL_GUARDIAN  fixed bin(31) value(6);
+  declare PERSONA_SPECTRAL_CARTOGRAPHER fixed bin(31) value(7);
+  declare PERSONA_SNAPKITTY_ENFORCER  fixed bin(31) value(8);
+  declare PERSONA_HARNESS_WEAVER      fixed bin(31) value(9);
+  declare PERSONA_OMEGA_SEAL          fixed bin(31) value(10);
+
+  /* INTERCOL Domains */
+  declare DOMAIN_TREASURY     fixed bin(31) value(1);
+  declare DOMAIN_CLINICAL     fixed bin(31) value(2);
+  declare DOMAIN_LEGAL        fixed bin(31) value(3);
+  declare DOMAIN_OPERATIONS   fixed bin(31) value(4);
+
+  /* Types */
+  declare 1 worm_seal,
+    2 hash char(32),
+    2 sig char(64),
+    2 timestamp fixed bin(63),
+    2 label char(64),
+    2 artifact_id char(32),
+    2 is_valid bit;
+
+  declare 1 persona_decision,
+    2 persona_id fixed bin(31),
+    2 result_text char(2048),
+    2 confidence float,
+    2 domain_id fixed bin(31),
+    2 context_hash char(32),
+    2 seal worm_seal;
+
+  /* Fortran/C ABI Declarations */
+  declare external SelectPersona
+    entry(pointer, fixed bin(31), pointer returns(fixed bin(31)));
+
+  declare external InvokePrologPersona
+    entry(fixed bin(31), pointer, fixed bin(31), pointer returns(pointer));
+
+  declare external Blake3Hash
+    entry(pointer, fixed bin(31), pointer returns(pointer));
+
+  declare external Ed25519Sign
+    entry(pointer, fixed bin(31), pointer, pointer returns(bit));
+
+  /* Main Entry Point */
+  PersonaDecision: procedure(context_ptr, context_len)
+                   returns(pointer);
+
+    declare context_ptr pointer;
+    declare context_len fixed bin(31);
+    declare active_persona fixed bin(31);
+    declare prolog_result pointer;
+    declare domain_check fixed bin(31);
+    declare sealed_decision pointer;
+    declare decision_struct pointer;
+    declare hash_ptr pointer;
+    declare sig_ptr pointer;
+    declare timestamp fixed bin(63);
+
+    /* Step 1: Select persona */
+    active_persona = SelectPersona(context_ptr, context_len,
+                                  addr(decision_struct -> context_hash));
+
+    /* Step 2: Invoke Prolog */
+    prolog_result = InvokePrologPersona(active_persona, context_ptr,
+                                        context_len,
+                                        addr(decision_struct -> confidence));
+
+    /* Step 3: INTERCOL domain check */
+    domain_check = EnforceIntercol(active_persona, prolog_result);
+    if (domain_check = 0) then
+      decision_struct -> result_text = 'NULL_STATE';
+      decision_struct -> persona_id = 0;
+      decision_struct -> seal -> is_valid = '0'b;
+      return(decision_struct);
+    end if;
+
+    /* Step 4: WORM seal */
+    call GetTimestamp(timestamp);
+
+    hash_ptr = Blake3Hash(addr(decision_struct -> result_text),
+                         MAX_DECISION_LEN);
+    sig_ptr = addr(decision_struct -> seal -> sig);
+
+    call Ed25519Sign(addr(decision_struct -> result_text),
+                     MAX_DECISION_LEN,
+                     addr(decision_struct -> seal -> secret),
+                     sig_ptr);
+
+    decision_struct -> seal -> hash = hash_ptr;
+    decision_struct -> seal -> timestamp = timestamp;
+    decision_struct -> seal -> label = 'PersonaDecision';
+    decision_struct -> seal -> is_valid = '1'b;
+
+    return(decision_struct);
+
+  end PersonaDecision;
+
+  /* EnforceIntercol */
+  EnforceIntercol: procedure(persona_id, prolog_result)
+                   returns(fixed bin(31));
+
+    declare persona_id fixed bin(31);
+    declare prolog_result pointer;
+    declare current_domain fixed bin(31);
+    declare allowed_domains(10) fixed bin(31);
+    declare i fixed bin(31);
+
+    allowed_domains(1) = DOMAIN_CLINICAL;
+    allowed_domains(2) = DOMAIN_LEGAL;
+    allowed_domains(3) = DOMAIN_OPERATIONS;
+    allowed_domains(4) = DOMAIN_CLINICAL;
+    allowed_domains(5) = DOMAIN_CLINICAL;
+    allowed_domains(6) = DOMAIN_CLINICAL;
+    allowed_domains(7) = DOMAIN_CLINICAL;
+    allowed_domains(8) = DOMAIN_OPERATIONS;
+    allowed_domains(9) = DOMAIN_LEGAL;
+    allowed_domains(10) = DOMAIN_LEGAL;
+
+    current_domain = allowed_domains(persona_id);
+
+    do i = 1 to NUM_DOMAINS;
+      if (current_domain ^= allowed_domains(persona_id)) then
+        return(0);
+      end if;
+    end do;
+
+    return(1);
+
+  end EnforceIntercol;
+
+  /* GetTimestamp */
+  GetTimestamp: procedure(timestamp_out);
+
+    declare timestamp_out fixed bin(63);
+    declare 1 time_struct,
+      2 year fixed bin(31),
+      2 month fixed bin(31),
+      2 day fixed bin(31),
+      2 hour fixed bin(31),
+      2 minute fixed bin(31),
+      2 second fixed bin(31),
+      2 microsecond fixed bin(31);
+
+    call systime(time_struct);
+    timestamp_out = (time_struct.hour * 3600 +
+                    time_struct.minute * 60 +
+                    time_struct.second) * 1000000 +
+                   time_struct.microsecond;
+
+  end GetTimestamp;
+
+end PersonaOrchestrator;

@@ -1,0 +1,51 @@
+cabal-version:      2.4
+name:               qataaum-refinements
+version:            0.1.0.0
+synopsis:           Liquid Haskell refinement types for QATAAUM quantum compiler
+description:        
+    Refinement type specifications and proof witnesses for the QATAAUM
+    quantum assembly runtime. Provides machine-checkable invariants for
+    qubit linearity, resource ownership, scheduling constraints, and
+    compiler pass preservation properties.
+license:            Apache-2.0
+author:             QATAAUM Project Contributors
+maintainer:         qataaum@example.com
+category:           Quantum, Verification
+build-type:         Simple
+
+library
+  exposed-modules:
+      QATAAUM.Refinements.Qubit
+      QATAAUM.Refinements.Circuit
+      QATAAUM.Refinements.Schedule
+      QATAAUM.Refinements.Pulse
+      QATAAUM.Refinements.Passes
+      QATAAUM.Refinements.Witness
+  
+  build-depends:
+      base >= 4.14 && < 5
+    , liquidhaskell >= 0.9
+    , containers >= 0.6
+    , vector >= 0.12
+    , mtl >= 2.2
+  
+  hs-source-dirs:   src
+  default-language: Haskell2010
+  
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wredundant-constraints
+
+test-suite qataaum-refinements-test
+  type:             exitcode-stdio-1.0
+  main-is:          Main.hs
+  hs-source-dirs:   test
+  build-depends:
+      base
+    , qataaum-refinements
+    , tasty >= 1.4
+    , tasty-hunit >= 0.10
+  default-language: Haskell2010

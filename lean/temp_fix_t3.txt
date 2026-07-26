@@ -1,0 +1,10 @@
+  -- Step 1: From fixed-point equation, isolate φ⁻¹ · U ρ* Uᴴ
+  have step1 : φ_inv • (U * ρ_star * star U) = (1 - φ_inv_sq) • ρ_star := by
+    have key : φ_inv • (U * ρ_star * star U) + φ_inv_sq • ρ_star = ρ_star := h_fp
+    have sum1 : φ_inv + φ_inv_sq = 1 := phi_sum_one
+    rw [← sum1, add_smul] at key
+    have eq : φ_inv • (U * ρ_star * star U) + φ_inv_sq • ρ_star =
+              φ_inv • ρ_star + φ_inv_sq • ρ_star := key
+    have h1 : φ_inv • (U * ρ_star * star U) = φ_inv • ρ_star := by linarith
+    rw [show (1 : ℂ) - φ_inv_sq = φ_inv by linarith [sum1]]
+    exact h1

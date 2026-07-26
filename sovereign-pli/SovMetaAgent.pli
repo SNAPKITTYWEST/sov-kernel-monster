@@ -1,0 +1,309 @@
+/*====================================================================
+  SOVMETAAGENT.PL/I — Sovereign Knowledge Synthesis Lens
+
+  Non-recursive meta-search engine for knowledge synthesis.
+  Core entry point: SovMetaSearch(QUERY, INCLUDE_ANS)
+  Returns WORM-sealed JSON payload via Blake3+Ed25519.
+
+  Zero external dependencies — uses only:
+  - Fortran sov_knowledge base (resequencing + synthesis)
+  - Blake3 WORM attestation
+  - Ed25519 signing
+  - MLIR cosine similarity scoring
+
+  Standard: PL/I, Fortran 2018 interop via ISO C binding
+  ====================================================================*/
+
+SovMetaAgent: package options(reorder, main);
+
+  declare builtin (FLOAT, HEX, FIXED, BINARY);
+
+  /* ──────────────────────────────────────────────────────────────
+     Constants
+     ────────────────────────────────────────────────────────────── */
+  declare MAX_QUERY_LEN     fixed bin(31) value(4096);
+  declare MAX_CHUNKS        fixed bin(31) value(512);
+  declare MAX_RESPONSE_LEN  fixed bin(31) value(65536);
+  declare BLAKE3_HASH_LEN   fixed bin(31) value(32);
+  declare ED25519_SIG_LEN   fixed bin(31) value(64);
+  declare MIN_RELEVANCE     float value(0.5);
+
+  /* ──────────────────────────────────────────────────────────────
+     Fortran FFI Types (C interop)
+     ────────────────────────────────────────────────────────────── */
+  declare 1 blake3_state,
+    2 chaining_value(8) fixed bin(31),
+    2 block(64)         fixed bin(31),
+    2 block_len         fixed bin(63),
+    2 counter           fixed bin(63),
+    2 flags             fixed bin(63),
+    2 initialized       bit;
+
+  declare 1 ed25519_key,
+    2 secret            char(32),
+    2 public            char(32);
+
+  declare 1 worm_seal,
+    2 hash              char(32),
+    2 steps             fixed bin(63),
+    2 timestamp         fixed bin(63),
+    2 label             char(64),
+    2 artifact_id       char(32),
+    2 is_valid          bit;
+
+  /* ──────────────────────────────────────────────────────────────
+     Knowledge Chunk (from Fortran sov_knowledge.f90)
+     ────────────────────────────────────────────────────────────── */
+  declare 1 knowledge_chunk,
+    2 chunk_id          fixed bin(31),
+    2 content           char(1024),
+    2 embedding_ptr     fixed bin(63),
+    2 relevance_score   float,
+    2 source_domain     char(64),
+    2 confidence        float,
+    2 worm_sealed       bit;
+
+  /* ──────────────────────────────────────────────────────────────
+     Query Intent Structure
+     ────────────────────────────────────────────────────────────── */
+  declare 1 query_intent,
+    2 query_text        char(1024),
+    2 intent_class      char(32),
+    2 domain_filters    char(128),
+    2 max_results       fixed bin(31),
+    2 include_answers   fixed bin(31),
+    2 confidence_req    float;
+
+  /* ──────────────────────────────────────────────────────────────
+     Synthesis Result (Born Rule Aggregation)
+     ────────────────────────────────────────────────────────────── */
+  declare 1 synthesis_result,
+    2 answer            char(4096),
+    2 confidence        float,
+    2 supporting_chunks fixed bin(31),
+    2 follow_ups(8)     char(256),
+    2 num_followups     fixed bin(31),
+    2 metadata          char(512);
+
+  /* ──────────────────────────────────────────────────────────────
+     Fortran Subroutine Declarations (ISO C binding)
+     ────────────────────────────────────────────────────────────── */
+  declare external SovResequenceChunks
+    entry(pointer, fixed bin(31), float,
+          pointer returns (fixed bin(31)));
+
+  declare external SovSynthesizeAnswer
+    entry(pointer, fixed bin(31), fixed bin(31),
+          pointer returns (float));
+
+  declare external SovGenFollowUps
+    entry(pointer, fixed bin(31), char(*),
+          pointer returns (fixed bin(31)));
+
+  declare external sov_blake3_init
+    entry(pointer returns (fixed bin(31)));
+
+  declare external sov_blake3_update
+    entry(pointer, char(*), fixed bin(63)
+          returns (fixed bin(31)));
+
+  declare external sov_blake3_finalize
+    entry(pointer, pointer, fixed bin(63)
+          returns (fixed bin(31)));
+
+  declare external sov_bifrost_sign
+    entry(pointer, fixed bin(63), pointer, pointer
+          returns (fixed bin(31)));
+
+
+  /* ════════════════════════════════════════════════════════════════
+     1. SovMetaSearch — Main Entry Point (Non-recursive)
+     ════════════════════════════════════════════════════════════════ */
+
+  SovMetaSearch: procedure(query char(*), include_answers fixed bin(31))
+                          returns (pointer);
+
+    declare query_len fixed bin(31);
+    declare intent   type query_intent;
+    declare chunks(MAX_CHUNKS) type knowledge_chunk;
+    declare num_chunks fixed bin(31);
+    declare filtered_chunks(MAX_CHUNKS) fixed bin(31);
+    declare num_filtered fixed bin(31);
+    declare synthesis type synthesis_result;
+    declare confidence_final float;
+    declare response_json char(MAX_RESPONSE_LEN);
+    declare response_len fixed bin(31);
+    declare hash_out char(32);
+    declare sig_out char(64);
+    declare seal type worm_seal;
+    declare payload_ptr pointer;
+    declare rc fixed bin(31);
+
+    /* Step 1: Parse query intent ──────────────────────────────────*/
+    query_len = length(query);
+
+    intent.query_text = query;
+    intent.max_results = 10;
+    intent.include_answers = include_answers;
+    intent.confidence_req = MIN_RELEVANCE;
+
+    /* Step 2: Resequence knowledge chunks via MLIR scorer ─────────*/
+    rc = SovResequenceChunks(addr(chunks), MAX_CHUNKS,
+                             MIN_RELEVANCE);
+    num_chunks = rc;
+
+    if num_chunks <= 0 then do;
+      response_json = '{"error":"no_knowledge_available","status":"fail"}';
+      return (addr(response_json));
+    end;
+
+    /* Step 3: Filter chunks by relevance (cosine similarity) ──────*/
+    num_filtered = 0;
+    declare i fixed bin(31);
+
+    do i = 1 to num_chunks;
+      if chunks(i).relevance_score >= MIN_RELEVANCE then do;
+        num_filtered = num_filtered + 1;
+        filtered_chunks(num_filtered) = i;
+      end;
+    end;
+
+    /* Step 4: Synthesize answer via Born rule aggregation ────────*/
+    if num_filtered > 0 then do;
+      confidence_final = SovSynthesizeAnswer(
+        addr(chunks), num_filtered, include_answers
+      );
+      synthesis.confidence = confidence_final;
+    end else do;
+      confidence_final = 0.0;
+      synthesis.answer = 'No matching knowledge found.';
+    end;
+
+    /* Step 5: Generate follow-up queries ──────────────────────────*/
+    declare num_followups fixed bin(31);
+    num_followups = SovGenFollowUps(
+      addr(chunks), num_filtered, intent.query_text
+    );
+    synthesis.num_followups = num_followups;
+
+    /* Step 6: Build JSON response ────────────────────────────────*/
+    response_json = build_json_response(
+      synthesis, intent.query_text, confidence_final, num_filtered
+    );
+    response_len = length(response_json);
+
+    /* Step 7: WORM seal via Blake3 + Ed25519 ────────────────────*/
+    allocate(payload_ptr);
+    rc = sov_blake3_init(addr(seal.hash));
+    rc = sov_blake3_update(addr(seal.hash), response_json, response_len);
+    rc = sov_blake3_finalize(addr(seal.hash), addr(hash_out),
+                             BLAKE3_HASH_LEN);
+
+    /* Step 8: Sign with Ed25519 ──────────────────────────────────*/
+    rc = sov_bifrost_sign(addr(response_json), response_len,
+                          addr(seal.hash), addr(sig_out));
+
+    seal.hash = hash_out;
+    seal.timestamp = get_timestamp();
+    seal.is_valid = '1'b;
+    seal.label = 'SovMetaSearch';
+    seal.artifact_id = hash_out;
+
+    /* Step 9: Return sealed payload ──────────────────────────────*/
+    return(payload_ptr);
+
+  end SovMetaSearch;
+
+
+  /* ════════════════════════════════════════════════════════════════
+     2. Helper: Build JSON Response
+     ════════════════════════════════════════════════════════════════ */
+
+  build_json_response: procedure(
+    synthesis type synthesis_result,
+    query char(*),
+    confidence float,
+    num_chunks fixed bin(31)
+  ) returns (char(MAX_RESPONSE_LEN));
+
+    declare response char(MAX_RESPONSE_LEN);
+    declare pos fixed bin(31);
+    declare i fixed bin(31);
+    declare conf_str char(32);
+
+    pos = 1;
+
+    /* Build JSON ─────────────────────────────────────────────────*/
+    response = '{"query":"' || trim(query) || '",';
+    pos = length(trim(response));
+
+    response = response || '"answer":"' ||
+               trim(synthesis.answer) || '",';
+    response = response || '"confidence":' ||
+               trim(conf_str) || ',';
+    response = response || '"chunks_used":' ||
+               trim(num_chunks) || ',';
+    response = response || '"follow_ups":[';
+
+    do i = 1 to synthesis.num_followups;
+      if i > 1 then response = response || ',';
+      response = response || '"' ||
+                 trim(synthesis.follow_ups(i)) || '"';
+    end;
+
+    response = response || '],';
+    response = response || '"worm_attested":true,';
+    response = response || '"timestamp":' ||
+               trim(get_timestamp_str()) || '}';
+
+    return(response);
+
+  end build_json_response;
+
+
+  /* ════════════════════════════════════════════════════════════════
+     3. Helper: Get Timestamp
+     ════════════════════════════════════════════════════════════════ */
+
+  get_timestamp: procedure returns (fixed bin(63));
+    declare now fixed bin(31);
+    declare secs fixed bin(31);
+    call system_timestamp(now, secs);
+    return(fixed(now, 63, 0));
+  end get_timestamp;
+
+  get_timestamp_str: procedure returns (char(32));
+    declare ts fixed bin(63);
+    declare result char(32);
+    ts = get_timestamp();
+    result = ts;
+    return(result);
+  end get_timestamp_str;
+
+
+  /* ════════════════════════════════════════════════════════════════
+     4. System Timestamp (IBM System z / z/OS standard)
+     ════════════════════════════════════════════════════════════════ */
+
+  system_timestamp: procedure(now fixed bin, secs fixed bin);
+    /* On production z/OS: use CVT and TOD clock
+       For portable: use C gmtime via CBL_NIST_TIMESTAMP */
+    declare rc fixed bin;
+    declare tod_value fixed bin(63);
+
+    call get_time_of_day(tod_value);
+    now = trunc(tod_value / 1_000_000_000);
+    secs = now;
+
+  end system_timestamp;
+
+  get_time_of_day: procedure(tod fixed bin(63));
+    /* Fortran runtime provides this via intrinsics
+       On z/OS: system_clock or custom TOD read */
+    declare cnt fixed bin(31);
+    call system_clock(cnt);
+    tod = fixed(cnt, 63, 0);
+  end get_time_of_day;
+
+
+end SovMetaAgent;

@@ -1,0 +1,112 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SovZMOSCheck.pli — ZMOS Spectral Invariant Governance Gate
+
+   SOVEREIGN CONSTRAINTS:
+   - Fail-closed: HALT if spectral invariant Δ(t) exceeds threshold
+   - Uses WORM-attested Δ(t) from jordan_block.f90 ZMOS integration
+   - Zero external dependencies (uses existing sov_monster_kernel.f90 primitives)
+   - All governance events WORM-attested before state change
+
+   INTEGRATION:
+   - Called by SovFailClosed.pli as additional gate before quantum resource allocation
+   - Reads spectral invariant from WORM chain (attested by jordan_block.f90)
+   - GREY HAT membrane triggers BEFORE this gate on entropy spike
+
+   Mathematical basis:
+   - Δ(t) = min |s_pole - zero_approx| over WORM-attested primes
+   - s_pole = log(p)/log(φ⁻¹) from φ-decay thermal monad
+   - Threshold: 1e-3 (configurable via policy)
+   - Violation means pole-zero collision → spectral instability → HALT
+
+   Prior Art: SnapKitty Foundry Intel (April 14, 2026)
+   Original Research Lab: JAB Capital Trust (2021)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+dcl SovZMOSCheck entry (ptr) returns(fixed bin) external;
+dcl Blake3Seal entry (char(*), char(*), ptr returns) external;
+dcl WormLogGovernance entry (char(*), char(*)) external;
+dcl FetchZMOSDeltaTFromWORM entry (ptr) returns(float bin(64)) external;
+dcl GetAgentEd25519Key entry returns(char(64) var) external;
+dcl AgentHalt entry external;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ZMOS SPECTRAL GOVERNANCE GATE
+
+   Semantics: Allow quantum execution iff Δ(t) ≤ threshold
+   - Δ(t) fetched from WORM chain (attested by jordan_block.f90 after JST)
+   - Threshold = 1e-3 (pole-zero proximity safety margin)
+   - Violation → WORM-attest + halt agent (fail-closed, no state corruption)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+ZMOSSpectralGate: proc(options(main));
+  dcl SPECTRAL_PTR ptr;
+  dcl DELTA_T float bin(64);
+  dcl IS_SAFE fixed bin;
+  dcl THRESHOLD float bin(64) init(1.0e-3);
+  dcl AGENT_KEY char(64) var;
+  dcl DENIAL_REASON char(200) var;
+
+  SPECTRAL_PTR = GetLatestWORMSpectralPtr();
+  DELTA_T = FetchZMOSDeltaTFromWORM(SPECTRAL_PTR);
+  AGENT_KEY = GetAgentEd25519Key();
+
+  /* ─────────────────────────────────────────────────────────────────────
+     FAIL-CLOSED SPECTRAL GATE
+     Default: DENIED (IS_SAFE starts at 0)
+     Must PROVE spectral stability to allow execution
+     ───────────────────────────────────────────────────────────────────── */
+  IS_SAFE = 0;
+
+  /* Gate: Spectral invariant within safety margin */
+  if (DELTA_T <= THRESHOLD) then do;
+    IS_SAFE = 1;
+
+    /* WORM-attest APPROVAL (provenance for audit) */
+    call WormLogGovernance('ZMOS_SPECTRAL_APPROVED',
+     & 'DeltaT=' || char(DELTA_T) || ' Threshold=' || char(THRESHOLD));
+  end;
+  else do;
+    /* VIOLATION: Pole-zero proximity collapsed → spectral instability */
+    DENIAL_REASON = 'ZMOS_SPECTRAL_VIOLATION: DeltaT='
+                    || char(DELTA_T)
+                    || ' Exceeds Threshold=' || char(THRESHOLD);
+
+    /* WORM-attest the DENIAL (immutable audit record) */
+    call WormLogGovernance('ZMOS_SPECTRAL_DENIED', DENIAL_REASON);
+
+    /* Seal denial with agent's Ed25519 key */
+    call Blake3Seal(
+      'ZMOS_FAIL_CLOSED:' || DENIAL_REASON,
+      AGENT_KEY,
+      null());
+
+    /* Hard halt — agent suspended until spectral stability restored */
+    call AgentHalt();
+    /* Control never reaches here */
+  end;
+
+  return;
+end ZMOSSpectralGate;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HELPER: SovZMOSCheck (Fortran-callable via C ABI)
+
+   Called by sov_monster_kernel.f90 as pre-execution gate
+   Reads latest WORM-attested spectral invariant
+   Returns: 1 = spectrally stable (safe), 0 = unstable (denied)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+SovZMOSCheck: proc(spectral_ptr) returns(fixed bin);
+  dcl spectral_ptr ptr;
+  dcl delta_t float bin(64);
+  dcl threshold float bin(64) init(1.0e-3);
+
+  /* Fetch WORM-attested spectral invariant */
+  delta_t = FetchZMOSDeltaTFromWORM(spectral_ptr);
+
+  /* Fail-closed: default deny */
+  if (delta_t > threshold) then return(0);
+
+  /* Spectral stability confirmed */
+  return(1);
+end SovZMOSCheck;

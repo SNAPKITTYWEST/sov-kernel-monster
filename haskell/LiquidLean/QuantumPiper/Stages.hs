@@ -260,38 +260,62 @@ executeAlive2Stage ws config inputs = do
     Right r -> pure r
 
 -- =====================================================================
--- STAGE 6: ISABELLE THEOREM PROVING
+-- STAGE 6: ISABELLE THEOREM PROVING (REAL)
 -- =====================================================================
 
 executeIsabelleStage :: QWorkspace -> IsabelleConfig -> Map Text ArtifactHash
   -> IO (Either String (Map Text QArtifact))
 executeIsabelleStage ws config inputs = do
   result <- try $ do
-    -- Invoke Isabelle with theory file
-    callProcess "isabelle"
-      [ "build", "-d", takeDirectory (icTheoryFile config)
-      , "-T", T.unpack (icProofMethod config)
-      ]
+    -- Initialize real Isabelle session
+    sessionResult <- initIsabelle (takeDirectory (icTheoryFile config))
 
-    let artifact = QArtifact
-          { qaHash = ""
-          , qaType = IsabelleTheorem
-          , qaRealm = Verification
-          , qaTeam = wsTeam ws
-          , qaContent = "theorem verified"
-          , qaMetadata = ArtifactMetadata 0 (wsTeam ws) IsabelleProven defaultQuantumProps 0 False
-          , qaDeps = Map.empty
-          , qaWORMAnchor = Nothing
-          }
+    case sessionResult of
+      Left err -> fail err
+      Right session -> do
+        -- Submit theorem to Isabelle
+        proofResult <- submitProof session
+          (T.pack (icTheoremName config))
+          (T.pack (icProofStatement config))
 
-    txHash <- attestStageCompletion ws "StageIsabelle" artifact
-    let artifact' = artifact { qaWORMAnchor = Just txHash }
+        case proofResult of
+          Left err -> fail err
+          Right proof -> do
+            -- Verify theorem in Isabelle
+            verified <- verifyTheorem session (T.pack (icTheoremName config))
 
-    pure (Right (Map.singleton "isabelle-theorem" artifact'))
+            case verified of
+              Left err -> fail err
+              Right isVerified -> do
+                -- Close session
+                closeIsabelle session
+
+                let artifact = QArtifact
+                      { qaHash = ""
+                      , qaType = IsabelleTheorem
+                      , qaRealm = Verification
+                      , qaTeam = wsTeam ws
+                      , qaContent = if isVerified
+                                    then "theorem verified by Isabelle"
+                                    else "theorem unproven"
+                      , qaMetadata = ArtifactMetadata 0 (wsTeam ws)
+                          (if isVerified then IsabelleProven else Unverified)
+                          defaultQuantumProps 0 False
+                      , qaDeps = Map.empty
+                      , qaWORMAnchor = Nothing
+                      }
+
+                txHash <- attestStageCompletion ws "StageIsabelle" artifact
+                let artifact' = artifact { qaWORMAnchor = Just txHash }
+
+                pure (Right (Map.singleton "isabelle-theorem" artifact'))
 
   case result of
     Left (e :: SomeException) -> pure (Left $ "StageIsabelle failed: " ++ show e)
     Right r -> pure r
+
+-- Import Isabelle integration
+import LiquidLean.QuantumPiper.Isabelle (initIsabelle, submitProof, verifyTheorem, closeIsabelle)
 
 takeDirectory :: FilePath -> FilePath
 takeDirectory = reverse . dropWhile (/= '/') . reverse

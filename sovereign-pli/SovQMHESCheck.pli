@@ -1,0 +1,145 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SovQMHESCheck.pli — QMHES Hybrid Security Governance Gate
+
+   SOVEREIGN CONSTRAINTS:
+   - Fail-closed: HALT if hybrid key strength < minimum threshold
+   - Uses WORM-attested key strength from QMHES hybrid key exchange
+   - Zero external dependencies (uses existing sov_monster_kernel.f90 primitives)
+   - All governance events WORM-attested before state change
+
+   INTEGRATION:
+   - Called by SovFailClosed.pli as additional gate before quantum resource allocation
+   - Reads hybrid key strength from WORM chain (attested by MLIR hybrid pass)
+   - Operates alongside SovZMOSCheck.pli (spectral stability gate)
+
+   Mathematical basis:
+   - Key strength = min(classical_entropy_bits, quantum_entropy_bits)
+   - Hybrid guarantee: attacker must break BOTH classical AND quantum to compromise
+   - Minimum threshold: 128 bits (NIST security level 1, ML-KEM compatible)
+   - MMP integration: system multiplicity ≤ φ⁻ᴺ ensures prime structure holds
+
+   Prior Art: SnapKitty Foundry Intel (April 14, 2026)
+   Original Research Lab: JAB Capital Trust (2021)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+dcl SovQMHESCheck entry (ptr) returns(fixed bin) external;
+dcl Blake3Seal entry (char(*), char(*), ptr returns) external;
+dcl WormLogGovernance entry (char(*), char(*)) external;
+dcl FetchQMHESKeyStrengthFromWORM entry (ptr) returns(fixed bin) external;
+dcl FetchQMHESMultiplicityFromWORM entry (ptr) returns(float bin(64)) external;
+dcl GetAgentEd25519Key entry returns(char(64) var) external;
+dcl AgentHalt entry external;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QMHES HYBRID SECURITY GOVERNANCE GATE
+
+   Semantics: Allow quantum execution iff:
+   1. Hybrid key strength ≥ MIN_STRENGTH (128 bits)
+   2. MMP multiplicity ≤ φ⁻ᴺ (prime structure stable)
+   Both conditions must pass (AND logic, not OR)
+   ANY failure → WORM-attest + halt agent (fail-closed)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+QMHESHybridGate: proc(options(main));
+  dcl KEY_PTR ptr;
+  dcl KEY_STRENGTH fixed bin;
+  dcl IS_SECURE fixed bin;
+  dcl MIN_STRENGTH fixed bin init(128);
+  dcl CURRENT_MULTIPLICITY float bin(64);
+  dcl MMP_BOUND float bin(64);
+  dcl PHI_INV float bin(64) init(0.6180339887498948482);
+  dcl SYSTEM_DIM fixed bin;
+  dcl AGENT_KEY char(64) var;
+  dcl DENIAL_REASON char(200) var;
+
+  KEY_PTR = GetLatestWORMHybridKeyPtr();
+  KEY_STRENGTH = FetchQMHESKeyStrengthFromWORM(KEY_PTR);
+  CURRENT_MULTIPLICITY = FetchQMHESMultiplicityFromWORM(KEY_PTR);
+  SYSTEM_DIM = GetSystemDimension();
+  MMP_BOUND = PHI_INV ** SYSTEM_DIM;
+  AGENT_KEY = GetAgentEd25519Key();
+
+  /* ─────────────────────────────────────────────────────────────────────
+     FAIL-CLOSED HYBRID SECURITY LOGIC
+     Default: DENIED (IS_SECURE starts at 0)
+     Must PROVE both key strength AND MMP stability to allow
+     ───────────────────────────────────────────────────────────────────── */
+  IS_SECURE = 0;
+  DENIAL_REASON = '';
+
+  /* Gate 1: Hybrid key strength check (NIST Level 1 minimum) */
+  if (KEY_STRENGTH < MIN_STRENGTH) then do;
+    DENIAL_REASON = 'QMHES_KEY_WEAK: Strength=' || char(KEY_STRENGTH)
+                    || ' Min=' || char(MIN_STRENGTH);
+    goto DENY_EXECUTION;
+  end;
+
+  /* Gate 2: MMP stability check (prime structure must hold) */
+  if (CURRENT_MULTIPLICITY > MMP_BOUND) then do;
+    DENIAL_REASON = 'QMHES_MMP_UNSTABLE: Multiplicity='
+                    || char(CURRENT_MULTIPLICITY)
+                    || ' Bound=' || char(MMP_BOUND);
+    goto DENY_EXECUTION;
+  end;
+
+  /* ALL gates passed — allow hybrid-secured execution */
+  IS_SECURE = 1;
+
+  /* WORM-attest the APPROVAL (provenance for audit) */
+  call WormLogGovernance('QMHES_HYBRID_APPROVED',
+   & 'KeyStrength=' || char(KEY_STRENGTH)
+   & || ' Multiplicity=' || char(CURRENT_MULTIPLICITY)
+   & || ' Bound=' || char(MMP_BOUND));
+
+  return;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     DENY PATH: Hard fail, WORM-attest, halt agent
+     No state corruption possible (hybrid key never issued)
+     ───────────────────────────────────────────────────────────────────── */
+  DENY_EXECUTION:
+    /* WORM-attest the DENIAL (immutable audit record) */
+    call WormLogGovernance('QMHES_HYBRID_DENIED', DENIAL_REASON);
+
+    /* Seal denial with agent's Ed25519 key (provable intent) */
+    call Blake3Seal(
+      'QMHES_FAIL_CLOSED:' || DENIAL_REASON,
+      AGENT_KEY,
+      null());
+
+    /* Hard halt — agent suspended until hybrid security restored */
+    call AgentHalt();
+    /* Control never reaches here */
+  return;
+end QMHESHybridGate;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HELPER: SovQMHESCheck (Fortran-callable via C ABI)
+
+   Called by sov_monster_kernel.f90 as pre-execution gate
+   Reads latest WORM-attested hybrid key strength + MMP status
+   Returns: 1 = hybrid-secure (safe), 0 = insecure (denied)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+SovQMHESCheck: proc(key_ptr) returns(fixed bin);
+  dcl key_ptr ptr;
+  dcl key_strength fixed bin;
+  dcl multiplicity float bin(64);
+  dcl mmp_bound float bin(64);
+  dcl phi_inv float bin(64) init(0.6180339887498948482);
+  dcl sys_dim fixed bin;
+  dcl min_strength fixed bin init(128);
+
+  /* Fetch WORM-attested values */
+  key_strength = FetchQMHESKeyStrengthFromWORM(key_ptr);
+  multiplicity = FetchQMHESMultiplicityFromWORM(key_ptr);
+  sys_dim = GetSystemDimension();
+  mmp_bound = phi_inv ** sys_dim;
+
+  /* Fail-closed: default deny */
+  if (key_strength < min_strength) then return(0);
+  if (multiplicity > mmp_bound) then return(0);
+
+  /* Both gates pass — hybrid-secure */
+  return(1);
+end SovQMHESCheck;

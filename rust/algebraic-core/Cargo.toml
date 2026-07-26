@@ -1,0 +1,16 @@
+[package]
+name = "algebraic_core"
+version = "0.1.0"
+edition = "2021"
+description = "High-velocity quantum noise simulation engine: Algebraic Core with Jordan product enforcement"
+repository = "https://github.com/SNAPKITTYWEST/sov-kernel-monster"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+tch = { version = "0.12.0", features = ["cuda"] }
+thiserror = "1.0"
+rand = "0.8"
+rand_chacha = "0.3"
+
+[dev-dependencies]
+approx = "0.5"

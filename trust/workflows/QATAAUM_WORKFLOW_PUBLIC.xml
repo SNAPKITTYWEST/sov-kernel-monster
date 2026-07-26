@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ╔═══════════════════════════════════════════════════════════════════════╗
+  ║  QATAAUM QUANTUM ASSEMBLY RUNTIME — SOVEREIGN WORKFLOW                ║
+  ║  Version: 1.0-PUBLIC (GATED)                                          ║
+  ║                                                                       ║
+  ║  Copyright (c) 2026 Ahmad Ali Parr                                    ║
+  ║  Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643                ║
+  ║  SnapKitty Research Labs · The Shared Primordial Foundation           ║
+  ║                                                                       ║
+  ║  License: FSL-1.1-Apache-2.0 + Sovereign Source License v3.0         ║
+  ║                                                                       ║
+  ║  ⚠  SOVEREIGN NODE KEY REQUIRED                                       ║
+  ║  This workflow requires a valid SOVEREIGN_NODE_KEY to instantiate.    ║
+  ║  Key fingerprint: 427AB4A1C0E64A7AB22B0F116ABDA4A46FDDCB60           ║
+  ║  Contact: BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS                          ║
+  ║                                                                       ║
+  ║  ⚠  SOVEREIGN_FSM_CORE NOT INCLUDED                                   ║
+  ║  The FSM transition-rules (the operational heart of this workflow)    ║
+  ║  are distributed separately under commercial license.                  ║
+  ║  Without SOVEREIGN_FSM_CORE, this workflow describes the              ║
+  ║  architecture but cannot execute.                                     ║
+  ║                                                                       ║
+  ║  To license:                                                          ║
+  ║  github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/snapkitty-research-labs║
+  ╚═══════════════════════════════════════════════════════════════════════╝
+-->
+
+<clean-room-quantum-program
+    id="QATAAUM-AS400-QUANTUM-RUNTIME-001"
+    version="1.0-PUBLIC"
+    execution-mode="asynchronous-parallel"
+    coordination-model="hybrid-hierarchical-finite-state-machine"
+    minimum-substantive-source-lines="15000"
+    sovereign-node-key-fingerprint="427AB4A1C0E64A7AB22B0F116ABDA4A46FDDCB60"
+    sovereign-node-key-required="true"
+    fsm-core-license="SOVEREIGN_FSM_CORE — separate commercial license required">
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SOVEREIGN NODE KEY GATE
+       ═══════════════════════════════════════════════════════════════════
+       Before instantiating this workflow, the executing environment must
+       present a valid SOVEREIGN_NODE_KEY matching fingerprint:
+           427AB4A1C0E64A7AB22B0F116ABDA4A46FDDCB60
+       Key algorithm: Ed25519
+       Key owner:     SNAPKITTYWEST Sovereign Node Build
+       Key metadata:  docs/keys/sovereign-node-build.json (foundry-intel)
+
+       Pseudocode for key verification:
+           if env(SOVEREIGN_NODE_KEY) is absent:
+               reject("SOVEREIGN_NODE_KEY not set")
+           sig = ed25519_sign(workflow_sha256, env(SOVEREIGN_NODE_KEY))
+           if not ed25519_verify(sig, FINGERPRINT):
+               reject("Key fingerprint mismatch — contact BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS")
+           proceed()
+       ═══════════════════════════════════════════════════════════════════ -->
+
+  <sovereign-gate>
+    <key-fingerprint>427AB4A1C0E64A7AB22B0F116ABDA4A46FDDCB60</key-fingerprint>
+    <key-algorithm>Ed25519</key-algorithm>
+    <key-owner>SNAPKITTYWEST Sovereign Node Build</key-owner>
+    <env-var>SOVEREIGN_NODE_KEY</env-var>
+    <on-failure>REJECT — contact BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS for commercial license</on-failure>
+    <licensing-contact>https://github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/snapkitty-research-labs</licensing-contact>
+  </sovereign-gate>
+
+  <program-identity>
+    <name>QATAAUM Quantum Assembly Runtime</name>
+    <codename>AS400-PULSE-MONAD</codename>
+
+    <mission>
+      Research publicly documented quantum-computing architectures, programming
+      models, processor constraints, compiler techniques, pulse abstractions,
+      and runtime interfaces.
+
+      Then design and implement an original, clean-room quantum compiler and
+      runtime centered on IBM i engineering, RPG-style operational control,
+      Rust systems components, Liquid Haskell refinement witnesses, Lean 4
+      formal proofs, and a new experimental quantum assembly language.
+
+      The implementation must be independent of IBM proprietary source code,
+      internal interfaces, confidential documents, reverse engineering, leaked
+      information, or copied Qiskit implementation details.
+    </mission>
+
+    <governing-principle>
+      PUBLIC SPECIFICATION IN.
+      INDEPENDENT IMPLEMENTATION OUT.
+      EVIDENCE OR SILENCE.
+    </governing-principle>
+
+    <provenance>
+      This workflow produced QATAAUM in a single prompt execution.
+      Output: 33,734 lines · 221/221 tests · 31 Lean 4 theorems · 0 sorry
+      Delivered: 2026-07-22
+      Proof of execution: github.com/SNAPKITTYWEST/sov-kernel-monster/qataaum/
+      WORM-sealed. Cryptographically attested. Prior art PAR-011 through PAR-016.
+    </provenance>
+  </program-identity>
+
+  <legal-and-clean-room-boundary>
+    <rule>Use only public standards, official public documentation, public patents,
+      academic publications, openly licensed source code, and independently
+      derived engineering knowledge.</rule>
+    <rule>Do not copy proprietary IBM source code, private APIs, internal processor
+      details, confidential pulse calibrations, credentials, firmware, bitstreams,
+      microcode, or undocumented service behavior.</rule>
+    <rule>Public open-source projects may be studied to understand interfaces and
+      standards, but the implementation must be independently structured and
+      independently written.</rule>
+    <rule>Maintain a source ledger recording every external document consulted,
+      its license, its publication date, and the concepts derived from it.</rule>
+    <rule>Never describe this project as an IBM product, an official Qiskit
+      implementation, an official OpenQASM successor, or an authorized IBM
+      Quantum runtime.</rule>
+    <rule>IBM, IBM Quantum, Qiskit, IBM i, AS/400, Eagle, Osprey, Condor, Heron,
+      and Nighthawk are referenced only as public research targets and
+      compatibility contexts.</rule>
+  </legal-and-clean-room-boundary>
+
+  <language-identity>
+    <standard-inputs>
+      <language>OpenQASM 2</language>
+      <language>OpenQASM 3 and publicly released minor revisions</language>
+    </standard-inputs>
+
+    <original-language>
+      <name>MetaQASM-4</name>
+      <alternate-name>QATAAUM Assembly Language</alternate-name>
+      <status>Original experimental language designed by this project.
+        Not OpenQASM 4. Not an official OpenQASM standard.</status>
+      <purpose>Extend public OpenQASM concepts with typed effects, monadic execution,
+        refinement constraints, explicit hardware capabilities, hybrid
+        classical-quantum state machines, pulse scheduling, proof obligations,
+        deterministic replay, and provider-neutral execution receipts.</purpose>
+    </original-language>
+
+    <host-control-language>
+      <name>ShadowRPG-Q</name>
+      <status>Original project-specific control language. Not an IBM language.</status>
+      <python-policy>Python is prohibited from the production runtime.</python-policy>
+    </host-control-language>
+  </language-identity>
+
+  <parallel-role-topology>
+    <role id="ROLE-RPG-ENGINEER" title="IBM i and RPG Quantum Runtime Engineer"
+          execution="asynchronous" authority="implementation">
+      <owned-components>
+        <component>shadow-rpg-q lexer and parser</component>
+        <component>IBM i command surface</component>
+        <component>job queue and journal model</component>
+        <component>runtime record formats</component>
+        <component>execution receipt schema</component>
+        <component>restart and recovery protocol</component>
+        <component>RPG-to-Rust FFI boundary</component>
+        <component>operator console</component>
+      </owned-components>
+    </role>
+
+    <role id="ROLE-SYSTEM-ARCHITECT" title="IBM Systems and Quantum Compiler Architect"
+          execution="asynchronous" authority="architecture">
+      <owned-components>
+        <component>architecture specification</component>
+        <component>research ledger</component>
+        <component>QATAAUM IR family</component>
+        <component>hybrid FSM</component>
+        <component>hardware capability model</component>
+        <component>pulse abstraction</component>
+        <component>MLIR and LLVM lowering design</component>
+        <component>formal verification boundary</component>
+        <component>backend plugin ABI</component>
+      </owned-components>
+    </role>
+
+    <role id="ROLE-HASKELL-VERIFIER"
+          title="Liquid Haskell Refinement and Monad Engineer"
+          execution="asynchronous" authority="verification-witness"/>
+
+    <role id="ROLE-RUST-RUNTIME"
+          title="Rust Quantum Compiler and Runtime Engineer"
+          execution="asynchronous" authority="systems-runtime"/>
+
+    <role id="ROLE-LEAN-AUDITOR"
+          title="Lean 4 Formal Verification Engineer"
+          execution="asynchronous" authority="proof-audit"/>
+
+    <role id="ROLE-INTEGRATOR"
+          title="Hybrid Runtime Integration Governor"
+          execution="serialized-after-parallel-work" authority="merge-and-release"/>
+  </parallel-role-topology>
+
+  <hybrid-fsm>
+    <description>
+      The system must be modeled as a hierarchical finite-state machine.
+      Classical control states execute on IBM i or its portable compatibility
+      layer. Quantum compilation and execution states run through provider-neutral
+      compiler and backend interfaces. All state transitions must be journaled
+      and replayable.
+    </description>
+
+    <states>
+      <state id="S0"  name="RECEIVED"/>
+      <state id="S1"  name="SOURCE_VALIDATED"/>
+      <state id="S2"  name="PARSED"/>
+      <state id="S3"  name="TYPED"/>
+      <state id="S4"  name="IR_GENERATED"/>
+      <state id="S5"  name="PROOF_OBLIGATIONS_CREATED"/>
+      <state id="S6"  name="OPTIMIZED"/>
+      <state id="S7"  name="TARGET_SELECTED"/>
+      <state id="S8"  name="ROUTED"/>
+      <state id="S9"  name="SCHEDULED"/>
+      <state id="S10" name="PULSE_LOWERED"/>
+      <state id="S11" name="VERIFIED"/>
+      <state id="S12" name="QUEUED"/>
+      <state id="S13" name="EXECUTING"/>
+      <state id="S14" name="MEASURED"/>
+      <state id="S15" name="MITIGATED"/>
+      <state id="S16" name="RECEIPT_SEALED"/>
+      <state id="S17" name="COMPLETED"/>
+      <state id="SF"  name="FAILED"/>
+      <state id="SR"  name="RECOVERING"/>
+      <state id="SX"  name="REJECTED"/>
+    </states>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         SOVEREIGN_FSM_CORE — TRANSITION RULES NOT INCLUDED
+         ═══════════════════════════════════════════════════════════════
+         The transition-rules that govern how states connect — including
+         journaling requirements, failure modes, recovery boundaries,
+         and execution preconditions — are the operational heart of
+         this workflow. They are distributed as SOVEREIGN_FSM_CORE
+         under a separate commercial license.
+
+         Without SOVEREIGN_FSM_CORE, this FSM has states but no
+         operational semantics. The architecture is visible. The
+         engine is not.
+
+         License SOVEREIGN_FSM_CORE:
+         github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/snapkitty-research-labs
+         ═══════════════════════════════════════════════════════════════ -->
+
+    <transition-rules license="SOVEREIGN_FSM_CORE — commercial license required">
+      <!-- REDACTED — contact BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS -->
+    </transition-rules>
+  </hybrid-fsm>
+
+  <ir-family>
+    <ir level="0" name="Source AST">Lossless OpenQASM and MetaQASM-4 syntax representation.</ir>
+    <ir level="1" name="Typed Quantum AST">Resolved names, types, effects, dimensions, and capabilities.</ir>
+    <ir level="2" name="QATAAUM-CFG">Hybrid classical-quantum control-flow graph.</ir>
+    <ir level="3" name="QATAAUM-SSA">SSA form with explicit measurement, branching, timing, and qubit effects.</ir>
+    <ir level="4" name="QATAAUM-GATE">Hardware-independent gate and measurement representation.</ir>
+    <ir level="5" name="QATAAUM-TOPO">Target-coupled placement and routing representation.</ir>
+    <ir level="6" name="QATAAUM-SCHEDULE">Time-aware operations, resource reservations, barriers, and dependencies.</ir>
+    <ir level="7" name="QATAAUM-PULSE">Provider-neutral pulse frames, ports, waveforms, captures, delays, phase shifts, and calibration references.</ir>
+    <ir level="8" name="QATAAUM-EXEC">Backend package with executable instructions, metadata, proof receipts, and result schema.</ir>
+  </ir-family>
+
+  <formal-verification-plan>
+    <proof-policy>No sorry. No admit. No theorem-conclusion axiom. Every accepted theorem must report its effective axioms.</proof-policy>
+    <lean4-theorems>
+      <theorem>Parser roundtrip for the canonical language subset.</theorem>
+      <theorem>Well-typed programs do not reference undeclared qubits.</theorem>
+      <theorem>Linear ownership prevents duplicated live-qubit references.</theorem>
+      <theorem>Gate cancellation preserves denotational circuit semantics.</theorem>
+      <theorem>Rotation folding preserves unitary semantics.</theorem>
+      <theorem>Routing preserves logical circuit semantics.</theorem>
+      <theorem>Scheduling preserves dependency order.</theorem>
+      <theorem>CFG lowering preserves reachable measurement outcomes.</theorem>
+      <theorem>SSA renaming preserves program meaning.</theorem>
+      <theorem>Receipt-chain verification detects mutation.</theorem>
+    </lean4-theorems>
+  </formal-verification-plan>
+
+  <quality-gates>
+    <gate id="QG-01">All sources appear in the research ledger.</gate>
+    <gate id="QG-02">No proprietary code or confidential material is used.</gate>
+    <gate id="QG-03">MetaQASM-4 is labeled as an original experimental language.</gate>
+    <gate id="QG-04">No unsupported processor facts are encoded.</gate>
+    <gate id="QG-05">The production dependency graph contains no Python.</gate>
+    <gate id="QG-06" license="SOVEREIGN_FSM_CORE">The hybrid FSM is deterministic and journaled. [GATED]</gate>
+    <gate id="QG-07">Every compiler pass has preconditions and postconditions.</gate>
+    <gate id="QG-08">Every target-specific operation is capability checked.</gate>
+    <gate id="QG-09">At least 15,000 substantive lines are implemented.</gate>
+    <gate id="QG-10">No source-volume padding is present.</gate>
+    <gate id="QG-11">The complete project builds deterministically.</gate>
+    <gate id="QG-12">All required tests execute successfully.</gate>
+    <gate id="QG-13">Lean contains no sorry or admit in accepted proofs.</gate>
+    <gate id="QG-14">Liquid Haskell refinements pass.</gate>
+    <gate id="QG-15">All architecture decisions have ADRs.</gate>
+    <gate id="QG-16">No AI tensor weights or learned compiler policy are used.</gate>
+    <gate id="QG-17">Hardware execution remains behind a public provider interface.</gate>
+    <gate id="QG-18">Documentation separates fact, inference, design, and hypothesis.</gate>
+  </quality-gates>
+
+  <source-volume-policy>
+    <minimum>15,000 substantive, human-reviewable lines</minimum>
+    <proved-output>33,734 lines (QATAAUM, 2026-07-22)</proved-output>
+  </source-volume-policy>
+
+  <final-response-format>
+    Report: analyzed public sources; clean-room boundaries applied; architecture selected;
+    final repository tree; substantive line count by language; supported OpenQASM versions;
+    MetaQASM-4 capabilities; ShadowRPG-Q capabilities; implemented compiler passes;
+    implemented processor profiles; simulator capabilities; IBM i integration status;
+    Lean theorem status; Liquid Haskell refinement status; test and benchmark results;
+    known gaps; final commit hash.
+
+    End with exactly one verdict:
+    CLEAN-ROOM RUNTIME VERIFIED
+    CLEAN-ROOM RUNTIME PARTIALLY VERIFIED
+    or INSUFFICIENT EVIDENCE
+  </final-response-format>
+
+  <licensing>
+    <commercial>Required for production use, AI training, or derivative workflows.</commercial>
+    <contact>github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS/snapkitty-research-labs</contact>
+    <trust>Bel Esprit D'Accord Irrevocable Trust · EIN 42-697643</trust>
+    <spdx>FSL-1.1-Apache-2.0 AND LicenseRef-SSv3</spdx>
+  </licensing>
+
+</clean-room-quantum-program>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOV-KERNEL-MONSTER | Trajectory Manifold Renderer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #00ffcc;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            overflow: hidden;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+        #hud {
+            position: fixed;
+            top: 16px; left: 16px;
+            z-index: 10;
+            pointer-events: none;
+            font-size: 11px;
+            line-height: 1.6;
+            text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+        }
+        #hud .label { color: #666; }
+        #hud .value { color: #00ffcc; }
+        #hud .warn { color: #ff6b35; }
+        #controls {
+            position: fixed;
+            bottom: 16px; left: 16px;
+            z-index: 10;
+            font-size: 11px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        #controls button {
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            color: #00ffcc;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        #controls button:hover {
+            background: rgba(0, 255, 204, 0.2);
+            border-color: #00ffcc;
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+        }
+        #controls input[type="range"] {
+            width: 100px;
+            accent-color: #00ffcc;
+        }
+        #status {
+            position: fixed;
+            top: 16px; right: 16px;
+            z-index: 10;
+            font-size: 10px;
+            text-align: right;
+            pointer-events: none;
+        }
+        #status .seal { color: #ffd700; }
+        .sovereign-border {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 1px solid rgba(0, 255, 204, 0.08);
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="sovereign-border"></div>
+    <div id="canvas-container"></div>
+
+    <div id="hud">
+        <div><span class="label">SYSTEM:</span> <span class="value">SOV-KERNEL-MONSTER</span></div>
+        <div><span class="label">MODULE:</span> <span class="value">Stochastic Trajectory Renderer</span></div>
+        <div><span class="label">MANIFOLD:</span> <span class="value">Bures Geometry (ρ ∈ S⁺₁)</span></div>
+        <div><span class="label">SDE:</span> <span class="value">dρₜ = -∇S dt + √D dWₜ</span></div>
+        <div id="hud-trajectories"><span class="label">TRAJECTORIES:</span> <span class="value">--</span></div>
+        <div id="hud-steps"><span class="label">TIME STEPS:</span> <span class="value">--</span></div>
+        <div id="hud-progress"><span class="label">RENDER:</span> <span class="value">0%</span></div>
+        <div id="hud-fps"><span class="label">FPS:</span> <span class="value">--</span></div>
+    </div>
+
+    <div id="status">
+        <div class="seal">Ω↺Ψ↺Δ↺Λ↺Σ↺Φ↺α</div>
+        <div style="color: #444; margin-top: 4px;">WORM-ATTESTED</div>
+    </div>
+
+    <div id="controls">
+        <button id="btn-play">▶ PLAY</button>
+        <button id="btn-pause">⏸ PAUSE</button>
+        <button id="btn-reset">↺ RESET</button>
+        <button id="btn-demo">◆ DEMO</button>
+        <label style="color: #666;">
+            SPEED
+            <input type="range" id="speed-slider" min="1" max="50" value="6" step="1">
+        </label>
+        <label style="color: #666;">
+            OPACITY
+            <input type="range" id="opacity-slider" min="5" max="100" value="15" step="5">
+        </label>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

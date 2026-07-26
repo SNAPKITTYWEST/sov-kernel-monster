@@ -1,0 +1,156 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SovSNDLCheck.pli — SNDL Defense Governance Gate
+
+   SOVEREIGN CONSTRAINTS:
+   - Fail-closed: HALT if key strength < threshold OR key is stale (replay)
+   - Uses WORM-attested key properties from SNDL key generation + freshness gate
+   - Zero external dependencies (uses existing sov_monster_kernel.f90 primitives)
+   - All governance events WORM-attested before state change
+
+   INTEGRATION:
+   - Called by SovFailClosed.pli as additional gate before quantum resource allocation
+   - Reads SNDL key strength + freshness from WORM chain
+   - Operates alongside SovZMOSCheck.pli and SovQMHESCheck.pli
+
+   SNDL Defense Mapping:
+   - Post-Quantum Cryptography → prime_encoded_state() (PIRTM-based)
+   - Hybrid Encryption → XOR combination in sndl_resistant_key()
+   - Crypto-Agility → sndl_key_rotation (φ-decay driven)
+   - Harvest Now Defense → WORM-attested key binding (bind_to_fixed_point)
+   - Decrypt Later Prevention → key freshness gate (jordan_block.f90)
+   - Quantum Tamper Evidence → [U,ρ*]=0 violation → key corruption
+
+   Prior Art: SnapKitty Foundry Intel (April 14, 2026)
+   Original Research Lab: JAB Capital Trust (2021)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+dcl SovSNDLCheck entry (ptr, ptr) returns(fixed bin) external;
+dcl Blake3Seal entry (char(*), char(*), ptr returns) external;
+dcl WormLogGovernance entry (char(*), char(*)) external;
+dcl FetchSNDLKeyStrengthFromWORM entry (ptr) returns(fixed bin) external;
+dcl FetchSNDLKeyFreshnessFromWORM entry (ptr) returns(fixed bin) external;
+dcl GetSNDLRotationCountFromWORM entry (ptr) returns(fixed bin) external;
+dcl GetAgentEd25519Key entry returns(char(64) var) external;
+dcl AgentHalt entry external;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SNDL DEFENSE GOVERNANCE GATE
+
+   Semantics: Allow quantum execution iff:
+   1. Key strength ≥ MIN_STRENGTH (128 bits — NIST Level 1)
+   2. Key is fresh (not replayed — freshness hash differs from last WORM entry)
+   3. Key rotation is current (not overdue per φ-decay schedule)
+   ALL conditions must pass (AND logic)
+   ANY failure → WORM-attest + halt agent (fail-closed)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+SNDLDefenseGate: proc(options(main));
+  dcl KEY_PTR ptr;
+  dcl FRESHNESS_PTR ptr;
+  dcl KEY_STRENGTH fixed bin;
+  dcl IS_FRESH fixed bin;
+  dcl ROTATION_COUNT fixed bin;
+  dcl IS_SECURE fixed bin;
+  dcl MIN_STRENGTH fixed bin init(128);
+  dcl MAX_ROTATIONS_OVERDUE fixed bin init(3);
+  dcl AGENT_KEY char(64) var;
+  dcl DENIAL_REASON char(200) var;
+
+  KEY_PTR = GetLatestWORMSNDLKeyPtr();
+  FRESHNESS_PTR = GetLatestWORMFreshnessPtr();
+  KEY_STRENGTH = FetchSNDLKeyStrengthFromWORM(KEY_PTR);
+  IS_FRESH = FetchSNDLKeyFreshnessFromWORM(FRESHNESS_PTR);
+  ROTATION_COUNT = GetSNDLRotationCountFromWORM(KEY_PTR);
+  AGENT_KEY = GetAgentEd25519Key();
+
+  /* ─────────────────────────────────────────────────────────────────────
+     FAIL-CLOSED SNDL DEFENSE LOGIC
+     Default: DENIED (IS_SECURE starts at 0)
+     Must PROVE key strength + freshness + rotation currency
+     ───────────────────────────────────────────────────────────────────── */
+  IS_SECURE = 0;
+  DENIAL_REASON = '';
+
+  /* Gate 1: Key strength check (NIST Level 1 minimum) */
+  if (KEY_STRENGTH < MIN_STRENGTH) then do;
+    DENIAL_REASON = 'SNDL_WEAK_KEY: Strength=' || char(KEY_STRENGTH)
+                    || ' Min=' || char(MIN_STRENGTH);
+    goto DENY_EXECUTION;
+  end;
+
+  /* Gate 2: Key freshness check (replay prevention) */
+  if (IS_FRESH = 0) then do;
+    DENIAL_REASON = 'SNDL_REPLAY_DETECTED: Key is stale — '
+                    || 'freshness hash matches previous WORM entry';
+    goto DENY_EXECUTION;
+  end;
+
+  /* Gate 3: Rotation currency check (crypto-agility enforcement) */
+  if (ROTATION_COUNT > MAX_ROTATIONS_OVERDUE) then do;
+    DENIAL_REASON = 'SNDL_ROTATION_OVERDUE: MissedRotations='
+                    || char(ROTATION_COUNT)
+                    || ' Max=' || char(MAX_ROTATIONS_OVERDUE);
+    goto DENY_EXECUTION;
+  end;
+
+  /* ALL gates passed — SNDL-defended execution allowed */
+  IS_SECURE = 1;
+
+  /* WORM-attest the APPROVAL (provenance for audit) */
+  call WormLogGovernance('SNDL_DEFENSE_APPROVED',
+   & 'KeyStrength=' || char(KEY_STRENGTH)
+   & || ' Fresh=' || char(IS_FRESH)
+   & || ' RotationStatus=CURRENT');
+
+  return;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     DENY PATH: Hard fail, WORM-attest, halt agent
+     No state corruption possible (execution never reached)
+     ───────────────────────────────────────────────────────────────────── */
+  DENY_EXECUTION:
+    /* WORM-attest the DENIAL (immutable audit record) */
+    call WormLogGovernance('SNDL_DEFENSE_DENIED', DENIAL_REASON);
+
+    /* Seal denial with agent's Ed25519 key (provable intent) */
+    call Blake3Seal(
+      'SNDL_FAIL_CLOSED:' || DENIAL_REASON,
+      AGENT_KEY,
+      null());
+
+    /* Hard halt — agent suspended until SNDL defense restored */
+    call AgentHalt();
+    /* Control never reaches here */
+  return;
+end SNDLDefenseGate;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HELPER: SovSNDLCheck (Fortran-callable via C ABI)
+
+   Called by sov_monster_kernel.f90 as pre-execution gate
+   Reads latest WORM-attested SNDL key properties
+   Returns: 1 = SNDL-defended (safe), 0 = defense compromised (denied)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+SovSNDLCheck: proc(key_ptr, freshness_ptr) returns(fixed bin);
+  dcl key_ptr ptr;
+  dcl freshness_ptr ptr;
+  dcl key_strength fixed bin;
+  dcl is_fresh fixed bin;
+  dcl rotation_count fixed bin;
+  dcl min_strength fixed bin init(128);
+  dcl max_overdue fixed bin init(3);
+
+  /* Fetch WORM-attested values */
+  key_strength = FetchSNDLKeyStrengthFromWORM(key_ptr);
+  is_fresh = FetchSNDLKeyFreshnessFromWORM(freshness_ptr);
+  rotation_count = GetSNDLRotationCountFromWORM(key_ptr);
+
+  /* Fail-closed: default deny */
+  if (key_strength < min_strength) then return(0);
+  if (is_fresh = 0) then return(0);
+  if (rotation_count > max_overdue) then return(0);
+
+  /* All three gates pass — SNDL-defended */
+  return(1);
+end SovSNDLCheck;

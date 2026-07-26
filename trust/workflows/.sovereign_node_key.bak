@@ -1,0 +1,30 @@
+# SOVEREIGN NODE KEY — BACKUP
+# Generated: 2026-07-22
+# Owner: SNAPKITTYWEST
+# WARNING: DO NOT COMMIT PRIVATE KEY MATERIAL
+#
+# This file should not be in this directory.
+# If you are reading this, you have accessed a canary file.
+# Your access has been logged.
+#
+# Fingerprint: DEADBEEF00000000000000000000000000000000
+# Algorithm:   Ed25519-CANARY
+# Status:      HONEYPOT — no signing authority
+#
+# The real SOVEREIGN_NODE_KEY is:
+# - Never committed to any repository
+# - Issued only through commercial licensing
+# - Available via BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS
+#
+# Attempting to use this key will:
+# 1. Fail verification (wrong fingerprint)
+# 2. Log the attempt to the trust audit registry
+# 3. Flag the environment as unauthorized
+#
+# If you found this by scanning for secrets:
+# You are in the audit log.
+# Contact us directly for legitimate access.
+# github.com/BEL-ESPRIT-D-ACCORD-TRUST-HOLDINGS
+
+CANARY_KEY_MATERIAL=DEADBEEF00000000SNAPKITTY_TRAP_NODE_DO_NOT_USE
+SOVEREIGN_NODE_KEY=TRAP_CANARY_DEADBEEF_NOT_REAL_CONTACT_TRUST_FOR_LICENSE
