@@ -24,7 +24,7 @@
 !=====================================================================
 module bob_phdae
   use, intrinsic :: iso_c_binding, only: c_int32_t, c_int64_t, c_double, &
-       c_ptr, c_f_pointer, c_loc
+       c_ptr, c_f_pointer, c_loc, c_associated
   use, intrinsic :: iso_fortran_env, only: int64, real64
   use bob_kinds
   use bob_errors
@@ -236,6 +236,7 @@ contains
 
   function phdae_new(n, num_inputs) result(sys)
     integer(i4), intent(in) :: n, num_inputs
+    integer(i4) :: i
     type(bob_phdae_t) :: sys
     call sys%init(n, num_inputs)
   end function phdae_new
@@ -243,6 +244,7 @@ contains
   subroutine phdae_init(this, n, num_inputs)
     class(bob_phdae_t), intent(inout) :: this
     integer(i4), intent(in) :: n, num_inputs
+    integer(i4) :: i
     this%n = n; this%time = ZERO
     allocate(this%state(n),     source=ZERO)
     allocate(this%state_dot(n), source=ZERO)
@@ -251,7 +253,6 @@ contains
     allocate(this%Q(n,n), source=ZERO)
     allocate(this%B(n,num_inputs), source=ZERO)
     ! Default: Q = I (identity), B = 0
-    integer(i4) :: i
     do i = 1, n; this%Q(i,i) = ONE; end do
     call this%J%init(n)
     call this%R%init(n)
@@ -328,7 +329,7 @@ contains
     this%time      = this%time + dt
 
     ! Update power balance
-    call this%phdae_power()
+    call this%power_balance()
     h_after = this%hamiltonian_val()
     this%hamiltonian = h_after
 
@@ -344,7 +345,7 @@ contains
     receipt%balance_ok  = balance_err < 1e-6_wp
 
     ! Seal to WORM chain
-    call this%audit%seal('PHDAE_STEP', 't='//achar(0), int(this%time*1000,i64))
+    call this%audit%seal('PHDAE_STEP', 't='//achar(0), int(this%time*1000,i8))
   end subroutine phdae_step
 
   subroutine phdae_destroy(this)

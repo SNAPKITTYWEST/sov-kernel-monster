@@ -31,6 +31,7 @@ module bob_kinds
     
     ! Character kind
     integer, parameter, public :: ck = c_char          ! Character
+    integer, parameter, public :: i1 = 1              ! 1-byte integer (int8)
     
     ! Constants
     real(wp), parameter, public :: PI = 3.141592653589793238462643383279502884197_wp

@@ -15,10 +15,13 @@ module sov_monster_kernel
   public :: sov_bifrost_verify
   public :: sov_apl_step_zgemm_fused
   public :: sov_apl_evolve_sequence
+  public :: dp, ci, czero, i8, sov_zmexp_scaling_squaring, sov_blake3_hash_matrix
+  public :: sov_is_hermitian_matrix, sov_is_density_matrix, sov_fault
+  public :: sov_zgetrf, blake3_state, sov_blake3_init, sov_blake3_update, sov_blake3_finalize
+  public :: BLAKE3_IV, HASH_LEN
 
   integer, parameter :: dp  = real64
   integer, parameter :: i8 = int64
-  integer, parameter :: i8  = int8
   complex(dp), parameter :: ci    = (0.0_dp, 1.0_dp)
   complex(dp), parameter :: czero = (0.0_dp, 0.0_dp)
 
@@ -45,7 +48,7 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 1. PLASMA GATE
   !══════════════════════════════════════════════════════════════════
-  pure function sov_plasma_verify(shape_ptr, rank, herm, trace_one, &
+  function sov_plasma_verify(shape_ptr, rank, herm, trace_one, &
                                    hash_ptr, buffer_ptr, buffer_bytes) &
        bind(C, name="sov_plasma_verify") result(ok)
     type(c_ptr),        intent(in), value :: shape_ptr, hash_ptr, buffer_ptr
@@ -68,7 +71,7 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 2. BIFROST: Ed25519 sign / verify
   !══════════════════════════════════════════════════════════════════
-  pure subroutine sov_bifrost_sign(payload_ptr, payload_len, sk_ptr, sig_ptr) &
+  subroutine sov_bifrost_sign(payload_ptr, payload_len, sk_ptr, sig_ptr) &
        bind(C, name="sov_bifrost_sign")
     type(c_ptr),       intent(in), value :: payload_ptr, sk_ptr, sig_ptr
     integer(c_size_t), intent(in), value :: payload_len
@@ -93,7 +96,7 @@ contains
     sig(1:32) = R_enc; sig(33:64) = s_bytes
   end subroutine
 
-  pure function sov_bifrost_verify(payload_ptr, payload_len, sig_ptr, pk_ptr) &
+  function sov_bifrost_verify(payload_ptr, payload_len, sig_ptr, pk_ptr) &
        bind(C, name="sov_bifrost_verify") result(ok)
     type(c_ptr),       intent(in), value :: payload_ptr, sig_ptr, pk_ptr
     integer(c_size_t), intent(in), value :: payload_len
@@ -252,7 +255,7 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 6. LU FACTORIZATION & TRIANGULAR SOLVE (pure Fortran, no LAPACK)
   !══════════════════════════════════════════════════════════════════
-  pure subroutine sov_zgetrf(A, n)
+  subroutine sov_zgetrf(A, n)
     complex(dp), intent(inout), dimension(n,n) :: A
     integer, intent(in) :: n
     integer :: i, j, k, piv
@@ -273,7 +276,7 @@ contains
     end do
   end subroutine
 
-  pure subroutine sov_zgetrs(LU, n, B)
+  subroutine sov_zgetrs(LU, n, B)
     complex(dp), intent(in),    dimension(n,n) :: LU
     integer,     intent(in)    :: n
     complex(dp), intent(inout), dimension(n,n) :: B
@@ -289,7 +292,7 @@ contains
     end do
   end subroutine
 
-  pure function sov_is_hermitian_matrix(A, n) result(ok)
+  function sov_is_hermitian_matrix(A, n) result(ok)
     complex(dp), intent(in), dimension(n,n) :: A
     integer(c_int64_t), intent(in) :: n
     logical :: ok
@@ -304,7 +307,7 @@ contains
     end do
   end function
 
-  pure function sov_is_density_matrix(rho, n) result(ok)
+  function sov_is_density_matrix(rho, n) result(ok)
     complex(dp), intent(in), dimension(n,n) :: rho
     integer(c_int64_t), intent(in) :: n
     logical :: ok
@@ -320,12 +323,12 @@ contains
   !══════════════════════════════════════════════════════════════════
   ! 7. BLAKE3 (Pure Fortran, RFC 9561, vectorizable)
   !══════════════════════════════════════════════════════════════════
-  pure subroutine sov_blake3_init(s)
+  subroutine sov_blake3_init(s)
     type(blake3_state), intent(out) :: s
     s%chaining_value = BLAKE3_IV; s%block=0_i8; s%block_len=0; s%counter=0; s%flags=0
   end subroutine
 
-  pure subroutine sov_blake3_update(s, input, in_len)
+  subroutine sov_blake3_update(s, input, in_len)
     type(blake3_state), intent(inout) :: s
     integer(i8), intent(in), dimension(*) :: input
     integer, intent(in) :: in_len
@@ -339,7 +342,7 @@ contains
     end do
   end subroutine
 
-  pure subroutine sov_blake3_finalize(s, out, out_len)
+  subroutine sov_blake3_finalize(s, out, out_len)
     type(blake3_state), intent(inout) :: s
     integer(i8), intent(out), dimension(*) :: out
     integer, intent(in) :: out_len
@@ -353,7 +356,7 @@ contains
     end do
   end subroutine
 
-  pure subroutine sov_blake3_compress(s)
+  subroutine sov_blake3_compress(s)
     type(blake3_state), intent(inout) :: s
     integer(i8) :: v(16), m(16)
     integer :: i, j, r
@@ -364,7 +367,7 @@ contains
       10,7,12,9,14,3,13,15,4,0,11,2,5,8,1,6,  &
       12,13,9,11,15,10,14,8,7,2,5,3,0,1,6,4,  &
       9,14,11,5,8,12,15,1,13,3,0,7,2,4,6,10,  &
-      11,15,5,0,1,9,8,2,10,7,3,12,4,6,13,14 /],[16,7])
+      11,15,5,0,1,9,8,2,10,7,3,12,4,6,13,14 ],[16,7])
     do i=1,8; v(i)=s%chaining_value(i); end do
     v(9:16) = BLAKE3_IV
     v(13) = ieor(v(13), s%counter)
@@ -389,7 +392,7 @@ contains
     do i=1,8; s%chaining_value(i)=ieor(v(i),v(i+8)); end do
   end subroutine
 
-  pure subroutine sov_blake3_g(v, mx, my, a, b, c, d)
+  subroutine sov_blake3_g(v, mx, my, a, b, c, d)
     integer(i8), intent(inout), dimension(16) :: v
     integer(i8), intent(in) :: mx, my
     integer, intent(in) :: a, b, c, d
@@ -399,7 +402,7 @@ contains
     v(c)=v(c)+v(d);              v(b)=ishftc(ieor(v(b),v(c)),-63)
   end subroutine
 
-  pure function sov_blake3_verify_buffer(buf_ptr, buf_len, hash_ptr) result(ok)
+  function sov_blake3_verify_buffer(buf_ptr, buf_len, hash_ptr) result(ok)
     type(c_ptr),        intent(in), value :: buf_ptr, hash_ptr
     integer(c_int64_t), intent(in), value :: buf_len
     logical :: ok
@@ -411,7 +414,7 @@ contains
     call sov_blake3_finalize(state, computed, 32); ok = all(computed == expected)
   end function
 
-  pure subroutine sov_blake3_hash_matrix(mat, n, hash_ptr)
+  subroutine sov_blake3_hash_matrix(mat, n, hash_ptr)
     complex(dp), intent(in), dimension(n,n) :: mat
     integer, intent(in) :: n
     type(c_ptr), intent(in), value :: hash_ptr
@@ -432,7 +435,7 @@ contains
     call sov_blake3_finalize(state, hash_bytes, 32)
   end subroutine
 
-  pure subroutine sov_blake3_hash_bytes(input, in_len, out, out_len)
+  subroutine sov_blake3_hash_bytes(input, in_len, out, out_len)
     integer(i8), intent(in),  dimension(*) :: input
     integer, intent(in) :: in_len, out_len
     integer(i8), intent(out), dimension(*) :: out
@@ -441,7 +444,7 @@ contains
     call sov_blake3_finalize(state, out, out_len)
   end subroutine
 
-  pure subroutine sov_blake3_hash_concat(a, la, b, lb, out, out_len)
+  subroutine sov_blake3_hash_concat(a, la, b, lb, out, out_len)
     integer(i8), intent(in), dimension(*) :: a, b
     integer, intent(in) :: la, lb, out_len
     integer(i8), intent(out), dimension(*) :: out
@@ -450,7 +453,7 @@ contains
     call sov_blake3_update(state, b, lb); call sov_blake3_finalize(state, out, out_len)
   end subroutine
 
-  pure subroutine sov_blake3_hash_concat3(a,la, b,lb, c,lc, out,out_len)
+  subroutine sov_blake3_hash_concat3(a,la, b,lb, c,lc, out,out_len)
     integer(i8), intent(in), dimension(*) :: a, b, c
     integer, intent(in) :: la, lb, lc, out_len
     integer(i8), intent(out), dimension(*) :: out
@@ -480,7 +483,7 @@ contains
   ! ── Field element helpers ──────────────────────────────────────
 
   ! Reduce a field element: propagate carries so each limb is in range
-  pure subroutine fe_reduce(f)
+  subroutine fe_reduce(f)
     integer(i8), intent(inout), dimension(10) :: f
     integer(i8) :: c
     ! Odd limbs: 26-bit mask; even limbs: 25-bit mask
@@ -498,7 +501,7 @@ contains
   end subroutine
 
   ! f = a + b mod p
-  pure subroutine fe_add(a, b, f)
+  subroutine fe_add(a, b, f)
     integer(i8), intent(in),  dimension(10) :: a, b
     integer(i8), intent(out), dimension(10) :: f
     integer :: i
@@ -507,7 +510,7 @@ contains
   end subroutine
 
   ! f = a - b mod p
-  pure subroutine fe_sub(a, b, f)
+  subroutine fe_sub(a, b, f)
     integer(i8), intent(in),  dimension(10) :: a, b
     integer(i8), intent(out), dimension(10) :: f
     integer :: i
@@ -522,17 +525,17 @@ contains
   end subroutine
 
   ! f = a * b mod p  (schoolbook, fully reduced)
-  pure subroutine fe_mul(a, b, f)
+  subroutine fe_mul(a, b, f)
     integer(i8), intent(in),  dimension(10) :: a, b
     integer(i8), intent(out), dimension(10) :: f
     integer(i8) :: h(10), b2(2:10)
+    integer(i8) :: b19(10)
+    integer(i8) :: b219(2:10)
     integer :: i
     ! Pre-multiply even-position b-limbs by 2, odd by 1 (radix-2^25.5)
     do i=2,10,2; b2(i)=2*b(i); end do
     ! Also pre-multiply all b-limbs by 19 for the wrap-around terms
-    integer(i8) :: b19(10)
     do i=1,10; b19(i)=19*b(i); end do
-    integer(i8) :: b219(2:10)
     do i=2,10,2; b219(i)=2*b19(i); end do
 
     h(1)  = a(1)*b(1)   + a(3)*b19(9) *2 + a(5)*b19(7) *2 + a(7)*b19(5) *2 + a(9)*b19(3) *2 &
@@ -560,7 +563,7 @@ contains
   end subroutine
 
   ! f = a^2 mod p  (optimised squaring)
-  pure subroutine fe_sq(a, f)
+  subroutine fe_sq(a, f)
     integer(i8), intent(in),  dimension(10) :: a
     integer(i8), intent(out), dimension(10) :: f
     integer(i8) :: h(10), a2(10), a19(10), a219(10)
@@ -606,7 +609,7 @@ contains
   end subroutine
 
   ! f = a^(2^n) mod p  (repeated squaring)
-  pure subroutine fe_sq_n(a, n, f)
+  subroutine fe_sq_n(a, n, f)
     integer(i8), intent(in),  dimension(10) :: a
     integer,      intent(in)                 :: n
     integer(i8), intent(out), dimension(10) :: f
@@ -616,10 +619,11 @@ contains
   end subroutine
 
   ! f = a^(-1) mod p via Fermat: a^(p-2) = a^(2^255 - 21)
-  pure subroutine fe_inv(a, f)
+  subroutine fe_inv(a, f)
     integer(i8), intent(in),  dimension(10) :: a
     integer(i8), intent(out), dimension(10) :: f
     integer(i8) :: t0(10),t1(10),t2(10),t3(10)
+    integer(i8) :: a8(10), a11(10), bits
     call fe_sq(a, t0)             ! t0 = a^2
     call fe_mul(a, t0, t1)        ! t1 = a^3
     call fe_sq(t1, t0)            ! t0 = a^6
@@ -667,7 +671,6 @@ contains
     call fe_mul(t1, a,  f)        ! 2^255-32+1 — need a^(32-21)=a^11
     ! a^11 = a^8 * a^2 * a
     call fe_sq(t0, t0)            ! reuse — overwritten, use fresh
-    integer(i8) :: a8(10),a11(10)
     call fe_sq(a,a8); call fe_sq(a8,a8); call fe_sq(a8,a8)  ! a^8
     call fe_mul(a8, t0, t0)       ! a^8 * (2^250-1)*2^5 — not right either
     ! Clean canonical inversion (ref10 pattern, verbatim):
@@ -697,11 +700,12 @@ contains
   end subroutine
 
   ! Convert field element to canonical 32-byte little-endian
-  pure subroutine fe_tobytes(f, b)
+  subroutine fe_tobytes(f, b)
     integer(i8), intent(in),  dimension(10) :: f
     integer(i8),  intent(out), dimension(32) :: b
     integer(i8) :: h(10), c
     integer :: i
+    integer(i8) :: bits
     h = f
     call fe_reduce(h)
     ! Final canonical reduction: subtract p if h >= p
@@ -738,7 +742,7 @@ contains
     b(17)= int(iand(shiftr(h(6),2),Z'FF'),i8)
     b(18)= int(iand(shiftr(h(6),10),Z'FF'),i8)
     b(19)= int(iand(shiftr(h(6),18),Z'FF'),i8)
-    b(20)= int(iand(ior(shiftr(h(6),24)+shiftl(h(7),1),Z'FF')),i8)  ! wrong — redo
+    b(20)= int(iand(shiftr(h(6),24)+shiftl(h(7),1), int(Z'FF',i8)),i8)
     ! Correct byte packing for radix-2^25.5:
     ! bit offset of each limb:
     !  h(1):  0..25 (26 bits)
@@ -751,7 +755,6 @@ contains
     !  h(8):179..203 (25 bits)
     !  h(9):204..229 (26 bits)
     ! h(10):230..254 (25 bits)
-    integer(i8) :: bits
     bits = 0_i8
     bits = ior(h(1),                         shiftl(h(2), 26))
     b(1) = int(iand(bits,     Z'FF'),i8); bits=shiftr(bits,8)
@@ -798,7 +801,7 @@ contains
   end subroutine
 
   ! Load 32 bytes (little-endian) into field element
-  pure subroutine fe_frombytes(b, f)
+  subroutine fe_frombytes(b, f)
     integer(i8),  intent(in),  dimension(32) :: b
     integer(i8), intent(out), dimension(10) :: f
     integer(i8) :: w(8)
@@ -833,7 +836,7 @@ contains
 
   ! Reduce a 512-bit integer (from hashing) mod L using Barrett reduction
   ! Input: 64 bytes h; Output: 32-byte scalar s
-  pure subroutine sc_reduce64(h, s)
+  subroutine sc_reduce64(h, s)
     integer(i8),  intent(in),  dimension(64) :: h
     integer(i8),  intent(out), dimension(32) :: s
     ! L in 8×32-bit limbs (little-endian):
@@ -849,6 +852,8 @@ contains
     ! Each limb is 21 bits to avoid overflow on multiplication
     integer(i8) :: s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12
     integer(i8)  :: hb(64)
+    integer(i8), parameter :: MU0=666643_i8, MU1=470296_i8, MU2=654183_i8
+    integer(i8), parameter :: MU3=-997805_i8, MU4=136657_i8, MU5=-683901_i8
     hb = h
     ! Load as signed to handle bit manipulation
     s0  = iand(int(hb(1),i8),Z'FF') + shiftl(iand(int(hb(2),i8),Z'FF'),8) &
@@ -883,8 +888,6 @@ contains
     ! c components (little-endian 21-bit limbs of c):
     ! c = 27742317777372353535851937790883648493
     ! 666643*s12 added to s0; 470296*s12 to s1; 654183*s12 to s2; etc.
-    integer(i8), parameter :: MU0=666643_i8, MU1=470296_i8, MU2=654183_i8
-    integer(i8), parameter :: MU3=-997805_i8, MU4=136657_i8, MU5=-683901_i8
     s0  = s0  + MU0*s12; s1  = s1  + MU1*s12; s2  = s2  + MU2*s12
     s3  = s3  + MU3*s12; s4  = s4  + MU4*s12; s5  = s5  + MU5*s12; s12 = 0
     carry = shiftr(s0,21); s1=s1+carry; s0=iand(s0,int(Z'1FFFFF',i8))
@@ -949,7 +952,7 @@ contains
 
   ! Scalar multiply mod L: res = a*b mod L
   ! Both a, b are 32-byte scalars; result is 32 bytes
-  pure subroutine sc_muladd(a, b, c, s)
+  subroutine sc_muladd(a, b, c, s)
     ! s = a*b + c  mod L  (standard Ed25519 signing formula)
     integer(i8), intent(in),  dimension(32) :: a, b, c
     integer(i8), intent(out), dimension(32) :: s
@@ -959,9 +962,9 @@ contains
     integer(i8) :: s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12
     integer(i8) :: s13,s14,s15,s16,s17,s18,s19,s20,s21,s22,s23
     integer(i8) :: carry
-    integer(i8), parameter :: MASK21 = int(Z'1FFFFF',i8)
     integer(i8), parameter :: MU0=666643_i8, MU1=470296_i8, MU2=654183_i8
     integer(i8), parameter :: MU3=-997805_i8, MU4=136657_i8, MU5=-683901_i8
+    integer(i8), parameter :: MASK21 = int(Z'1FFFFF',i8)
     ! Load a into 21-bit limbs
     a0  = iand(int(a(1),i8),Z'FF') + shiftl(iand(int(a(2),i8),Z'FF'),8) + shiftl(iand(iand(int(a(3),i8),Z'FF'),Z'1F'),16)
     a1  = shiftr(iand(int(a(3),i8),Z'FF'),5) + shiftl(iand(int(a(4),i8),Z'FF'),3) + shiftl(iand(iand(int(a(5),i8),Z'FF'),Z'3F'),11) + shiftl(iand(iand(int(a(6),i8),Z'FF'),Z'3'),19)
@@ -1122,7 +1125,7 @@ contains
   ! Curve: -x^2 + y^2 = 1 + d*x^2*y^2
   ! d = -121665/121666 mod p (as 10-limb fe)
 
-  pure subroutine ge_d(d)
+  subroutine ge_d(d)
     integer(i8), intent(out), dimension(10) :: d
     ! d = -121665/121666 mod p
     ! Pre-computed value (RFC 8032 §5.1, SUPERCOP fe d):
@@ -1132,7 +1135,7 @@ contains
   end subroutine
 
   ! 2*d (for unified addition formula)
-  pure subroutine ge_2d(d2)
+  subroutine ge_2d(d2)
     integer(i8), intent(out), dimension(10) :: d2
     integer(i8) :: d(10)
     call ge_d(d)
@@ -1141,7 +1144,7 @@ contains
   end subroutine
 
   ! Set point to neutral element (0:1:1:0) — additive identity
-  pure subroutine ge_zero(x,y,z,t)
+  subroutine ge_zero(x,y,z,t)
     integer(i8), intent(out), dimension(10) :: x,y,z,t
     x=0; y=0; z=0; t=0
     y(1)=1; z(1)=1  ! (0:1:1:0)
@@ -1150,7 +1153,7 @@ contains
   ! Unified (complete) addition on twisted Edwards
   ! (x3,y3,z3,t3) = (x1,y1,z1,t1) + (x2,y2,z2,t2)
   ! RFC 8032 §5.1.4 formula (Hisil et al. unified addition)
-  pure subroutine ge_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
+  subroutine ge_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
     integer(i8), intent(in),  dimension(10) :: x1,y1,z1,t1,x2,y2,z2,t2
     integer(i8), intent(out), dimension(10) :: x3,y3,z3,t3
     integer(i8) :: A(10),B(10),C(10),D(10),E(10),F(10),G(10),H(10),d2(10)
@@ -1178,7 +1181,7 @@ contains
 
   ! Double a point: (x3,y3,z3,t3) = 2*(x1,y1,z1,t1)
   ! RFC 8032 §5.1.4 doubling (dbl-2008-hwcd)
-  pure subroutine ge_double(x1,y1,z1,t1, x3,y3,z3,t3)
+  subroutine ge_double(x1,y1,z1,t1, x3,y3,z3,t3)
     integer(i8), intent(in),  dimension(10) :: x1,y1,z1,t1
     integer(i8), intent(out), dimension(10) :: x3,y3,z3,t3
     integer(i8) :: A(10),B(10),C(10),H(10),E(10),G(10),F(10)
@@ -1210,13 +1213,13 @@ contains
   end subroutine
 
   ! Constant-time conditional swap (for ladder)
-  pure subroutine fe_cswap(a, b, swap)
+  subroutine fe_cswap(a, b, swap)
     integer(i8), intent(inout), dimension(10) :: a, b
     integer, intent(in) :: swap  ! 0 or 1
     integer(i8) :: mask, t(10), i
     mask = -int(swap, i8)  ! 0 or all-ones
     do i=1,10
-      t(i) = mask .and. ieor(a(i), b(i))
+      t(i) = iand(mask, ieor(a(i), b(i)))
       a(i) = ieor(a(i), t(i))
       b(i) = ieor(b(i), t(i))
     end do
@@ -1224,7 +1227,7 @@ contains
 
   ! Scalar multiplication via double-and-add (Montgomery ladder for constant time)
   ! result = s * P  (P given as extended homogeneous (px,py,pz,pt))
-  pure subroutine ge_scalarmult(s_bytes, px,py,pz,pt, rx,ry,rz,rt)
+  subroutine ge_scalarmult(s_bytes, px,py,pz,pt, rx,ry,rz,rt)
     integer(i8),  intent(in),  dimension(32) :: s_bytes
     integer(i8), intent(in),  dimension(10) :: px,py,pz,pt
     integer(i8), intent(out), dimension(10) :: rx,ry,rz,rt
@@ -1262,7 +1265,7 @@ contains
   end subroutine
 
   ! Base point B of Ed25519 (RFC 8032 §5.1)
-  pure subroutine ge_basepoint(bx,by,bz,bt)
+  subroutine ge_basepoint(bx,by,bz,bt)
     integer(i8), intent(out), dimension(10) :: bx,by,bz,bt
     ! B = (Bx, By, 1, Bx*By) in extended homogeneous
     ! By = 4/5 mod p (RFC 8032)
@@ -1280,7 +1283,7 @@ contains
 
   ! ── Public API wrappers (match existing sov_* ABI) ────────────
 
-  pure subroutine sov_ed25519_clamp_and_decode(b, s)
+  subroutine sov_ed25519_clamp_and_decode(b, s)
     integer(i8),  intent(in),  dimension(32) :: b
     integer(i8), intent(out), dimension(10) :: s
     integer(i8) :: bc(32)
@@ -1290,19 +1293,19 @@ contains
     call fe_frombytes(bc, s)
   end subroutine
 
-  pure subroutine sov_ed25519_scalar_from_bytes(b, s)
+  subroutine sov_ed25519_scalar_from_bytes(b, s)
     integer(i8),  intent(in),  dimension(32) :: b
     integer(i8), intent(out), dimension(10) :: s
     call fe_frombytes(b, s)
   end subroutine
 
-  pure subroutine sov_ed25519_scalar_to_bytes(s, b)
+  subroutine sov_ed25519_scalar_to_bytes(s, b)
     integer(i8), intent(in),  dimension(10) :: s
     integer(i8),  intent(out), dimension(32) :: b
     call fe_tobytes(s, b)
   end subroutine
 
-  pure function sov_ed25519_scalar_valid(s) result(ok)
+  function sov_ed25519_scalar_valid(s) result(ok)
     integer(i8), intent(in), dimension(10) :: s
     logical :: ok
     ! Valid if not all-zero (zero scalar is the degenerate key)
@@ -1310,7 +1313,7 @@ contains
   end function
 
   ! Reduce 64-byte hash to scalar mod L
-  pure subroutine sov_ed25519_reduce_scalar(h, s)
+  subroutine sov_ed25519_reduce_scalar(h, s)
     integer(i8),  intent(in),  dimension(64) :: h
     integer(i8), intent(out), dimension(10) :: s
     integer(i8) :: out32(32)
@@ -1320,7 +1323,7 @@ contains
 
   ! Scalar multiplication in the field: res = a * b mod L
   ! (both treated as 10-limb fe encoding of the scalar)
-  pure subroutine sov_ed25519_scalar_mul(a, b, res)
+  subroutine sov_ed25519_scalar_mul(a, b, res)
     integer(i8), intent(in),  dimension(10) :: a, b
     integer(i8), intent(out), dimension(10) :: res
     integer(i8) :: ab(32), bb(32), zero(32), out(32)
@@ -1332,7 +1335,7 @@ contains
   end subroutine
 
   ! Scalar addition mod L
-  pure subroutine sov_ed25519_scalar_add_mod_l(a, b, res)
+  subroutine sov_ed25519_scalar_add_mod_l(a, b, res)
     integer(i8), intent(in),    dimension(10) :: a, b
     integer(i8), intent(inout), dimension(10) :: res
     ! res = (a + b) mod L via sc_muladd(1, a, b, res)
@@ -1345,7 +1348,7 @@ contains
   end subroutine
 
   ! s * BasePoint → (x,y,z,t)
-  pure subroutine sov_ed25519_scalar_mul_base(s, x,y,z,t)
+  subroutine sov_ed25519_scalar_mul_base(s, x,y,z,t)
     integer(i8), intent(in),  dimension(10) :: s
     integer(i8), intent(out), dimension(10) :: x,y,z,t
     integer(i8) :: bx(10),by(10),bz(10),bt(10)
@@ -1356,7 +1359,7 @@ contains
   end subroutine
 
   ! s * P → accumulate into (x2,y2,z2,t2)
-  pure subroutine sov_ed25519_scalar_mul_point(s, x1,y1,z1,t1, x2,y2,z2,t2)
+  subroutine sov_ed25519_scalar_mul_point(s, x1,y1,z1,t1, x2,y2,z2,t2)
     integer(i8), intent(in),    dimension(10) :: s,x1,y1,z1,t1
     integer(i8), intent(inout), dimension(10) :: x2,y2,z2,t2
     integer(i8) :: rx(10),ry(10),rz(10),rt(10)
@@ -1367,14 +1370,14 @@ contains
   end subroutine
 
   ! Unified point addition
-  pure subroutine sov_ed25519_point_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
+  subroutine sov_ed25519_point_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
     integer(i8), intent(in),  dimension(10) :: x1,y1,z1,t1,x2,y2,z2,t2
     integer(i8), intent(out), dimension(10) :: x3,y3,z3,t3
     call ge_add(x1,y1,z1,t1, x2,y2,z2,t2, x3,y3,z3,t3)
   end subroutine
 
   ! Negate point: (-X:Y:Z:-T)
-  pure subroutine sov_ed25519_point_negate(x,y,z,t)
+  subroutine sov_ed25519_point_negate(x,y,z,t)
     integer(i8), intent(inout), dimension(10) :: x,y,z,t
     integer(i8) :: nx(10), nt(10)
     integer(i8), parameter :: ZERO(10) = 0_i8
@@ -1384,23 +1387,23 @@ contains
   end subroutine
 
   ! Encode point (X:Y:Z:T) → 32 bytes (RFC 8032 §5.1.2)
-  pure subroutine sov_ed25519_encode_point(x,y,z,t, b)
+  subroutine sov_ed25519_encode_point(x,y,z,t, b)
     integer(i8), intent(in),  dimension(10) :: x,y,z,t
     integer(i8),  intent(out), dimension(32) :: b
     integer(i8) :: recip(10), xp(10), yp(10), zx(10)
+    integer(i8) :: xb(10)
+    integer(i8) :: xbytes(32)
     call fe_inv(z, recip)       ! recip = 1/Z
     call fe_mul(x, recip, xp)  ! xp = X/Z
     call fe_mul(y, recip, yp)  ! yp = Y/Z
     call fe_tobytes(yp, b)
     ! Set high bit of b[32] to sign bit of x (LSB of xp)
-    integer(i8) :: xb(10)
-    integer(i8)  :: xbytes(32)
     call fe_tobytes(xp, xbytes)
     b(32) = ior(b(32), shiftl(iand(xbytes(1), 1_i8), 7))
   end subroutine
 
   ! Decode 32 bytes → point (RFC 8032 §5.1.3)
-  pure function sov_ed25519_decode_point(b, x,y,z,t) result(ok)
+  function sov_ed25519_decode_point(b, x,y,z,t) result(ok)
     integer(i8),  intent(in),  dimension(32) :: b
     integer(i8), intent(out), dimension(10) :: x,y,z,t
     logical :: ok
@@ -1408,6 +1411,17 @@ contains
     integer(i8) :: y_fe(10), y2(10), u(10), v(10), v3(10), v7(10)
     integer(i8) :: x_candidate(10), check(10), d(10), one(10), tmp(10)
     integer :: sign_bit
+    integer(i8) :: xb(32)
+    integer(i8), parameter :: NEG1(10) = &
+      [ int(Z'3FFFFEC',i8), int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), &
+        int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), int(Z'1FFFFFF',i8), &
+        int(Z'3FFFFFF',i8), int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), &
+        int(Z'1FFFFFF',i8) ]
+    integer(i8), parameter :: SQRT_M1(10) = &
+      [ -32595792_i8, -7943725_i8, 9377950_i8, 3500415_i8, &
+        12389472_i8, -272473_i8, -25146209_i8, -2005654_i8, &
+        326686_i8, 11406482_i8 ]
+    integer(i8), parameter :: ZERO(10) = 0_i8
     yb = b; sign_bit = int(iand(shiftr(int(b(32),i8),7), 1_i8))
     yb(32) = iand(yb(32), int(Z'7F',i8))  ! clear sign bit
     call fe_frombytes(yb, y_fe)
@@ -1459,19 +1473,10 @@ contains
     call fe_sub(check, u, check)
     call fe_reduce(check)
     ! If check != 0 and check != -1 mod p: no square root
-    integer(i8), parameter :: NEG1(10) = &
-      [ int(Z'3FFFFEC',i8), int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), &
-        int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), int(Z'1FFFFFF',i8), &
-        int(Z'3FFFFFF',i8), int(Z'1FFFFFF',i8), int(Z'3FFFFFF',i8), &
-        int(Z'1FFFFFF',i8) ]
     if (all(check == 0_i8)) then
       ok = .true.
     else if (all(check == NEG1)) then
       ! x = x * sqrt(-1) = x * 2^((p-1)/4) mod p
-      integer(i8), parameter :: SQRT_M1(10) = &
-        [ -32595792_i8, -7943725_i8, 9377950_i8, 3500415_i8, &
-          12389472_i8, -272473_i8, -25146209_i8, -2005654_i8, &
-          326686_i8, 11406482_i8 ]
       call fe_mul(x_candidate, SQRT_M1, x_candidate)
       ok = .true.
     else
@@ -1480,12 +1485,9 @@ contains
       return
     end if
     ! Adjust sign
-    integer(i8) :: xbytes_check(10)
-    integer(i8)  :: xb(32)
     call fe_tobytes(x_candidate, xb)
     if (int(iand(int(xb(1),i8), 1_i8)) /= sign_bit) then
       call fe_sub(0_i8*x_candidate, x_candidate, x_candidate)  ! negate
-      integer(i8), parameter :: ZERO(10) = 0_i8
       call fe_sub(ZERO, x_candidate, x_candidate)
     end if
     x = x_candidate; y = y_fe

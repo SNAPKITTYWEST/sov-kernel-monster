@@ -173,10 +173,10 @@ contains
 
     write(combined, '(A,I2)') trim(context_str), persona_id
 
-    hash_val = int(z'cbf29ce484222325')  ! FNV offset basis
+    hash_val = int(z'811c9dc5')  ! FNV offset basis
     do i = 1, min(256, len_trim(combined))
       hash_val = ieor(hash_val, ichar(combined(i:i)))
-      hash_val = ior(ishft(hash_val, 1), ishft(hash_val, -63))
+      hash_val = ior(ishft(hash_val, 1), ishft(hash_val, -31))
     end do
 
     hash_str = ''
