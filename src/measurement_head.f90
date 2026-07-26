@@ -74,7 +74,7 @@ contains
     complex(dp), pointer :: q(:,:,:), rho(:,:)
     real(dp),    pointer :: p(:)
     integer(c_int64_t) :: j, k, l
-    real(dp) :: p_sum
+    real(dp) :: p_sum, s
 
     call c_f_pointer(q_ptr,   q,   [m, d, d])
     call c_f_pointer(rho_ptr, rho, [d, d])
@@ -86,7 +86,7 @@ contains
     ! APL:  p_j ← +/ (q_j × ρ)    — tr(q_j ρ) = Σ_{kl} (q_j)_{kl} ρ_{lk}
     !$omp parallel do default(none) shared(p,q,rho,m,d) private(j,k,l)
     do j = 1, m
-      real(dp) :: s; s = 0.0_dp
+      s = 0.0_dp
       do k = 1, d
         do l = 1, d
           ! tr(q_j ρ) = Σ_k (q_j ρ)_{kk} = Σ_{kl} q_j(k,l) ρ(l,k)
@@ -127,7 +127,7 @@ contains
     real(dp),    pointer :: p(:)
     real(dp),    allocatable :: raw(:)
     integer(c_int64_t) :: j, k, l
-    real(dp) :: max_raw, s
+    real(dp) :: max_raw, s, acc
 
     call c_f_pointer(q_ptr,   q,   [m, d, d])
     call c_f_pointer(rho_ptr, rho, [d, d])
@@ -141,7 +141,7 @@ contains
     ! APL:  raw ← {tr(q_j ρ)}_j    — exact Born projections
     !$omp parallel do default(none) shared(raw,q,rho,m,d) private(j,k,l)
     do j = 1, m
-      real(dp) :: acc; acc = 0.0_dp
+      acc = 0.0_dp
       do k = 1, d; do l = 1, d
         acc = acc + real(q(j,k,l) * rho(l,k))
       end do; end do
@@ -229,6 +229,7 @@ contains
     real(dp),    pointer :: p(:)
     complex(dp), pointer :: psi(:,:,:), signal(:,:)
     integer(c_int64_t) :: j, k, l
+    complex(dp) :: s
 
     call c_f_pointer(p_ptr,      p,      [m])
     call c_f_pointer(psi_ptr,    psi,    [m, d, d])
@@ -239,7 +240,7 @@ contains
     !$omp parallel do collapse(2) default(none) shared(signal,p,psi,m,d) private(j,k,l)
     do k = 1, d
       do l = 1, d
-        complex(dp) :: s; s = czero
+        s = czero
         do j = 1, m; s = s + p(j) * psi(j,k,l); end do
         signal(k,l) = s
       end do

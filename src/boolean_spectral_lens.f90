@@ -23,7 +23,7 @@
 !=====================================================================
 module boolean_spectral_lens
   use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, &
-       c_size_t, c_loc, c_null_ptr, c_associated, c_char
+       c_size_t, c_loc, c_null_ptr, c_associated, c_char, c_null_char
   use, intrinsic :: iso_fortran_env, only: int64, real64, int8, error_unit
   use sov_monster_kernel, only: dp, ci, czero, &
        sov_blake3_hash_matrix, sov_bifrost_sign, &
@@ -66,7 +66,8 @@ contains
   ! 1. BOOLEAN → SPECTRAL
   !    Maps bool vector to eigenvalues (sum=1) then reconstructs density
   !═══════════════════════════════════════════════════════════════════
-  subroutine boolean_to_spectral(bool_ptr, bool_len, frame, &
+  subroutine boolean_to_spectral(bool_ptr, bool_len, frame, eigenvalues_ptr, density_ptr, plasma_ok) &
+       bind(C, name="boolean_to_spectral")
     type(c_ptr),        intent(in),  value :: bool_ptr
     integer(c_size_t),  intent(in),  value :: bool_len
     type(spe_frame_t),  intent(in)         :: frame
@@ -78,8 +79,6 @@ contains
     complex(dp), pointer :: density(:,:), frame_arr(:,:,:)
     real(dp) :: s
         complex(dp) :: acc
-       eigenvalues_ptr, density_ptr, plasma_ok) &
-       bind(C, name="boolean_to_spectral")
 
 
     r = frame%rank; d = frame%dim
@@ -118,15 +117,14 @@ contains
   !═══════════════════════════════════════════════════════════════════
   ! 2. SPECTRAL → BOOLEAN  (threshold measurement — "word forms" here)
   !═══════════════════════════════════════════════════════════════════
-  subroutine spectral_to_boolean(eigenvalues_ptr, rank, threshold, &
+  subroutine spectral_to_boolean(eigenvalues_ptr, rank, threshold, bool_out_ptr) &
+       bind(C, name="spectral_to_boolean")
     type(c_ptr),        intent(in),  value :: eigenvalues_ptr, bool_out_ptr
     integer(c_int64_t), intent(in),  value :: rank
     real(dp),           intent(in),  value :: threshold
     real(dp),           pointer :: eigenvalues(:)
     integer(c_int64_t), pointer :: bool_out(:)
     integer(c_int64_t) :: i
-       bool_out_ptr) &
-       bind(C, name="spectral_to_boolean")
 
 
     call c_f_pointer(eigenvalues_ptr, eigenvalues, [rank])
@@ -147,10 +145,10 @@ contains
 
   ! AND: A ∘ B  → pointwise product then normalize
   subroutine spectral_and(a_ptr, b_ptr, r, out_ptr) &
+       bind(C, name="spectral_and")
     type(c_ptr),        intent(in),  value :: a_ptr, b_ptr, out_ptr
     integer(c_int64_t), intent(in),  value :: r
     real(dp), pointer :: a(:), b(:), out(:)
-       bind(C, name="spectral_and")
     call c_f_pointer(a_ptr, a, [r])
     call c_f_pointer(b_ptr, b, [r])
     call c_f_pointer(out_ptr, out, [r])
@@ -160,10 +158,10 @@ contains
 
   ! OR: A + B - A ∘ B  → clamp to [0,1] then normalize
   subroutine spectral_or(a_ptr, b_ptr, r, out_ptr) &
+       bind(C, name="spectral_or")
     type(c_ptr),        intent(in),  value :: a_ptr, b_ptr, out_ptr
     integer(c_int64_t), intent(in),  value :: r
     real(dp), pointer :: a(:), b(:), out(:)
-       bind(C, name="spectral_or")
     call c_f_pointer(a_ptr, a, [r])
     call c_f_pointer(b_ptr, b, [r])
     call c_f_pointer(out_ptr, out, [r])
@@ -174,10 +172,10 @@ contains
 
   ! NOT: I - A  → (1/r - λᵢ) normalized (on effects)
   subroutine spectral_not(a_ptr, r, out_ptr) &
+       bind(C, name="spectral_not")
     type(c_ptr),        intent(in),  value :: a_ptr, out_ptr
     integer(c_int64_t), intent(in),  value :: r
     real(dp), pointer :: a(:), out(:)
-       bind(C, name="spectral_not")
     call c_f_pointer(a_ptr, a, [r])
     call c_f_pointer(out_ptr, out, [r])
     out = 1.0_dp/real(r,dp) - a + 1.0_dp/real(r,dp)  ! shift above zero
@@ -187,10 +185,10 @@ contains
 
   ! XOR: A + B - 2(A ∘ B)
   subroutine spectral_xor(a_ptr, b_ptr, r, out_ptr) &
+       bind(C, name="spectral_xor")
     type(c_ptr),        intent(in),  value :: a_ptr, b_ptr, out_ptr
     integer(c_int64_t), intent(in),  value :: r
     real(dp), pointer :: a(:), b(:), out(:)
-       bind(C, name="spectral_xor")
     call c_f_pointer(a_ptr, a, [r])
     call c_f_pointer(b_ptr, b, [r])
     call c_f_pointer(out_ptr, out, [r])
@@ -205,6 +203,7 @@ contains
   !    Writes Lisp world dump to lens buffer after each step
   !═══════════════════════════════════════════════════════════════════
   subroutine watch_sum_one(lens, max_steps, sk_ptr, plasma_ok) &
+       bind(C, name="watch_sum_one")
     type(inverted_lens_t), intent(inout) :: lens
     integer(c_int64_t),    intent(in),   value :: max_steps
     type(c_ptr),           intent(in),   value :: sk_ptr
@@ -214,7 +213,6 @@ contains
     complex(dp), pointer :: density(:,:)
     type(spe_frame_t), pointer :: frame
     real(dp) :: trace_sum, trace_err
-       bind(C, name="watch_sum_one")
 
 
     r = lens%rank
@@ -253,6 +251,7 @@ contains
   !    Format: (world-state :step N :trace T :eigenvalues (λ₁ λ₂ ...) :density ...)
   !═══════════════════════════════════════════════════════════════════
   subroutine lisp_world_dump_step(lens, step, eigenvalues, density, trace_sum) &
+       bind(C, name="lisp_world_dump_step")
     type(inverted_lens_t), intent(in)        :: lens
     integer(c_int64_t),    intent(in), value :: step
     real(dp),              intent(in)        :: eigenvalues(lens%rank)
@@ -263,7 +262,6 @@ contains
     integer(c_int64_t) :: i, r
     character(c_char), pointer :: buf(:)
     integer :: slen
-       bind(C, name="lisp_world_dump_step")
 
 
     r = lens%rank

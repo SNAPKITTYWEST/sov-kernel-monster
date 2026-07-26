@@ -15,11 +15,10 @@
 !=====================================================================
 module sov_knowledge
   use, intrinsic :: iso_c_binding, only: c_int64_t, c_ptr, c_f_pointer, &
-       c_loc, c_size_t, c_null_ptr, c_char
+       c_loc, c_size_t, c_null_ptr, c_char, c_associated
   use, intrinsic :: iso_fortran_env, only: int64, real64, int8
   use bob_kinds
   use bob_worm, only: bob_worm_chain, blake3_hash_string
-  use sov_monster_kernel, only: dp
   implicit none
   private
 
@@ -189,7 +188,7 @@ contains
   ! hex helpers (local — bob_worm bytes_to_hex is private)
   !═══════════════════════════════════════════════════════════════════
   pure function digest_to_hex(b) result(hex)
-    integer(int8), intent(in) :: b(32)
+    integer(i8), intent(in) :: b(32)
     character(len=64) :: hex
     character(len=16), parameter :: H = '0123456789abcdef'
     integer :: i, hi, lo
@@ -202,7 +201,7 @@ contains
   end function digest_to_hex
 
   pure function bytes_to_hex64(b, n) result(hex)
-    integer(int8), intent(in) :: b(:)
+    integer(i8), intent(in) :: b(:)
     integer,       intent(in) :: n
     character(len=64) :: hex
     character(len=16), parameter :: H = '0123456789abcdef'
@@ -252,7 +251,7 @@ contains
     character(len=*), intent(in) :: source_key
 
     type(knowledge_chunk) :: new_chunk
-    integer(int8) :: digest(32), sig_digest(32)
+    integer(i8) :: digest(32), sig_digest(32)
     character(len=:), allocatable :: material, sig_material
     integer :: n
 
@@ -350,7 +349,7 @@ contains
     class(knowledge_store), intent(in) :: self
     character(len=*), intent(in) :: chunk_id
     integer :: i
-    integer(int8) :: digest(32)
+    integer(i8) :: digest(32)
     character(len=64) :: recomputed
     character(len=:), allocatable :: material
 
