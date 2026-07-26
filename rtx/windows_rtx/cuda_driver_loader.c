@@ -2,6 +2,7 @@
  * PEB walk -> nvcuda.dll -> PE export table -> 25 CUDA functions
  * Janet kernel config uploaded to device constant memory on init
  */
+extern void sov_cuda_kernels_set_launch_fn(void*);
 typedef unsigned short     wchar_t;
 typedef unsigned long long uint64_t;
 typedef unsigned int       uint32_t;
@@ -210,6 +211,8 @@ static void resolve_cuda(void) {
     RESOLVE(nvcuda, cuEventDestroy_v2); RESOLVE(nvcuda, cuCtxSynchronize); RESOLVE(nvcuda, cuGetErrorString);
     RESOLVE(nvcuda, cuDeviceGetAttribute); RESOLVE(nvcuda, cuCtxGetDevice); RESOLVE(nvcuda, cuModuleUnload);
     RESOLVE(nvcuda, cuCtxDestroy_v2);
+    /* Hand resolved launch fn to the ROWM-gated kernel layer */
+    sov_cuda_kernels_set_launch_fn((void*)g_cuLaunchKernel);
 }
 
 int sov_cuda_init(void) {

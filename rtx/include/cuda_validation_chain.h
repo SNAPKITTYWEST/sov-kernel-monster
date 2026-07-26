@@ -67,6 +67,8 @@ int sov_rowm_check_authorized(const sov_rowm_record_t* rec,
 
 /* Kernel wrappers — implemented in cuda_kernels.c */
 void sov_cuda_kernels_set_auth(sov_rowm_record_t* rec, sov_cuda_auth_t* auth);
+/* Must be called after cuLaunchKernel is resolved from nvcuda.dll */
+void sov_cuda_kernels_set_launch_fn(void* fn);
 
 int sov_cuda_flash_attention(int seqs, int heads,
                              float* q, float* k, float* v, float* out,
