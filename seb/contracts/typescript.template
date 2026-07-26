@@ -1,0 +1,368 @@
+// SEB TypeScript Contract Template
+// Generated from: SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION.xml
+// Version: 1.0.0
+// Target: TypeScript Client Library
+
+import { z } from 'zod';
+import { ulid } from 'ulid';
+import { createHash } from 'crypto';
+
+// Branded types for type safety
+export type EventId = string & { readonly __brand: 'EventId' };
+export type PrincipalId = string & { readonly __brand: 'PrincipalId' };
+export type Hash = string & { readonly __brand: 'Hash' };
+export type Signature = string & { readonly __brand: 'Signature' };
+
+// Zod schemas for runtime validation
+export const NetworkPolicySchema = z.enum(['allow', 'deny', 'restricted']);
+export type NetworkPolicy = z.infer<typeof NetworkPolicySchema>;
+
+export const FilesystemPolicySchema = z.enum(['readonly', 'readwrite', 'deny']);
+export type FilesystemPolicy = z.infer<typeof FilesystemPolicySchema>;
+
+export const ConstraintsSchema = z.object({
+  network: NetworkPolicySchema,
+  max_runtime_ms: z.number().positive(),
+  max_memory_bytes: z.number().positive(),
+  filesystem: FilesystemPolicySchema,
+});
+export type Constraints = z.infer<typeof ConstraintsSchema>;
+
+export const IntentSchema = z.object({
+  action: z.string().min(1),
+  subject: z.string().min(1),
+  parameters: z.record(z.unknown()),
+});
+export type Intent = z.infer<typeof IntentSchema>;
+
+export const ContextSchema = z.object({
+  environment: z.string().min(1),
+  constraints: ConstraintsSchema,
+  metadata: z.record(z.unknown()),
+});
+export type Context = z.infer<typeof ContextSchema>;
+
+export const CredentialsSchema = z.object({
+  credential_type: z.string().min(1),
+  value: z.string().min(1),
+  signature: z.string().optional(),
+});
+export type Credentials = z.infer<typeof CredentialsSchema>;
+
+export const AuthoritySchema = z.object({
+  principal: z.string().min(1),
+  credentials: CredentialsSchema,
+  scope: z.array(z.string()),
+});
+export type Authority = z.infer<typeof AuthoritySchema>;
+
+export const ContinuationSchema = z.object({
+  step: z.number().int().positive(),
+  total_steps: z.number().int().positive(),
+  state: z.record(z.unknown()),
+});
+export type Continuation = z.infer<typeof ContinuationSchema>;
+
+export const EvidenceSchema = z.object({
+  evidence_type: z.string().min(1),
+  hash: z.string().min(1),
+  signature: z.string().min(1),
+  timestamp: z.string().datetime(),
+});
+export type Evidence = z.infer<typeof EvidenceSchema>;
+
+export const SealSchema = z.object({
+  hash: z.string().min(1),
+  signature: z.string().min(1),
+  public_key: z.string().min(1),
+  timestamp: z.string().datetime(),
+  algorithm: z.string().min(1),
+});
+export type Seal = z.infer<typeof SealSchema>;
+
+export const EventEnvelopeSchema = z.object({
+  type: z.string().min(1),
+  version: z.string().min(1),
+  id: z.string().min(1),
+  timestamp: z.string().datetime(),
+  intent: IntentSchema,
+  context: ContextSchema,
+  authority: AuthoritySchema,
+  continuation: ContinuationSchema.optional(),
+  evidence: z.array(EvidenceSchema).default([]),
+  seal: SealSchema.optional(),
+});
+export type EventEnvelope = z.infer<typeof EventEnvelopeSchema>;
+
+/**
+ * Result type for operations that can fail
+ */
+export type Result<T, E = Error> = 
+  | { ok: true; value: T }
+  | { ok: false; error: E };
+
+/**
+ * Create a successful Result
+ */
+export function Ok<T>(value: T): Result<T, never> {
+  return { ok: true, value };
+}
+
+/**
+ * Create a failed Result
+ */
+export function Err<E>(error: E): Result<never, E> {
+  return { ok: false, error };
+}
+
+/**
+ * Event envelope builder with fluent API
+ */
+export class EventEnvelopeBuilder {
+  private envelope: Partial<EventEnvelope>;
+
+  constructor(eventType: string) {
+    this.envelope = {
+      type: eventType,
+      version: '1.0.0',
+      id: ulid() as EventId,
+      timestamp: new Date().toISOString(),
+      evidence: [],
+    };
+  }
+
+  withIntent(intent: Intent): this {
+    this.envelope.intent = intent;
+    return this;
+  }
+
+  withContext(context: Context): this {
+    this.envelope.context = context;
+    return this;
+  }
+
+  withAuthority(authority: Authority): this {
+    this.envelope.authority = authority;
+    return this;
+  }
+
+  withContinuation(continuation: Continuation): this {
+    this.envelope.continuation = continuation;
+    return this;
+  }
+
+  addEvidence(evidence: Evidence): this {
+    this.envelope.evidence = [...(this.envelope.evidence || []), evidence];
+    return this;
+  }
+
+  build(): Result<EventEnvelope, z.ZodError> {
+    try {
+      const validated = EventEnvelopeSchema.parse(this.envelope);
+      return Ok(validated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return Err(error);
+      }
+      throw error;
+    }
+  }
+}
+
+/**
+ * Compute Blake3 hash of envelope (excluding seal)
+ */
+export function computeEnvelopeHash(envelope: EventEnvelope): Hash {
+  const envelopeCopy = { ...envelope };
+  delete envelopeCopy.seal;
+  const json = JSON.stringify(envelopeCopy);
+  // Note: In production, use actual Blake3 implementation
+  // This is a placeholder using SHA-256
+  const hash = createHash('sha256').update(json).digest('hex');
+  return hash as Hash;
+}
+
+/**
+ * Policy decision types
+ */
+export type PolicyDecision =
+  | { type: 'allow' }
+  | { type: 'deny'; reason: string }
+  | { type: 'require_evidence'; required: string[] };
+
+/**
+ * Policy gate interface
+ */
+export interface PolicyGate {
+  evaluate(envelope: EventEnvelope): Promise<Result<PolicyDecision, PolicyError>>;
+}
+
+export class PolicyError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
+    super(message);
+    this.name = 'PolicyError';
+  }
+}
+
+/**
+ * Route destination types
+ */
+export type RouteDestination =
+  | { type: 'adapter'; adapterId: string }
+  | { type: 'queue'; queueName: string }
+  | { type: 'reject'; reason: string };
+
+/**
+ * Routing engine interface
+ */
+export interface RoutingEngine {
+  route(envelope: EventEnvelope): Promise<Result<RouteDestination, RoutingError>>;
+}
+
+export class RoutingError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
+    super(message);
+    this.name = 'RoutingError';
+  }
+}
+
+/**
+ * Execution status types
+ */
+export type ExecutionStatus = 'success' | 'failure' | 'timeout' | 'denied';
+
+/**
+ * Execution metrics
+ */
+export interface ExecutionMetrics {
+  duration_ms: number;
+  memory_used_bytes: number;
+  network_calls: number;
+  filesystem_operations: number;
+}
+
+/**
+ * Execution result
+ */
+export interface ExecutionResult {
+  status: ExecutionStatus;
+  output: unknown;
+  evidence: Evidence[];
+  metrics: ExecutionMetrics;
+}
+
+/**
+ * Execution adapter interface
+ */
+export interface ExecutionAdapter {
+  execute(envelope: EventEnvelope): Promise<Result<ExecutionResult, ExecutionError>>;
+  capabilities(): string[];
+  constraints(): Constraints;
+}
+
+export class ExecutionError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly recoverable: boolean,
+  ) {
+    super(message);
+    this.name = 'ExecutionError';
+  }
+}
+
+/**
+ * SEB Client for interacting with the Sovereign Event Bus
+ */
+export class SEBClient {
+  constructor(
+    private readonly endpoint: string,
+    private readonly apiKey: string,
+  ) {}
+
+  /**
+   * Submit an event envelope to the bus
+   */
+  async submit(envelope: EventEnvelope): Promise<Result<string, Error>> {
+    try {
+      const response = await fetch(`${this.endpoint}/events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(envelope),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        return Err(new Error(`Failed to submit event: ${error}`));
+      }
+
+      const result = await response.json();
+      return Ok(result.id);
+    } catch (error) {
+      return Err(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+
+  /**
+   * Query event status
+   */
+  async getStatus(eventId: EventId): Promise<Result<ExecutionResult, Error>> {
+    try {
+      const response = await fetch(`${this.endpoint}/events/${eventId}`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        return Err(new Error(`Failed to get status: ${error}`));
+      }
+
+      const result = await response.json();
+      return Ok(result);
+    } catch (error) {
+      return Err(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+}
+
+/**
+ * Example usage
+ */
+export function createExampleEnvelope(): Result<EventEnvelope, z.ZodError> {
+  return new EventEnvelopeBuilder('snapkitty.intent.verify_proof')
+    .withIntent({
+      action: 'verify_proof',
+      subject: 'bundle:01J...',
+      parameters: {},
+    })
+    .withContext({
+      environment: 'production',
+      constraints: {
+        network: 'deny',
+        max_runtime_ms: 5000,
+        max_memory_bytes: 1024 * 1024,
+        filesystem: 'readonly',
+      },
+      metadata: {},
+    })
+    .withAuthority({
+      principal: 'user:alice',
+      credentials: {
+        credential_type: 'api_key',
+        value: 'sk_...',
+      },
+      scope: ['read', 'verify'],
+    })
+    .build();
+}

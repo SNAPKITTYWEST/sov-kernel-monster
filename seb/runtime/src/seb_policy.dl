@@ -1,0 +1,248 @@
+// seb_policy.dl — SEB Sovereign Policy Engine (Souffle)
+//
+// Cherry-picked from systemic-intelligence/datalog/ and merged with
+// SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION.xml L3 layer.
+//
+// Three source layers combined:
+//   1. systemic-intelligence authority rules  (who can do what)
+//   2. systemic-intelligence base facts       (actor/capability/target registry)
+//   3. SEB master spec policy strata          (plasma gate, fiscal gate, kernel_authorize)
+//
+// Actor → SEB Agent mapping:
+//   1 "bob"         → devops_001   (execute, write)       → INFRA_PROVISION, CONFIG_DEPLOY
+//   2 "metatron"    → arch_001     (read, verify)         → ARCH_DECISION
+//   3 "edaulc"      → treasury_001 (observe)              → PROBLEM_SOLVED, ATTACK_DETECTED
+//   4 "autonomous"  → council_001  (vacuum_collapse)      → SOVEREIGN_ROOT
+//
+// Compile: souffle -c seb_policy.dl -o seb_policy
+// Link: shared lib for Erlang port (seb_datalog_bridge.erl)
+
+// ── TYPE DECLARATIONS ──────────────────────────────────────────────────────
+
+.type AgentID    = symbol
+.type ActorNum   = number
+.type EventID    = unsigned
+.type Hash32     = symbol
+.type Capability = symbol
+.type EventType  = unsigned
+.type Weight     = unsigned
+
+// ── BASE FACTS (from systemic-intelligence/datalog/facts/base.dl) ─────────
+// Mapped to SEB agent registry (GenesisConfig.toml)
+
+.decl actor(id: ActorNum, name: AgentID)
+actor(1, "bob").           // devops_001
+actor(2, "metatron").      // arch_001
+actor(3, "edaulc").        // treasury_001 / shadow builder
+actor(4, "autonomous").    // council_001
+
+.decl capability(actor_id: ActorNum, cap: Capability)
+capability(1, "execute").
+capability(1, "write").
+capability(2, "read").
+capability(2, "verify").
+capability(3, "observe").
+capability(4, "vacuum_collapse").
+
+.decl target(id: number, resource: symbol)
+target(100, "memory").
+target(101, "stack").
+target(102, "entropy_pool").
+target(200, "seb_chain").       // SEB WORM chain
+target(201, "seb_partition").   // SEB partition
+target(202, "seb_fiscal").      // SEB fiscal ledger
+
+.decl precondition_met(actor_id: ActorNum, target_id: number)
+precondition_met(1, 100).
+precondition_met(1, 101).
+precondition_met(1, 200).    // bob can write to chain
+precondition_met(1, 201).    // bob can write to partition
+precondition_met(2, 100).
+precondition_met(2, 200).    // metatron can read chain
+precondition_met(3, 200).    // edaulc observes chain
+precondition_met(4, 102).
+precondition_met(4, 202).    // council controls fiscal
+
+// ── AUTHORITY RULES (from systemic-intelligence/datalog/rules/authority.dl)
+
+.decl si_authorized(actor_id: ActorNum, target_id: number, cap: Capability)
+.decl si_denied(actor_id: ActorNum, target_id: number, reason: symbol)
+
+si_authorized(A, T, C) :-
+    actor(A, _),
+    capability(A, C),
+    target(T, _),
+    precondition_met(A, T).
+
+si_denied(A, T, "no_capability") :-
+    actor(A, _),
+    target(T, _),
+    !capability(A, _).
+
+si_denied(A, T, "precondition_failed") :-
+    actor(A, _),
+    capability(A, _),
+    target(T, _),
+    !precondition_met(A, T).
+
+// ── SEB INPUT FACTS (populated by Erlang runtime) ─────────────────────────
+
+.decl agent_competency(a: AgentID, c: Capability)
+.decl agent_status(a: AgentID, s: symbol)
+.decl event_schema(t: EventType, schema_hash: Hash32, req_cap: Capability, weight: Weight)
+.decl event_header(offset: EventID, agent: AgentID, etype: EventType,
+                    prev_hash: Hash32, event_hash: Hash32, sig: symbol, payload_hash: Hash32)
+.decl bifrost_confirmed(offset: EventID)
+
+// Bridge systemic-intelligence actors to SEB agents
+agent_competency("bob",        "execute") :- capability(1, "execute").
+agent_competency("bob",        "write")   :- capability(1, "write").
+agent_competency("metatron",   "read")    :- capability(2, "read").
+agent_competency("metatron",   "verify")  :- capability(2, "verify").
+agent_competency("edaulc",     "observe") :- capability(3, "observe").
+agent_competency("autonomous", "vacuum_collapse") :- capability(4, "vacuum_collapse").
+
+// ── STRATUM 1: PLASMA GATE + WORM INTEGRITY ────────────────────────────────
+
+.decl verified_agent(a: AgentID, offset: EventID)
+verified_agent(A, O) :-
+    event_header(O, A, _, _, EH, Sig, PH),
+    ed25519_verify(A, EH, Sig),
+    lattice_verify(PH, EH),         // GF(2^8) lattice circuit replaces blake3
+    bifrost_confirmed(O).
+
+// ── STRATUM 2: COMPETENCY ROUTING ─────────────────────────────────────────
+
+.decl authorized(a: AgentID, offset: EventID)
+authorized(A, O) :-
+    verified_agent(A, O),
+    event_header(O, _, ET, _, _, _, _),
+    event_schema(ET, _, C, _),
+    agent_competency(A, C),
+    agent_status(A, "active"),
+    !agent_status(A, "revoked").
+
+// ── STRATUM 3: CONSTITUTIONAL GATE (from SEB_Constitution.agda) ───────────
+// Maps Agda Verdict to Datalog fact.
+// denied-no-exec theorem: if constitution_denied(A,O) then !kernel_authorize(A,O)
+
+.decl constitution_denied(a: AgentID, offset: EventID, reason: symbol)
+
+// Capability mismatch (Theorem 4: wrong-cap-denied)
+constitution_denied(A, O, "capability_mismatch") :-
+    event_header(O, A, ET, _, _, _, _),
+    event_schema(ET, _, ReqCap, _),
+    !agent_competency(A, ReqCap).
+
+// SOVEREIGN_ROOT requires vacuum_collapse exclusively (Theorem 5)
+constitution_denied(A, O, "requires_vacuum_collapse") :-
+    event_header(O, A, 0xFFFF, _, _, _, _),    // SOVEREIGN_ROOT = 0xFFFF
+    !agent_competency(A, "vacuum_collapse").
+
+// ── STRATUM 4: FISCAL GATE ─────────────────────────────────────────────────
+
+.decl fiscal_ok(a: AgentID, offset: EventID)
+fiscal_ok(A, O) :-
+    event_header(O, _, ET, _, _, _, _),
+    event_schema(ET, _, _, W),
+    W != 0xFFFFFFFF.
+fiscal_ok(A, O) :-
+    event_header(O, _, ET, _, _, _, _),
+    event_schema(ET, _, _, W),
+    W = 0xFFFFFFFF,
+    treasury_balance(A, B),
+    B >= W.
+
+// ── STRATUM 5: FINAL AUTHORIZATION GATE ───────────────────────────────────
+
+.decl kernel_authorize(a: AgentID, offset: EventID)
+kernel_authorize(A, O) :-
+    authorized(A, O),
+    fiscal_ok(A, O),
+    !constitution_denied(A, O, _).   // Constitution gates must all pass
+
+// ── STRATUM 6: P/NP CONVERGENCE EVENTS (from seb_pnp_bridge.erl) ─────────
+
+.decl convergence_event(offset: EventID, event_type: symbol, delta: float)
+.decl attack_condition(reason: symbol)
+
+attack_condition("negative_universe_sum") :-
+    convergence_event(_, "attack_detected", D),
+    D < 0.0.
+
+// ── OUTPUT RELATIONS ───────────────────────────────────────────────────────
+
+.decl si_actor_authorized(name: AgentID, resource: symbol)
+si_actor_authorized(N, R) :-
+    actor(A, N),
+    target(T, R),
+    si_authorized(A, T, _).
+
+.output kernel_authorize
+.output si_authorized
+.output si_denied
+.output constitution_denied
+.output attack_condition
+.output si_actor_authorized
+
+// ── EXTERNAL PRIMITIVES (Erlang port provides these) ──────────────────────
+
+.external ed25519_verify(pubkey: symbol, msg: symbol, sig: symbol) : bool
+.external lattice_verify(prev_hash: symbol, event_hash: symbol) : bool
+.external treasury_balance(agent: symbol, balance: unsigned) : bool
+
+
+// __ STRATUM 7: FLOATING AGENT DETECTION ____________________________________
+// Cherry-picked from exo-synchronicity/logic/datalog/reachability.dl
+//
+// A floating_agent is an actor that exists in the registry but is never
+// authorized for any target or event type.
+// This is the Datalog version of exo-synchronicity's floating_port:
+//   floating_port(p) :- bound_port(p), !reachable("sigma", p)
+// Here: floating_agent(A) :- actor(A,_), !si_authorized(A,_,_)
+//
+// Floating agents are a configuration error: they consume a partition slot
+// but can never emit or receive events. Detected at policy compile time.
+
+.decl floating_agent(a: AgentID, reason: symbol)
+.decl reachable_agent(a: AgentID)
+
+// An agent is reachable if it has at least one authorized action
+reachable_agent(A) :- si_authorized(Num, _, _), actor(Num, A).
+reachable_agent(A) :- kernel_authorize(A, _).
+
+// A floating agent exists in registry but has no authorized path
+floating_agent(A, "no_authorized_target") :-
+    actor(_, A),
+    !reachable_agent(A).
+
+// An agent is floating if their only capability is revoked
+floating_agent(A, "all_capabilities_revoked") :-
+    actor(_, A),
+    agent_status(A, "revoked").
+
+// Transitive reachability: if A can authorize B's action, A is not floating
+// (mirrors reachable(a,b) :- edge(a,b) from exo-synchronicity)
+.decl agent_edge(from_agent: AgentID, to_agent: AgentID)
+agent_edge(A, B) :-
+    kernel_authorize(A, O),
+    event_header(O, B, _, _, _, _, _).
+
+.decl agent_reachable(a: AgentID, b: AgentID)
+agent_reachable(A, B) :- agent_edge(A, B).
+agent_reachable(A, C) :- agent_reachable(A, B), agent_edge(B, C).
+
+.output floating_agent
+.output reachable_agent
+
+// __ STRATUM 8: P/NP CONVERGENCE EVENTS ____________________________________
+// (from seb_pnp_bridge.erl integration)
+
+.decl convergence_event(offset: EventID, etype: symbol, delta: float)
+.decl attack_condition(reason: symbol)
+
+attack_condition("negative_universe_sum") :-
+    convergence_event(_, "attack_detected", D),
+    D < 0.0.
+
+.output attack_condition

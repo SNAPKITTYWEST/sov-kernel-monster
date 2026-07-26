@@ -1,0 +1,49 @@
+## Sovereign Event Bus (SEB) - Erlang VM Configuration
+
+## Name of the Erlang node
+-name seb@localhost
+
+## Use kernel polling for better I/O performance
++K true
+
+## Enable SMP
++sbt db
+
+## Number of scheduler threads (default: number of CPU cores)
+## Uncomment to set explicitly:
+## +S 8:8
+
+## Memory settings
+## Total memory reserved for the Erlang runtime
++MBt private
++MBssd 128
++MBmsd 256
+
+## Heap settings
++h 256
+
+## Port limit
++Q 65536
+
+## Maximum number of processes
++P 262144
+
+## Process spawning rate limit
++SPe 1000
+
+## I/O settings
++A 256
+
+## Enable eager GC
+-env ERL_EAGER_GC yes
+
+## Log configuration
+## Level: critical, error, warning, notice, info, debug
++evm
+
+## Distribution settings
+-kernel inet_dist_listen_min 9001 inet_dist_listen_max 9999
+
+## Application specific
+-env SEB_LOG_LEVEL info
+-env SEB_CLUSTER_MODE distributed

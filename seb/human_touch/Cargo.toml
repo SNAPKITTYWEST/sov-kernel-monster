@@ -1,0 +1,41 @@
+[workspace]
+members = []
+
+[package]
+name = "seb-human-touch"
+version = "1.0.0"
+edition = "2021"
+description = "Human-centered review gate for SEB — ensures all code changes receive human approval before landing"
+authors = ["SnapKitty"]
+license = "Proprietary"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+git2 = "0.21"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+anyhow = "1.0"
+thiserror = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+async-trait = "0.1"
+parking_lot = "0.12"
+dashmap = "5.5"
+crossbeam-channel = "0.5"
+blake3 = "1.5"
+ed25519-dalek = "2.1"
+hex = "0.4"
+regex = "1.10"
+tempfile = "3.8"
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockito = "1.2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

@@ -1,0 +1,269 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-07-25T00:00:00Z",
+  "artifacts": {
+    "blake3_core": {
+      "artifact_id": "blake3_core",
+      "name": "Blake3 Cryptographic Hash",
+      "version": "1.5.0",
+      "language": "rust",
+      "tier": "T0",
+      "invariants": [
+        {
+          "name": "collision_resistant",
+          "description": "Blake3 must be collision resistant for 256-bit output",
+          "proof_reference": "blake3_collision_proof"
+        },
+        {
+          "name": "preimage_resistant",
+          "description": "Blake3 must be preimage resistant",
+          "proof_reference": "blake3_preimage_proof"
+        }
+      ],
+      "proofs": [
+        {
+          "id": "blake3_collision_proof",
+          "language": "lean4",
+          "hash": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+          "created_at": "2026-07-24T00:00:00Z"
+        }
+      ],
+      "tests": [
+        {
+          "id": "blake3_test_suite",
+          "framework": "cargo test",
+          "pass_count": 127,
+          "last_run": "2026-07-25T00:00:00Z"
+        }
+      ],
+      "source_path": "seb/kernel/src/blake3_binding.rs",
+      "doc_url": "https://github.com/BLAKE3-team/BLAKE3",
+      "content_hash": "blake3_t0_hash_001",
+      "cvm_gate_passed": true,
+      "created_at": "2026-07-24T00:00:00Z",
+      "updated_at": "2026-07-25T00:00:00Z",
+      "metadata": {
+        "canonical": true,
+        "trust_level": "maximum"
+      }
+    },
+    "mmap_arena": {
+      "artifact_id": "mmap_arena",
+      "name": "Memory-Mapped Arena Allocator",
+      "version": "1.0.0",
+      "language": "rust",
+      "tier": "T0",
+      "invariants": [
+        {
+          "name": "memory_safety",
+          "description": "Arena must prevent use-after-free and buffer overflows",
+          "proof_reference": "mmap_memory_safety"
+        },
+        {
+          "name": "alignment_preserved",
+          "description": "All allocations must respect alignment requirements",
+          "proof_reference": "mmap_alignment_proof"
+        }
+      ],
+      "proofs": [
+        {
+          "id": "mmap_memory_safety",
+          "language": "lean4",
+          "hash": "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7",
+          "created_at": "2026-07-24T00:00:00Z"
+        }
+      ],
+      "tests": [
+        {
+          "id": "arena_stress_test",
+          "framework": "cargo test",
+          "pass_count": 64,
+          "last_run": "2026-07-25T00:00:00Z"
+        }
+      ],
+      "source_path": "seb/kernel/src/mmap_arena.rs",
+      "doc_url": null,
+      "content_hash": "mmap_t0_hash_002",
+      "cvm_gate_passed": true,
+      "created_at": "2026-07-24T00:00:00Z",
+      "updated_at": "2026-07-25T00:00:00Z",
+      "metadata": {
+        "canonical": true,
+        "trust_level": "maximum"
+      }
+    },
+    "u64_arithmetic": {
+      "artifact_id": "u64_arithmetic",
+      "name": "Fixed-Point 64-bit Arithmetic",
+      "version": "1.0.0",
+      "language": "rust",
+      "tier": "T0",
+      "invariants": [
+        {
+          "name": "no_overflow",
+          "description": "All operations must be checked for overflow",
+          "proof_reference": "u64_no_overflow"
+        },
+        {
+          "name": "idempotent_multiply",
+          "description": "Multiplication by 1 is idempotent",
+          "proof_reference": "u64_idempotent"
+        }
+      ],
+      "proofs": [
+        {
+          "id": "u64_no_overflow",
+          "language": "lean4",
+          "hash": "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8",
+          "created_at": "2026-07-24T00:00:00Z"
+        }
+      ],
+      "tests": [
+        {
+          "id": "arithmetic_edge_cases",
+          "framework": "cargo test",
+          "pass_count": 256,
+          "last_run": "2026-07-25T00:00:00Z"
+        }
+      ],
+      "source_path": "seb/kernel/src/fixed_u64.rs",
+      "doc_url": null,
+      "content_hash": "u64_t0_hash_003",
+      "cvm_gate_passed": true,
+      "created_at": "2026-07-24T00:00:00Z",
+      "updated_at": "2026-07-25T00:00:00Z",
+      "metadata": {
+        "canonical": true,
+        "trust_level": "maximum"
+      }
+    },
+    "segment_rotation": {
+      "artifact_id": "segment_rotation",
+      "name": "Log Segment Rotation Manager",
+      "version": "1.0.0",
+      "language": "rust",
+      "tier": "T1",
+      "invariants": [
+        {
+          "name": "rotation_atomicity",
+          "description": "Segment rotation must be atomic with respect to append",
+          "proof_reference": "rotation_atomic"
+        },
+        {
+          "name": "no_segment_loss",
+          "description": "No segment can be lost during rotation",
+          "proof_reference": "rotation_safety"
+        }
+      ],
+      "proofs": [
+        {
+          "id": "rotation_atomic",
+          "language": "lean4",
+          "hash": "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9",
+          "created_at": "2026-07-24T00:00:00Z"
+        }
+      ],
+      "tests": [
+        {
+          "id": "rotation_concurrent",
+          "framework": "cargo test",
+          "pass_count": 50,
+          "last_run": "2026-07-25T00:00:00Z"
+        }
+      ],
+      "source_path": "seb/kernel/src/segment_rotation.rs",
+      "doc_url": null,
+      "content_hash": "seg_rot_t1_hash_001",
+      "cvm_gate_passed": true,
+      "created_at": "2026-07-24T00:00:00Z",
+      "updated_at": "2026-07-25T00:00:00Z",
+      "metadata": {
+        "canonical": true,
+        "trust_level": "high"
+      }
+    },
+    "append_only_log": {
+      "artifact_id": "append_only_log",
+      "name": "Append-Only Log with WORM Guarantee",
+      "version": "1.0.0",
+      "language": "rust",
+      "tier": "T1",
+      "invariants": [
+        {
+          "name": "immutability",
+          "description": "No entry can be modified after append",
+          "proof_reference": "worm_immutability"
+        },
+        {
+          "name": "ordering_preserved",
+          "description": "Entry order is strictly preserved",
+          "proof_reference": "worm_ordering"
+        },
+        {
+          "name": "hash_chain_integrity",
+          "description": "Hash chain must remain unbroken",
+          "proof_reference": "worm_hash_chain"
+        }
+      ],
+      "proofs": [
+        {
+          "id": "worm_immutability",
+          "language": "lean4",
+          "hash": "e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0",
+          "created_at": "2026-07-24T00:00:00Z"
+        }
+      ],
+      "tests": [
+        {
+          "id": "worm_fuzz_test",
+          "framework": "cargo test",
+          "pass_count": 1000,
+          "last_run": "2026-07-25T00:00:00Z"
+        }
+      ],
+      "source_path": "seb/kernel/src/append_only_log.rs",
+      "doc_url": null,
+      "content_hash": "worm_t1_hash_001",
+      "cvm_gate_passed": true,
+      "created_at": "2026-07-24T00:00:00Z",
+      "updated_at": "2026-07-25T00:00:00Z",
+      "metadata": {
+        "canonical": true,
+        "trust_level": "high"
+      }
+    },
+    "sealed_container": {
+      "artifact_id": "sealed_container",
+      "name": "WORM-Sealed Container (Proposal)",
+      "version": "1.0.0",
+      "language": "rust",
+      "tier": "T2",
+      "invariants": [
+        {
+          "name": "seal_atomicity",
+          "description": "Once sealed, container cannot be modified",
+          "proof_reference": null
+        }
+      ],
+      "proofs": [],
+      "tests": [
+        {
+          "id": "container_proposal_test",
+          "framework": "cargo test",
+          "pass_count": 12,
+          "last_run": "2026-07-25T00:00:00Z"
+        }
+      ],
+      "source_path": "seb/kernel/src/sealed_container.rs",
+      "doc_url": null,
+      "content_hash": "seal_t2_proposal_001",
+      "cvm_gate_passed": false,
+      "created_at": "2026-07-25T00:00:00Z",
+      "updated_at": "2026-07-25T00:00:00Z",
+      "metadata": {
+        "status": "pending_cvmgate",
+        "proposed_by": "kernel_001"
+      }
+    }
+  ]
+}

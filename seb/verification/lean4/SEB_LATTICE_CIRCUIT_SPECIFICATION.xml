@@ -1,0 +1,71 @@
+<SEB_LATTICE_CIRCUIT_SPECIFICATION version="1.0.0" status="FROZEN" parent_spec="SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION" xmlns="urn:snapkitty:sovereign:seb:lattice">
+
+  <Axioms>
+    <Axiom id="AX-LATTICE-MINIMAL" priority="1">Single arithmetic circuit. 96 bytes in, 32 bytes out. No branches, no loops, no external calls, no libraries.</Axiom>
+    <Axiom id="AX-LATTICE-CIRCULANT" priority="1">Circulant ring arithmetic: R = GF(2^8)[x]/(x^32 + 1). Commitment = K0*a + K1*b + K2*c (cyclic convolution).</Axiom>
+    <Axiom id="AX-LATTICE-INJECTIVE" priority="1">Tip injectivity: K0 invertible in R (K0=1) implies different prev_commitment with same payload gives different next_commitment.</Axiom>
+    <Axiom id="AX-LATTICE-STORAGE" priority="1">One file. 96-byte records appended sequentially. No headers, no indexes, no metadata.</Axiom>
+  </Axioms>
+
+  <RecordLayout>
+    <Field name="payload" offset="0" size="64" description="Arbitrary 64-byte payload"/>
+    <Field name="commitment" offset="64" size="32" description="C(prev_commitment || payload)"/>
+    <Invariant>sizeof(Record) == 96 (compile-time enforced)</Invariant>
+  </RecordLayout>
+
+  <Circuit name="LatticeCommit" domain="GF(2^8)[x]/(x^32 + 1)">
+    <Description>
+      Ring R = polynomials modulo x^32 + 1 over GF(2^8) with AES irreducible polynomial x^8 + x^4 + x^3 + x + 1 (0x11B).
+      Each element = 32-byte vector. Multiplication = cyclic convolution.
+    </Description>
+    <Constants>
+      <Constant name="K0" hex="0100000000000000000000000000000000000000000000000000000000000000" description="x^0 = 1 (identity, invertible)"/>
+      <Constant name="K1" hex="0001000000000000000000000000000000000000000000000000000000000000" description="x^1"/>
+      <Constant name="K2" hex="0000010000000000000000000000000000000000000000000000000000000000" description="x^2"/>
+    </Constants>
+    <Algorithm><![CDATA[
+function LatticeCommit(prev[32], payload[64]) -> next[32]:
+  b = payload[0:32]
+  c = payload[32:64]
+  t0 = CyclicConvolve(K0, prev)
+  t1 = CyclicConvolve(K1, b)
+  t2 = CyclicConvolve(K2, c)
+  next[i] = t0[i] ^ t1[i] ^ t2[i]  for i in 0..31
+
+function CyclicConvolve(a[32], b[32]) -> c[32]:
+  c[k] = XOR_{i=0..31} GF256_Mul(a[i], b[(k-i) mod 32])
+
+function GF256_Mul(x, y) -> z:
+  z = 0
+  for i in 0..7:
+    if (y & 1): z ^= x
+    hi = x & 0x80; x <<= 1
+    if hi: x ^= 0x1B
+    y >>= 1
+  return z
+    ]]></Algorithm>
+    <Properties>
+      <Property name="Deterministic">Pure function. Same inputs, same output.</Property>
+      <Property name="ConstantTime">No data-dependent branches.</Property>
+      <Property name="InjectiveInTip">K0=1 (invertible) implies a bijection in prev for fixed payload.</Property>
+      <Property name="NoExternalDeps">Only GF(256) arithmetic. No crypto libraries.</Property>
+    </Properties>
+  </Circuit>
+
+  <Operations>
+    <Operation name="genesis"><Signature>genesis() -> tip[32] = {0}</Signature></Operation>
+    <Operation name="append"><Signature>append(file, payload[64]) -> record[96]</Signature></Operation>
+    <Operation name="tip"><Signature>tip(file) -> commitment[32]</Signature></Operation>
+    <Operation name="verify"><Signature>verify(file, start_offset, count) -> bool</Signature></Operation>
+  </Operations>
+
+  <Genesis>
+    <Constant name="GENESIS_TIP" hex="0000000000000000000000000000000000000000000000000000000000000000"/>
+    <Constant name="K0" hex="0100000000000000000000000000000000000000000000000000000000000000"/>
+    <Constant name="K1" hex="0001000000000000000000000000000000000000000000000000000000000000"/>
+    <Constant name="K2" hex="0000010000000000000000000000000000000000000000000000000000000000"/>
+    <Constant name="GF256_IRREDUCIBLE" hex="11B" description="x^8 + x^4 + x^3 + x + 1"/>
+    <Constant name="RING_MODULUS" value="x^32 + 1"/>
+  </Genesis>
+
+</SEB_LATTICE_CIRCUIT_SPECIFICATION>

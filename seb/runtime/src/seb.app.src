@@ -1,0 +1,19 @@
+{application, seb,
+ [{description, "Sovereign Event Bus - L2 Erlang/OTP Runtime"},
+  {vsn, "1.0.0"},
+  {registered, [seb_sup, seb_agent_sup, seb_partition_mgr, seb_datalog_bridge, seb_kernel_nif]},
+  {applications, [kernel, stdlib, sasl, telemetry]},
+  {mod, {seb_app, []}},
+  {env, []},
+
+  %% Package metadata
+  {licenses, ["Apache 2.0"]},
+  {links, [{"GitHub", "https://github.com/SNAPKITTYWEST/seb"},
+           {"Docs", "https://snapkitty.dev/seb"}]},
+
+  %% Contact
+  {maintainers, ["SnapKitty", "Ahmad"]},
+
+  %% Build metadata
+  {build_tools, ["rebar3"]}
+ ]}.

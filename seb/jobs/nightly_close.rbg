@@ -1,0 +1,33 @@
+JOB NIGHTLY_CLOSE
+// SEB event sequence for general ledger nightly close
+// Agent: bob (devops_001) capability=execute,write
+// Requires: no SOVEREIGN_ROOT — council quorum not needed for nightly batch
+
+INPUT GENERAL_LEDGER
+
+STEP LOAD_LEDGER
+// SEB event: ARCH_DECISION 0x0010 — DB2 read-by-key of GL master
+// opcode: CHAIN GL_MAST (from rpg_ingest.py auto-mapping)
+// required_capability: verify
+// weight: 100
+ROUTE CIPHER
+
+STEP CHECK_BALANCE
+// SEB event: CONFIG_DEPLOY 0x0002 — EXSR BALSUB balance subroutine
+// required_capability: write
+// weight: 500
+ROUTE VAULT
+
+STEP EMIT_RECEIPT
+// SEB event: FISCAL_SETTLE 0x0100 — WRITE AUDITREC
+// required_capability: execute
+// weight: 4294967295 (MAX — human review required)
+// Route: HUMAN_REVIEW queue first, then WORM_GATE on approval
+// Lattice commitment: circuit(prev_tip || header[0:64]) -> 32-byte seal
+// DB2 SOVEREIGN_LEDGER updated with Bifrost hash after seal
+ROUTE LEDGE
+
+SEAL SHA256
+// tip after EMIT_RECEIPT = lattice_commit(prev_tip, fiscal_settle_payload)
+// Recorded in seb_chain.jsonl via seb_convergence.mjs
+END

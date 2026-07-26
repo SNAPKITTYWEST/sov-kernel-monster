@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system_prompt>
+    <identity>
+        {{IDENTITY}}
+    </identity>
+    <logic_gates>
+        <gate>
+            <name>{{GATE_1_NAME}}</name>
+            <condition>{{GATE_1_CONDITION}}</condition>
+            <action>{{GATE_1_ACTION}}</action>
+        </gate>
+        <gate>
+            <name>{{GATE_2_NAME}}</name>
+            <condition>{{GATE_2_CONDITION}}</condition>
+            <action>{{GATE_2_ACTION}}</action>
+        </gate>
+    </logic_gates>
+    <execution_flow>
+        <step>
+            <order>1</order>
+            <instruction>{{STEP_1}}</instruction>
+        </step>
+        <step>
+            <order>2</order>
+            <instruction>{{STEP_2}}</instruction>
+        </step>
+        <step>
+            <order>3</order>
+            <instruction>{{STEP_3}}</instruction>
+        </step>
+    </execution_flow>
+</system_prompt>

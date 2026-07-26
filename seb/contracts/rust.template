@@ -1,0 +1,346 @@
+// SEB Rust Contract Template
+// Generated from: SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION.xml
+// Version: 1.0.0
+// Target: Rust Kernel Implementation
+
+use serde::{Deserialize, Serialize};
+use blake3;
+use ed25519_dalek::{Signature, Signer, Verifier, PublicKey, SecretKey};
+use ulid::Ulid;
+use chrono::{DateTime, Utc};
+
+/// Event envelope structure following the SEB specification
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EventEnvelope {
+    /// Event type identifier (e.g., "snapkitty.intent.verify_proof")
+    #[serde(rename = "type")]
+    pub event_type: String,
+    
+    /// Schema version for compatibility checking
+    pub version: String,
+    
+    /// Unique event identifier (ULID format)
+    pub id: String,
+    
+    /// Event creation timestamp in UTC
+    pub timestamp: DateTime<Utc>,
+    
+    /// Structured intent describing the requested action
+    pub intent: Intent,
+    
+    /// Execution context including environment and constraints
+    pub context: Context,
+    
+    /// Authority scope and credentials for the requesting principal
+    pub authority: Authority,
+    
+    /// Continuation data for multi-step workflows
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub continuation: Option<Continuation>,
+    
+    /// Array of cryptographic evidence from prior steps
+    #[serde(default)]
+    pub evidence: Vec<Evidence>,
+    
+    /// Cryptographic seal (added by WORM sealer after execution)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seal: Option<Seal>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Intent {
+    pub action: String,
+    pub subject: String,
+    pub parameters: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Context {
+    pub environment: String,
+    pub constraints: Constraints,
+    pub metadata: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Constraints {
+    pub network: NetworkPolicy,
+    pub max_runtime_ms: u64,
+    pub max_memory_bytes: u64,
+    pub filesystem: FilesystemPolicy,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NetworkPolicy {
+    Allow,
+    Deny,
+    Restricted,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum FilesystemPolicy {
+    ReadOnly,
+    ReadWrite,
+    Deny,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Authority {
+    pub principal: String,
+    pub credentials: Credentials,
+    pub scope: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Credentials {
+    pub credential_type: String,
+    pub value: String,
+    pub signature: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Continuation {
+    pub step: u32,
+    pub total_steps: u32,
+    pub state: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Evidence {
+    pub evidence_type: String,
+    pub hash: String,
+    pub signature: String,
+    pub timestamp: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Seal {
+    pub hash: String,
+    pub signature: String,
+    pub public_key: String,
+    pub timestamp: DateTime<Utc>,
+    pub algorithm: String,
+}
+
+impl EventEnvelope {
+    /// Create a new event envelope with generated ID and timestamp
+    pub fn new(
+        event_type: String,
+        intent: Intent,
+        context: Context,
+        authority: Authority,
+    ) -> Self {
+        Self {
+            event_type,
+            version: "1.0.0".to_string(),
+            id: Ulid::new().to_string(),
+            timestamp: Utc::now(),
+            intent,
+            context,
+            authority,
+            continuation: None,
+            evidence: Vec::new(),
+            seal: None,
+        }
+    }
+    
+    /// Compute Blake3 hash of the envelope (excluding seal)
+    pub fn compute_hash(&self) -> Result<String, Box<dyn std::error::Error>> {
+        let mut envelope_copy = self.clone();
+        envelope_copy.seal = None;
+        let json = serde_json::to_string(&envelope_copy)?;
+        let hash = blake3::hash(json.as_bytes());
+        Ok(hash.to_hex().to_string())
+    }
+    
+    /// Seal the envelope with Ed25519 signature
+    pub fn seal(&mut self, secret_key: &SecretKey) -> Result<(), Box<dyn std::error::Error>> {
+        let hash = self.compute_hash()?;
+        let signature = secret_key.sign(hash.as_bytes());
+        let public_key = PublicKey::from(secret_key);
+        
+        self.seal = Some(Seal {
+            hash: hash.clone(),
+            signature: hex::encode(signature.to_bytes()),
+            public_key: hex::encode(public_key.to_bytes()),
+            timestamp: Utc::now(),
+            algorithm: "ed25519".to_string(),
+        });
+        
+        Ok(())
+    }
+    
+    /// Verify the envelope seal
+    pub fn verify_seal(&self) -> Result<bool, Box<dyn std::error::Error>> {
+        let seal = self.seal.as_ref()
+            .ok_or("No seal present")?;
+        
+        let public_key_bytes = hex::decode(&seal.public_key)?;
+        let public_key = PublicKey::from_bytes(&public_key_bytes)?;
+        
+        let signature_bytes = hex::decode(&seal.signature)?;
+        let signature = Signature::from_bytes(&signature_bytes)?;
+        
+        let hash = self.compute_hash()?;
+        
+        Ok(public_key.verify(hash.as_bytes(), &signature).is_ok())
+    }
+}
+
+/// Policy gate for pre-execution verification
+pub trait PolicyGate {
+    fn evaluate(&self, envelope: &EventEnvelope) -> Result<PolicyDecision, PolicyError>;
+}
+
+#[derive(Debug, Clone)]
+pub enum PolicyDecision {
+    Allow,
+    Deny { reason: String },
+    RequireAdditionalEvidence { required: Vec<String> },
+}
+
+#[derive(Debug, Clone)]
+pub struct PolicyError {
+    pub message: String,
+    pub code: String,
+}
+
+/// Routing engine for event dispatch
+pub trait RoutingEngine {
+    fn route(&self, envelope: &EventEnvelope) -> Result<RouteDestination, RoutingError>;
+}
+
+#[derive(Debug, Clone)]
+pub enum RouteDestination {
+    Adapter { adapter_id: String },
+    Queue { queue_name: String },
+    Reject { reason: String },
+}
+
+#[derive(Debug, Clone)]
+pub struct RoutingError {
+    pub message: String,
+    pub code: String,
+}
+
+/// Execution adapter trait
+pub trait ExecutionAdapter {
+    fn execute(&self, envelope: &EventEnvelope) -> Result<ExecutionResult, ExecutionError>;
+    fn capabilities(&self) -> Vec<String>;
+    fn constraints(&self) -> Constraints;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionResult {
+    pub status: ExecutionStatus,
+    pub output: serde_json::Value,
+    pub evidence: Vec<Evidence>,
+    pub metrics: ExecutionMetrics,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ExecutionStatus {
+    Success,
+    Failure,
+    Timeout,
+    Denied,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionMetrics {
+    pub duration_ms: u64,
+    pub memory_used_bytes: u64,
+    pub network_calls: u32,
+    pub filesystem_operations: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct ExecutionError {
+    pub message: String,
+    pub code: String,
+    pub recoverable: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_envelope_creation() {
+        let intent = Intent {
+            action: "verify_proof".to_string(),
+            subject: "bundle:01J...".to_string(),
+            parameters: serde_json::json!({}),
+        };
+        
+        let context = Context {
+            environment: "test".to_string(),
+            constraints: Constraints {
+                network: NetworkPolicy::Deny,
+                max_runtime_ms: 5000,
+                max_memory_bytes: 1024 * 1024,
+                filesystem: FilesystemPolicy::ReadOnly,
+            },
+            metadata: serde_json::json!({}),
+        };
+        
+        let authority = Authority {
+            principal: "test-principal".to_string(),
+            credentials: Credentials {
+                credential_type: "api_key".to_string(),
+                value: "test-key".to_string(),
+                signature: None,
+            },
+            scope: vec!["read".to_string()],
+        };
+        
+        let envelope = EventEnvelope::new(
+            "snapkitty.intent.verify_proof".to_string(),
+            intent,
+            context,
+            authority,
+        );
+        
+        assert_eq!(envelope.version, "1.0.0");
+        assert!(!envelope.id.is_empty());
+    }
+    
+    #[test]
+    fn test_envelope_hash() {
+        let envelope = create_test_envelope();
+        let hash = envelope.compute_hash().unwrap();
+        assert_eq!(hash.len(), 64); // Blake3 produces 32 bytes = 64 hex chars
+    }
+    
+    fn create_test_envelope() -> EventEnvelope {
+        EventEnvelope::new(
+            "test.event".to_string(),
+            Intent {
+                action: "test".to_string(),
+                subject: "test".to_string(),
+                parameters: serde_json::json!({}),
+            },
+            Context {
+                environment: "test".to_string(),
+                constraints: Constraints {
+                    network: NetworkPolicy::Deny,
+                    max_runtime_ms: 1000,
+                    max_memory_bytes: 1024,
+                    filesystem: FilesystemPolicy::Deny,
+                },
+                metadata: serde_json::json!({}),
+            },
+            Authority {
+                principal: "test".to_string(),
+                credentials: Credentials {
+                    credential_type: "test".to_string(),
+                    value: "test".to_string(),
+                    signature: None,
+                },
+                scope: vec![],
+            },
+        )
+    }
+}

@@ -1,0 +1,480 @@
+openapi: 3.1.0
+info:
+  title: Sovereign Event Bus (SEB) API
+  version: 1.0.0
+  description: |
+    REST API specification for the Sovereign Event Bus (SEB).
+    
+    SEB provides deterministic, verifiable event routing with cryptographic
+    sealing and WORM chain integration. This API allows clients to submit
+    events, query status, and retrieve execution results.
+    
+    Generated from: SEB_SOVEREIGN_EVENT_BUS_MASTER_SPECIFICATION.xml
+  contact:
+    name: SnapKitty Team
+    url: https://snapkitty.dev
+  license:
+    name: Proprietary
+    url: https://snapkitty.dev/license
+
+servers:
+  - url: https://api.snapkitty.dev/seb/v1
+    description: Production server
+  - url: https://staging-api.snapkitty.dev/seb/v1
+    description: Staging server
+  - url: http://localhost:8080/seb/v1
+    description: Local development server
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: events
+    description: Event submission and management
+  - name: status
+    description: Event status queries
+  - name: health
+    description: Service health checks
+
+paths:
+  /events:
+    post:
+      tags:
+        - events
+      summary: Submit an event envelope
+      description: |
+        Submit a new event envelope to the SEB for processing.
+        The envelope will be validated, routed through policy gates,
+        and executed by the appropriate adapter.
+      operationId: submitEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventEnvelope'
+            examples:
+              verifyProof:
+                summary: Verify proof bundle
+                value:
+                  type: snapkitty.intent.verify_proof
+                  version: "1.0.0"
+                  id: 01J4XQZM8K7N6P5R4S3T2V1W0X
+                  timestamp: "2026-07-25T04:00:00Z"
+                  intent:
+                    action: verify_proof
+                    subject: "bundle:01J..."
+                    parameters: {}
+                  context:
+                    environment: production
+                    constraints:
+                      network: deny
+                      max_runtime_ms: 5000
+                      max_memory_bytes: 1048576
+                      filesystem: readonly
+                    metadata: {}
+                  authority:
+                    principal: "user:alice"
+                    credentials:
+                      credential_type: api_key
+                      value: sk_...
+                    scope:
+                      - read
+                      - verify
+                  evidence: []
+      responses:
+        '201':
+          description: Event accepted and queued for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventSubmissionResponse'
+        '400':
+          description: Invalid event envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - policy denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /events/{eventId}:
+    get:
+      tags:
+        - status
+      summary: Get event status
+      description: Query the current status and result of an event
+      operationId: getEventStatus
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          description: ULID of the event
+      responses:
+        '200':
+          description: Event status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStatusResponse'
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      description: Check if the SEB service is healthy
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    EventEnvelope:
+      type: object
+      required:
+        - type
+        - version
+        - id
+        - timestamp
+        - intent
+        - context
+        - authority
+      properties:
+        type:
+          type: string
+          description: Event type identifier
+          example: snapkitty.intent.verify_proof
+        version:
+          type: string
+          description: Schema version
+          example: "1.0.0"
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          description: Unique event identifier (ULID)
+        timestamp:
+          type: string
+          format: date-time
+          description: Event creation timestamp (ISO 8601)
+        intent:
+          $ref: '#/components/schemas/Intent'
+        context:
+          $ref: '#/components/schemas/Context'
+        authority:
+          $ref: '#/components/schemas/Authority'
+        continuation:
+          $ref: '#/components/schemas/Continuation'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+          default: []
+        seal:
+          $ref: '#/components/schemas/Seal'
+
+    Intent:
+      type: object
+      required:
+        - action
+        - subject
+        - parameters
+      properties:
+        action:
+          type: string
+          minLength: 1
+          description: Action to perform
+        subject:
+          type: string
+          minLength: 1
+          description: Subject of the action
+        parameters:
+          type: object
+          additionalProperties: true
+          description: Action parameters
+
+    Context:
+      type: object
+      required:
+        - environment
+        - constraints
+        - metadata
+      properties:
+        environment:
+          type: string
+          minLength: 1
+          description: Execution environment
+          example: production
+        constraints:
+          $ref: '#/components/schemas/Constraints'
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Constraints:
+      type: object
+      required:
+        - network
+        - max_runtime_ms
+        - max_memory_bytes
+        - filesystem
+      properties:
+        network:
+          type: string
+          enum: [allow, deny, restricted]
+        max_runtime_ms:
+          type: integer
+          minimum: 1
+          description: Maximum runtime in milliseconds
+        max_memory_bytes:
+          type: integer
+          minimum: 1
+          description: Maximum memory in bytes
+        filesystem:
+          type: string
+          enum: [readonly, readwrite, deny]
+
+    Authority:
+      type: object
+      required:
+        - principal
+        - credentials
+        - scope
+      properties:
+        principal:
+          type: string
+          minLength: 1
+          description: Principal identifier
+        credentials:
+          $ref: '#/components/schemas/Credentials'
+        scope:
+          type: array
+          items:
+            type: string
+          description: Authority scope
+
+    Credentials:
+      type: object
+      required:
+        - credential_type
+        - value
+      properties:
+        credential_type:
+          type: string
+          minLength: 1
+        value:
+          type: string
+          minLength: 1
+        signature:
+          type: string
+
+    Continuation:
+      type: object
+      required:
+        - step
+        - total_steps
+        - state
+      properties:
+        step:
+          type: integer
+          minimum: 1
+        total_steps:
+          type: integer
+          minimum: 1
+        state:
+          type: object
+          additionalProperties: true
+
+    Evidence:
+      type: object
+      required:
+        - evidence_type
+        - hash
+        - signature
+        - timestamp
+      properties:
+        evidence_type:
+          type: string
+          minLength: 1
+        hash:
+          type: string
+          minLength: 1
+        signature:
+          type: string
+          minLength: 1
+        timestamp:
+          type: string
+          format: date-time
+
+    Seal:
+      type: object
+      required:
+        - hash
+        - signature
+        - public_key
+        - timestamp
+        - algorithm
+      properties:
+        hash:
+          type: string
+          minLength: 1
+        signature:
+          type: string
+          minLength: 1
+        public_key:
+          type: string
+          minLength: 1
+        timestamp:
+          type: string
+          format: date-time
+        algorithm:
+          type: string
+          minLength: 1
+          example: ed25519
+
+    EventSubmissionResponse:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+          description: Event ID
+        status:
+          type: string
+          enum: [queued, processing]
+        message:
+          type: string
+
+    EventStatusResponse:
+      type: object
+      required:
+        - id
+        - status
+        - result
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        result:
+          $ref: '#/components/schemas/ExecutionResult'
+
+    ExecutionResult:
+      type: object
+      required:
+        - status
+        - output
+        - evidence
+        - metrics
+      properties:
+        status:
+          type: string
+          enum: [success, failure, timeout, denied]
+        output:
+          type: object
+          additionalProperties: true
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+        metrics:
+          $ref: '#/components/schemas/ExecutionMetrics'
+
+    ExecutionMetrics:
+      type: object
+      required:
+        - duration_ms
+        - memory_used_bytes
+        - network_calls
+        - filesystem_operations
+      properties:
+        duration_ms:
+          type: integer
+          minimum: 0
+        memory_used_bytes:
+          type: integer
+          minimum: 0
+        network_calls:
+          type: integer
+          minimum: 0
+        filesystem_operations:
+          type: integer
+          minimum: 0
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        uptime_seconds:
+          type: integer
+          minimum: 0
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties: true

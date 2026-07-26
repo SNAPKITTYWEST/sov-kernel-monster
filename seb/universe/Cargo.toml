@@ -1,0 +1,25 @@
+[package]
+name = "seb-universe"
+version = "1.0.0"
+edition = "2021"
+description = "SEB L7 Universe Substrate - Artifact manifests, CVMGate verification pipeline, and searchable repository"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+blake3 = "1.5"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+regex = "1.10"
+anyhow = "1.0"
+thiserror = "1.0"
+ed25519-dalek = "2.1"
+rand = "0.8"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[[example]]
+name = "universe_demo"
+path = "examples/universe_demo.rs"
