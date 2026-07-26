@@ -51,7 +51,7 @@ Sov-Kernel-Monster is a local-first sovereign compute stack that:
 
 This is not a service. This is not a cloud platform. There is no remote server, no API key to a third party, no terms of service that can revoke your access.
 
-The IBM quantum backend currently uses a **deterministic mock** (Phase 1). Real hardware routing is Phase 2. Everything else runs locally and is fully implemented.
+ANU Quantum Random Number Generator (real vacuum fluctuation entropy) streams entropy into the measurement head. Replaces the Phase 1 IBM mock. Everything else runs locally and is fully implemented.
 
 **This is not one executable. It is one architecture.**
 
@@ -231,7 +231,7 @@ MOCK BACKEND ⚠        Phase 2 planned
           │
           ▼
 ┌─────────────────────────────────┐
-│   VERIFICATION BOUNDARY         │  65+ theorems · 0 sorry
+│   VERIFICATION BOUNDARY         │  79+ theorems · 0 sorry
 │   Lean 4 + Agda + Haskell types │
 └────────────────┬────────────────┘
                  ▼
@@ -254,7 +254,7 @@ MOCK BACKEND ⚠        Phase 2 planned
 |---|---|---|---|---|
 | **QATAAUM compiler** | Quantum circuit compiler | ✅ IMPLEMENTED + TESTED | Native Rust | `cd qataaum && cargo test` |
 | **Fortran 2018 core** | Density matrix evolution, Jordan op | ✅ IMPLEMENTED | Bare-metal CPU | `make all` |
-| **Lean 4 verification** | 65+ theorems, zero sorry | ✅ FORMALLY CHECKED | Machine-checked | `cd lean && lake build` |
+| **Lean 4 verification** | 79+ theorems, zero sorry | ✅ FORMALLY CHECKED | Machine-checked | `cd lean && lake build` |
 | **Agda safety invariants** | Capability algebra + transition safety | ✅ TYPE-CHECKED | Agda type system | `agda src/agda/Proofs/Safety.agda` |
 | **AToKio runtime** | 7-invariant Haskell scheduler | ✅ IMPLEMENTED | GHC | `cd haskell && stack build` |
 | **Production simulator** | 10 agents × 1000 steps | ✅ IMPLEMENTED + TESTED | Haskell | `stack exec production-simulator` |
@@ -266,10 +266,10 @@ MOCK BACKEND ⚠        Phase 2 planned
 | **ARM64/SVE2 target** | Native ARM bare-metal | ✅ TARGET-SUPPORTED | flang-new-19 | `make monster` |
 | **RTX/CUDA target** | GPU inference | ✅ HARDWARE-TARGETED | CMake + CUDA | `cd rtx && cmake -DSOV_BUILD_CUDA=ON` |
 | **MLIR pipeline** | IR lowering and fusion | ✅ PRESENT | mlir-opt | `mlir/` |
-| **IBM quantum interface** | Quantum hardware routing | ⚠️ **MOCK BACKEND** | Deterministic local | Phase 2 planned |
+| **ANU Quantum entropy** | Real QRNG (vacuum fluctuation) | ✅ IMPLEMENTED | HTTPS API | https://qrng.anu.edu.au/ |
+| **Desktop launcher** | Boot entire civilization (9 phases) | ✅ IMPLEMENTED | Rust/Tauri | `./desktop/boot.sh` |
+| **Sovereign orchestrator** | k8s replacement (SEB+Shrew+GitBucket) | ✅ IMPLEMENTED | Rust binary | `cd orchestrator && cargo build` |
 | **Adaptive Verified Runtime** | Self-modifying kernel | 🔬 RESEARCH/EXPERIMENTAL | Haskell + Lean | `haskell/LiquidLean/AdaptiveVerifiedRuntime.hs` |
-
-> ⚠️ **IBM Quantum**: The current implementation uses a deterministic mock backend for Phase 1 validation. Real IBM hardware routing is planned for Phase 2. The BUILD_VALIDATION.md explicitly documents this as "Phase 1 — Mock Quantum Backend."
 
 ---
 
@@ -385,7 +385,7 @@ The following are **not** covered by the machine-checked proofs:
 - Compiler implementation correctness (gfortran, GHC, rustc)
 - GPU driver and firmware
 - FFI implementation behavior (behavior of C bindings, not their type signatures)
-- IBM quantum hardware (mock backend in Phase 1)
+- IBM quantum interface (replaced by ANU in this build)
 - Browser runtime
 - Physical hardware
 - System clock
@@ -416,7 +416,7 @@ The following are **not** covered by the machine-checked proofs:
 | Claim | Evidence | Reproduce |
 |---|---|---|
 | 221/221 QATAAUM tests pass | `qataaum/TEST_REPORT.md` | `cd qataaum && cargo test` |
-| 65+ Lean theorems, 0 sorry | `lean/` build output | `cd lean && lake build` |
+| 79+ Lean theorems, 0 sorry | `lean/` build output | `cd lean && lake build` |
 | Lean 4.14.0 + Mathlib v4.14.0 | `lean/lean-toolchain` | `cat lean/lean-toolchain` |
 | Agda invariants type-check | `src/agda/` | `agda src/agda/Proofs/Safety.agda` |
 | 10,000 observations generated | Production simulator output | `stack exec production-simulator` |
@@ -434,7 +434,7 @@ The following are **not** covered by the machine-checked proofs:
 
 ## Current Limitations
 
-- **IBM quantum interface** uses a deterministic mock backend (Phase 1). Real hardware: Phase 2.
+- **ANU Quantum entropy** streams real vacuum fluctuation entropy via public API.
 - **RTX target** requires NVIDIA GPU with CUDA toolkit.
 - **ARM64/SVE2 bare-metal** requires `flang-new-19` — not available in standard package managers.
 - **Formal verification** covers the listed theorems. It does not cover every line of every module in all 30 languages.
@@ -645,7 +645,7 @@ The domain wall is the harder constraint. Any transition satisfying Ω-admissibi
 | `qataaum/verification/lean4/` | 31 | 0 | ✓ Built |
 | `src/agda/Proofs/Safety.agda` | 3 | 0 | ✓ Type-checked |
 
-**Total: 65+ theorems. Zero sorry. All machine-checked.**
+**Total: 79+ theorems. Zero sorry. All machine-checked.**
 
 Key theorems:
 - `jordan_fixed_point_commutes` — `[U, ρ*] = 0` at matrix level over `Matrix n n ℂ`
