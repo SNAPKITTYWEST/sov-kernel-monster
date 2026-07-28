@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { setupBatchedTrajectories, TrajectoryAnimator } from './TrajectoryRenderer.js';
 import { generateDemoTrajectories } from './DemoGenerator.js';
+import { ISSTelemetry } from './ISSTelemetry.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // SCENE SETUP
@@ -94,6 +95,14 @@ const NUM_TRAJECTORIES = 1000;
 const NUM_STEPS = 500;
 
 // ═══════════════════════════════════════════════════════════════════
+// ISS TELEMETRY (REAL SATELLITE DATA)
+// ═══════════════════════════════════════════════════════════════════
+const issTelemetry = new ISSTelemetry(scene, {
+  voyagerUrl: 'http://localhost:4299',
+  hudElement: document.getElementById('hud-iss'),
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // HUD UPDATE
 // ═══════════════════════════════════════════════════════════════════
 const hudTrajectories = document.querySelector('#hud-trajectories .value');
@@ -129,6 +138,14 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 document.getElementById('btn-demo').addEventListener('click', () => {
     loadDemo();
+});
+
+document.getElementById('btn-iss').addEventListener('click', () => {
+    if (!issTelemetry.isLive) {
+        issTelemetry.startPolling(4500);
+    } else {
+        issTelemetry.stopPolling();
+    }
 });
 
 document.getElementById('speed-slider').addEventListener('input', (e) => {
