@@ -1,12 +1,12 @@
 #!/bin/bash
 # Boot entire orbital verification stack
-# BOB VOYAGER (ISS oracle) + Verification Server (proof validator) + ROWM Notebook (UI)
+# BOB VOYAGER + Ahmad Orchestrator (sov-kernel-monster) + optional ROWM UI
 
 set -e
 
 echo "╔════════════════════════════════════════════╗"
 echo "║  ORBITAL VERIFICATION STACK BOOT           ║"
-echo "║  BOB VOYAGER + sov-kernel-monster + ROWM   ║"
+echo "║  BOB VOYAGER + Ahmad Orchestrator + ROWM   ║"
 echo "╚════════════════════════════════════════════╝"
 echo ""
 
@@ -17,30 +17,30 @@ node server.mjs &
 VOYAGER_PID=$!
 sleep 2
 
-# ─ 2. Start Verification Server (orbital invariant oracle)
-echo "[2/3] Starting Verification Server (http://localhost:3333)..."
+# ─ 2. Start Ahmad Orchestrator (sov-kernel-monster)
+echo "[2/3] Starting Ahmad Orchestrator (http://localhost:5555)..."
 cd "$(dirname "$(pwd)")/sov-kernel-monster"
-VOYAGER_URL=http://localhost:4299 node src/verification_server.mjs &
-VERIFY_PID=$!
+VOYAGER_URL=http://localhost:4299 node src/ahmad-orchestrator.mjs &
+AHMAD_PID=$!
 sleep 2
 
-# ─ 3. Open ROWM Notebook
-echo "[3/3] Opening ROWM Polymorphic Notebook..."
+# ─ 3. Optionally open ROWM Notebook (UI only)
+echo "[3/3] Starting web server for ROWM Notebook (http://localhost:8000)..."
 cd "$(dirname "$(pwd)")/rowm-polymorphic-notebook"
-# On macOS:
-# open index-app.html
-# On Linux:
-# xdg-open index-app.html
-# On Windows (WSL):
-explorer.exe index-app.html 2>/dev/null || xdg-open index-app.html 2>/dev/null || open index-app.html 2>/dev/null
+python3 -m http.server 8000 &
+WEB_PID=$!
+sleep 1
+echo "Opening ROWM Notebook..."
+explorer.exe http://localhost:8000/index-app.html 2>/dev/null || xdg-open http://localhost:8000/index-app.html 2>/dev/null || open http://localhost:8000/index-app.html 2>/dev/null
 
 echo ""
 echo "╔════════════════════════════════════════════╗"
 echo "║  ORBITAL STACK READY                       ║"
 echo "║  BOB VOYAGER:        http://localhost:4299 ║"
-echo "║  Verification:       http://localhost:3333 ║"
-echo "║  ROWM Notebook:      $(pwd)/index-app.html ║"
+echo "║  Ahmad Orchestrator: http://localhost:5555 ║"
+echo "║  ROWM Notebook UI:   http://localhost:8000 ║"
 echo "╚════════════════════════════════════════════╝"
 echo ""
+echo "Verification running in headless mode at :5555"
 echo "Press Ctrl+C to stop all services"
 wait
