@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://snapkitty.example/canon/schemas/character.schema.json",
+  "title": "SnapKitty Character Collection",
+  "type": "object",
+  "required": ["version", "characters"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": "1.0.0" },
+    "characters": {
+      "type": "array",
+      "minItems": 50,
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/character" }
+    }
+  },
+  "$defs": {
+    "character": {
+      "type": "object",
+      "required": ["id", "name", "category", "speciesId", "origin", "occupation", "biography", "personality", "voiceStyle", "relationships", "trustValues", "personalQuests", "longTermGoals", "homeLocationId", "workLocationId", "favoriteEquipmentId", "dynamicReactions", "schedule", "needs", "faction", "memories", "inventory", "dialogueState"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^char-[a-z0-9-]+$" },
+        "name": { "type": "string", "minLength": 2 },
+        "category": { "enum": ["council", "agent", "civilian"] },
+        "councilRole": { "type": "string" },
+        "callSign": { "type": "string" },
+        "speciesId": { "type": "string" },
+        "origin": { "type": "string", "minLength": 3 },
+        "occupation": { "type": "string", "minLength": 3 },
+        "biography": { "type": "string", "minLength": 40 },
+        "personality": {
+          "type": "object",
+          "required": ["traits", "values", "flaw"],
+          "properties": {
+            "traits": { "type": "array", "minItems": 3, "items": { "type": "string" } },
+            "values": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+            "flaw": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "voiceStyle": {
+          "type": "object",
+          "required": ["register", "cadence", "markers"],
+          "properties": {
+            "register": { "type": "string" },
+            "cadence": { "type": "string" },
+            "markers": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        },
+        "relationships": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["characterId", "kind", "bond"],
+            "properties": {
+              "characterId": { "type": "string" },
+              "kind": { "type": "string" },
+              "bond": { "type": "number", "minimum": -1, "maximum": 1 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "trustValues": {
+          "type": "object",
+          "required": ["player", "council", "faction", "strangers"],
+          "properties": {
+            "player": { "type": "number", "minimum": -1, "maximum": 1 },
+            "council": { "type": "number", "minimum": -1, "maximum": 1 },
+            "faction": { "type": "number", "minimum": -1, "maximum": 1 },
+            "strangers": { "type": "number", "minimum": -1, "maximum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "personalQuests": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "longTermGoals": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "homeLocationId": { "type": "string" },
+        "workLocationId": { "type": "string" },
+        "favoriteEquipmentId": { "type": "string" },
+        "dynamicReactions": {
+          "type": "object",
+          "required": ["promises", "theft", "combat", "rescues", "gifts", "betrayals", "negotiations", "contracts", "lies", "debts"],
+          "properties": {
+            "promises": { "type": "number", "minimum": -1, "maximum": 1 },
+            "theft": { "type": "number", "minimum": -1, "maximum": 1 },
+            "combat": { "type": "number", "minimum": -1, "maximum": 1 },
+            "rescues": { "type": "number", "minimum": -1, "maximum": 1 },
+            "gifts": { "type": "number", "minimum": -1, "maximum": 1 },
+            "betrayals": { "type": "number", "minimum": -1, "maximum": 1 },
+            "negotiations": { "type": "number", "minimum": -1, "maximum": 1 },
+            "contracts": { "type": "number", "minimum": -1, "maximum": 1 },
+            "lies": { "type": "number", "minimum": -1, "maximum": 1 },
+            "debts": { "type": "number", "minimum": -1, "maximum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "schedule": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["startHour", "endHour", "locationId", "activity"],
+            "properties": {
+              "startHour": { "type": "integer", "minimum": 0, "maximum": 23 },
+              "endHour": { "type": "integer", "minimum": 1, "maximum": 24 },
+              "locationId": { "type": "string" },
+              "activity": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "needs": {
+          "type": "object",
+          "required": ["nutrition", "rest", "safety", "belonging", "purpose"],
+          "properties": {
+            "nutrition": { "type": "number", "minimum": 0, "maximum": 1 },
+            "rest": { "type": "number", "minimum": 0, "maximum": 1 },
+            "safety": { "type": "number", "minimum": 0, "maximum": 1 },
+            "belonging": { "type": "number", "minimum": 0, "maximum": 1 },
+            "purpose": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "faction": {
+          "type": "object",
+          "required": ["id", "rank", "loyalty"],
+          "properties": {
+            "id": { "type": "string" },
+            "rank": { "type": "string" },
+            "loyalty": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "memories": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "summary", "emotionalWeight", "canonEventId"],
+            "properties": {
+              "id": { "type": "string" },
+              "kind": { "type": "string" },
+              "summary": { "type": "string" },
+              "emotionalWeight": { "type": "number", "minimum": -1, "maximum": 1 },
+              "canonEventId": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "inventory": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "dialogueState": {
+          "type": "object",
+          "required": ["greetingNode", "currentTopic", "knownSecrets", "mood"],
+          "properties": {
+            "greetingNode": { "type": "string" },
+            "currentTopic": { "type": "string" },
+            "knownSecrets": { "type": "array", "items": { "type": "string" } },
+            "mood": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

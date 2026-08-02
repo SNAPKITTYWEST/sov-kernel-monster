@@ -1,0 +1,17 @@
+; Merge these sections into the copied Godot project's project.godot.
+; Keep this as a reviewable fragment; do not replace project.godot wholesale.
+
+[application]
+config/features=PackedStringArray("4.6", "GL Compatibility")
+
+[autoload]
+CanonBridge="*res://integrations/snapkitty-life-web/canon_bridge.gd"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method.web="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+
+[audio]
+driver/enable_input=false

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://snapkitty.example/canon/schemas/bindings.schema.json",
+  "title": "SnapKitty Project Binding Collection",
+  "type": "object",
+  "required": ["version", "protocol", "bindings"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": "1.0.0" },
+    "protocol": {
+      "type": "object",
+      "required": ["name", "messageVersion", "identityKey", "eventEnvelope"],
+      "properties": {
+        "name": { "const": "snapkitty-canon-bridge" },
+        "messageVersion": { "const": 1 },
+        "identityKey": { "const": "snapkittyPlayerId" },
+        "eventEnvelope": { "type": "array", "minItems": 4, "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "bindings": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["projectId", "displayName", "canonLocationId", "experienceId", "entryMode", "launchTarget", "stateContract"],
+        "properties": {
+          "projectId": { "type": "string" },
+          "displayName": { "type": "string" },
+          "canonLocationId": { "type": "string" },
+          "experienceId": { "type": "string" },
+          "entryMode": { "enum": ["native-scene", "embedded-web", "portal", "terminal"] },
+          "launchTarget": { "type": "string" },
+          "stateContract": {
+            "type": "object",
+            "required": ["reads", "writes", "events"],
+            "properties": {
+              "reads": { "type": "array", "items": { "type": "string" } },
+              "writes": { "type": "array", "items": { "type": "string" } },
+              "events": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

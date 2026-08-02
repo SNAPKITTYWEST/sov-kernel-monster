@@ -1,0 +1,50 @@
+{
+  "format": "snapkitty-canon-binding",
+  "version": 1,
+  "project_id": "snapkitty-life",
+  "state_schema": "snapkitty-life/v1",
+  "continuity": {
+    "schema": "snapkitty.universe.continuity",
+    "channel": "snapkitty.universe.continuity.v1",
+    "protocol": "snapkitty.universe.continuity.bridge.v1",
+    "sourceExperienceId": "snapkitty-life",
+    "snapshotEventType": "mission-signal"
+  },
+  "canon": {
+    "resource_path": "res://canon/v1/canon.json",
+    "web_url": "../../canon/v1/canon.json",
+    "shared_source": "../../../canon/v1/canon.json"
+  },
+  "project_bindings": {
+    "world.day": "day",
+    "world.hour": "game_hour",
+    "world.characters": "paras",
+    "character.id": "brain.id",
+    "character.name": "brain.para_name",
+    "character.memories": "brain.memory_chain",
+    "character.relationships": "brain.relationships",
+    "character.needs": "brain.needs"
+  },
+  "legacy_save": {
+    "source": "res://scripts/save_manager.gd",
+    "token_version": 1,
+    "continuity_target": "projects.snapkitty-life.state",
+    "preserve_fields": [
+      "world_name",
+      "day",
+      "season",
+      "paras",
+      "shards",
+      "civ_log",
+      "worm_head",
+      "saved_at",
+      "player_id"
+    ]
+  },
+  "native_extension": {
+    "descriptor": "res://gdextension/snapkitty_npc.gdextension",
+    "required_classes": ["SnapKittyWorld", "SnapKittyPara"],
+    "web_policy": "compile-for-wasm-or-use-a-validated-gdscript-gameplay-fallback",
+    "bridge_dependency": false
+  }
+}

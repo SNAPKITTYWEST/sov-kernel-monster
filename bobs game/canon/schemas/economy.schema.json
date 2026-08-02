@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://snapkitty.example/canon/schemas/economy.schema.json",
+  "title": "SnapKitty Economy",
+  "type": "object",
+  "required": ["version", "resources", "nodes", "routes", "interruptions", "pricing"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": "1.0.0" },
+    "resources": { "type": "array", "minItems": 6, "items": { "type": "object", "required": ["id", "name", "unit", "baseValue"] } },
+    "nodes": { "type": "array", "minItems": 6, "items": { "type": "object", "required": ["id", "name", "locationId", "inputs", "outputs", "cycleHours", "ownerFactionId"] } },
+    "routes": { "type": "array", "minItems": 5, "items": { "type": "object", "required": ["id", "fromNodeId", "toNodeId", "resourceId", "capacity", "risk", "playerInterruptible"] } },
+    "interruptions": { "type": "array", "minItems": 5, "items": { "type": "object", "required": ["id", "routeId", "actions", "downstreamEffects"] } },
+    "pricing": { "type": "object", "required": ["formula", "shortageMultiplierMax", "sanctionMultiplierMax", "updateIntervalHours"] }
+  },
+  "additionalProperties": false
+}

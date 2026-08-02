@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://snapkitty.example/canon/schemas/location.schema.json",
+  "title": "SnapKitty Location Collection",
+  "type": "object",
+  "required": ["version", "locations"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": "1.0.0" },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "kind", "systemId", "description", "functions", "factionId", "persistenceScope"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^loc-[a-z0-9-]+$" },
+          "name": { "type": "string" },
+          "kind": { "type": "string" },
+          "systemId": { "type": "string" },
+          "description": { "type": "string", "minLength": 20 },
+          "functions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "factionId": { "type": "string" },
+          "persistenceScope": { "enum": ["local", "system", "universe"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

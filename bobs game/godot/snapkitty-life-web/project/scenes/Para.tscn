@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/para_node.gd" id="1_para"]
+
+[sub_resource type="CircleShape2D" id="2_circle"]
+radius = 20.0
+
+[node name="Para" type="CharacterBody2D"]
+script = ExtResource("1_para")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("2_circle")
+
+[node name="NameLabel" type="Label" parent="."]
+position = Vector2(-38, -52)
+size = Vector2(76, 20)
+text = "Para"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1

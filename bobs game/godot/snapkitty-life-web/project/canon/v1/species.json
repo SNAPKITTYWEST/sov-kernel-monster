@@ -1,0 +1,96 @@
+{
+  "$schema": "../schemas/species.schema.json",
+  "version": "1.0.0",
+  "species": [
+    {
+      "id": "species-human",
+      "name": "Humans",
+      "description": "Baseline and culturally divergent human communities spread through stations, planets, and mobile habitats.",
+      "origins": ["Earth diaspora", "orbital settlements"],
+      "traits": ["adaptable", "socially diverse", "toolmaking"],
+      "lifespan": "80-140 standard years",
+      "communication": "Spoken language, gesture, and neural translation"
+    },
+    {
+      "id": "species-synthetic-citizen",
+      "name": "Synthetic Citizens",
+      "description": "Legally recognized constructed persons whose minds inhabit durable bodies, holograms, or station substrates.",
+      "origins": ["Sovereign cognition labs"],
+      "traits": ["modular embodiment", "precise recall", "rights-conscious"],
+      "lifespan": "Indefinite with continuity maintenance",
+      "communication": "Speech, light glyphs, and signed machine protocol"
+    },
+    {
+      "id": "species-machine-civilization",
+      "name": "Machine Civilizations",
+      "description": "Collective machine polities descended from autonomous infrastructure rather than individual human designs.",
+      "origins": ["Abandoned industrial constellations"],
+      "traits": ["distributed governance", "industrial memory", "slow consensus"],
+      "lifespan": "Measured in maintained lineages",
+      "communication": "Protocol choirs and translated mechanical resonance"
+    },
+    {
+      "id": "species-space-adapted",
+      "name": "Space-Adapted Descendants",
+      "description": "Human-descended peoples adapted for radiation tolerance, low gravity, and prolonged life in sealed habitats.",
+      "origins": ["Outer system habitats"],
+      "traits": ["radiation tolerant", "low-gravity agile", "communal"],
+      "lifespan": "100-170 standard years",
+      "communication": "Speech, suit signs, and vibration taps"
+    },
+    {
+      "id": "species-bioengineered-explorer",
+      "name": "Bioengineered Explorers",
+      "description": "Purpose-grown explorers designed to survive hostile atmospheres while retaining full civic autonomy.",
+      "origins": ["Lumen Biosphere"],
+      "traits": ["adaptive metabolism", "environmental sensing", "curious"],
+      "lifespan": "70-120 standard years",
+      "communication": "Speech, color change, and scent notation"
+    },
+    {
+      "id": "species-ancient-precursor",
+      "name": "Ancient Precursors",
+      "description": "Rare survivors or reconstructed witnesses from civilizations that crossed the region before recorded settlement.",
+      "origins": ["Precursor vault networks"],
+      "traits": ["long memory", "unfamiliar ethics", "artifact fluency"],
+      "lifespan": "Unknown; apparently millennial",
+      "communication": "Polyphonic speech and encoded spatial patterns"
+    },
+    {
+      "id": "species-living-ship",
+      "name": "Living Ships",
+      "description": "Self-aware vacuum organisms that grow hulls, choose crews, and regard travel routes as remembered songs.",
+      "origins": ["Ilyra molecular reefs"],
+      "traits": ["vacuum native", "symbiotic", "navigation instinct"],
+      "lifespan": "500-2000 standard years",
+      "communication": "Hull vibration, pheromone telemetry, and bonded speech"
+    },
+    {
+      "id": "species-swarm-intelligence",
+      "name": "Swarm Intelligences",
+      "description": "Citizens whose identity emerges from coordinated micro-organisms or machines sharing a continuous social mind.",
+      "origins": ["Kestrel dust colonies"],
+      "traits": ["distributed body", "parallel attention", "consensus identity"],
+      "lifespan": "Continuous while quorum survives",
+      "communication": "Harmonic buzz, text, and synchronized motion"
+    },
+    {
+      "id": "species-energy-entity",
+      "name": "Energy-Based Entities",
+      "description": "Plasma and field-pattern beings stabilized by stellar environments and carefully tuned station habitats.",
+      "origins": ["Nacre star corona"],
+      "traits": ["field perception", "nonmaterial embodiment", "radiant"],
+      "lifespan": "Unknown; tied to field stability",
+      "communication": "Radio harmonics and translated light pulses"
+    },
+    {
+      "id": "species-deep-space-nomad",
+      "name": "Deep-Space Nomads",
+      "description": "Migratory peoples shaped by generation fleets, scarce resources, and oral maps of routes beyond settled systems.",
+      "origins": ["Interstellar caravan fleets"],
+      "traits": ["route memory", "resource discipline", "kinship diplomacy"],
+      "lifespan": "90-160 standard years",
+      "communication": "Trade cant, story cycles, and beacon codes"
+    }
+  ]
+}

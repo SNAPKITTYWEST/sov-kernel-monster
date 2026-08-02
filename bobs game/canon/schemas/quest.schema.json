@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://snapkitty.example/canon/schemas/quest.schema.json",
+  "title": "SnapKitty Quest Collection",
+  "type": "object",
+  "required": ["version", "quests"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": "1.0.0" },
+    "quests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "giverCharacterId", "title", "synopsis", "locationId", "objectives", "prerequisites", "outcomes", "canonImpact", "repeatable"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^quest-[a-z0-9-]+$" },
+          "giverCharacterId": { "type": "string" },
+          "title": { "type": "string" },
+          "synopsis": { "type": "string", "minLength": 20 },
+          "locationId": { "type": "string" },
+          "objectives": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+          "prerequisites": { "type": "array", "items": { "type": "string" } },
+          "outcomes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "canonImpact": { "type": "string" },
+          "repeatable": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

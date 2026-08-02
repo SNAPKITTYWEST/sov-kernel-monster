@@ -1,0 +1,19 @@
+{
+  "$schema": "../schemas/bindings.schema.json",
+  "version": "1.0.0",
+  "protocol": {
+    "name": "snapkitty-canon-bridge",
+    "messageVersion": 1,
+    "identityKey": "snapkittyPlayerId",
+    "eventEnvelope": ["version", "eventId", "eventType", "payload", "occurredAt", "sourceProjectId", "previousSeal"]
+  },
+  "bindings": [
+    { "projectId": "apple-ii-universal-machine", "displayName": "Apple II Universal Machine", "canonLocationId": "loc-apple2-museum-station", "experienceId": "exp-apple2-boot-archive", "entryMode": "terminal", "launchTarget": "snapkitty://projects/apple-ii-universal-machine", "stateContract": { "reads": ["player.identity", "history.discoveries"], "writes": ["history.discoveries", "player.inventory"], "events": ["ANCIENT_SOFTWARE_BOOTED", "ARCHIVE_SECRET_DECODED"] } },
+    { "projectId": "qataaum", "displayName": "QATAAUM", "canonLocationId": "loc-qataaum-quantum-lab", "experienceId": "exp-qataaum-verified-experiment", "entryMode": "embedded-web", "launchTarget": "snapkitty://projects/qataaum", "stateContract": { "reads": ["player.identity", "research.unlocks"], "writes": ["research.unlocks", "history.receipts"], "events": ["QATAAUM_CIRCUIT_VERIFIED", "RESEARCH_UNLOCKED"] } },
+    { "projectId": "cartographer-agent", "displayName": "Cartographer Agent", "canonLocationId": "loc-carto-observatory-guild", "experienceId": "exp-carto-map-unknown", "entryMode": "native-scene", "launchTarget": "snapkitty://projects/cartographer-agent", "stateContract": { "reads": ["universe.discoveries", "player.reputation"], "writes": ["universe.routes", "missions.exploration"], "events": ["SYSTEM_DISCOVERED", "ROUTE_PUBLISHED"] } },
+    { "projectId": "mylaw", "displayName": "MyLaw", "canonLocationId": "loc-mylaw-tribunal", "experienceId": "exp-mylaw-arbitration", "entryMode": "portal", "launchTarget": "snapkitty://projects/mylaw", "stateContract": { "reads": ["history.receipts", "factions.reputation", "contracts.active"], "writes": ["factions.reputation", "contracts.rulings"], "events": ["EVIDENCE_SUBMITTED", "RULING_SEALED"] } },
+    { "projectId": "alienchain", "displayName": "AlienChain", "canonLocationId": "loc-alienchain-registry", "experienceId": "exp-alienchain-claim", "entryMode": "terminal", "launchTarget": "snapkitty://projects/alienchain", "stateContract": { "reads": ["player.identity", "ownership.claims"], "writes": ["player.identity", "ownership.claims"], "events": ["IDENTITY_VERIFIED", "OWNERSHIP_CLAIM_REGISTERED"] } },
+    { "projectId": "bob-voyager", "displayName": "BOB Voyager", "canonLocationId": "loc-bob-voyager", "experienceId": "exp-bob-voyager-expedition", "entryMode": "native-scene", "launchTarget": "snapkitty://projects/bob-voyager", "stateContract": { "reads": ["universe.routes", "crew.roster", "missions.active"], "writes": ["universe.discoveries", "crew.memories", "cargo.inventory"], "events": ["VOYAGER_DEPARTED", "DEEP_SPACE_SAMPLE_RETURNED"] } },
+    { "projectId": "worm-ledger", "displayName": "WORM Ledger", "canonLocationId": "loc-worm-ledger-archive", "experienceId": "exp-worm-history-replay", "entryMode": "portal", "launchTarget": "snapkitty://projects/worm-ledger", "stateContract": { "reads": ["history.receipts", "history.events"], "writes": ["player.discoveries"], "events": ["HISTORY_VERIFIED", "HISTORY_REPLAYED"] } }
+  ]
+}

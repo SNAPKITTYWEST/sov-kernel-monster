@@ -1,0 +1,25 @@
+{
+  "$schema": "./schemas/manifest.schema.json",
+  "canonId": "snapkitty-universe",
+  "version": "1.0.0",
+  "releasedAt": "2026-08-01",
+  "compatibility": {
+    "minimumReaderVersion": "1.0.0",
+    "persistenceNamespace": "snapkitty.canon.v1"
+  },
+  "collections": {
+    "species": { "path": "v1/species.json", "schema": "schemas/species.schema.json", "count": 10 },
+    "locations": { "path": "v1/locations.json", "schema": "schemas/location.schema.json", "count": 16 },
+    "experiences": { "path": "v1/experiences.json", "schema": "schemas/experience.schema.json", "count": 7 },
+    "equipment": { "path": "v1/equipment.json", "schema": "schemas/equipment.schema.json", "count": 24 },
+    "quests": { "path": "v1/quests.json", "schema": "schemas/quest.schema.json", "count": 50 },
+    "characters": { "path": "v1/characters.json", "schema": "schemas/character.schema.json", "count": 50 },
+    "bindings": { "path": "v1/bindings.json", "schema": "schemas/bindings.schema.json", "count": 7 },
+    "economy": { "path": "v1/economy.json", "schema": "schemas/economy.schema.json", "count": 6 }
+  },
+  "characterBreakdown": {
+    "council": 12,
+    "agent": 8,
+    "civilian": 30
+  }
+}

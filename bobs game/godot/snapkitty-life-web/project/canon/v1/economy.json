@@ -1,0 +1,42 @@
+{
+  "$schema": "../schemas/economy.schema.json",
+  "version": "1.0.0",
+  "resources": [
+    { "id": "resource-ore", "name": "Raw Ore", "unit": "tonne", "baseValue": 12 },
+    { "id": "resource-alloy", "name": "Refined Alloy", "unit": "tonne", "baseValue": 38 },
+    { "id": "resource-components", "name": "Ship Components", "unit": "crate", "baseValue": 95 },
+    { "id": "resource-ships", "name": "Commissioned Ships", "unit": "hull", "baseValue": 1800 },
+    { "id": "resource-fleet-readiness", "name": "Fleet Readiness", "unit": "point", "baseValue": 240 },
+    { "id": "resource-demand-signal", "name": "Strategic Demand", "unit": "index", "baseValue": 60 }
+  ],
+  "nodes": [
+    { "id": "econ-mining-colony", "name": "Mining Colony", "locationId": "loc-outer-belt-mining-colony", "inputs": ["resource-demand-signal"], "outputs": ["resource-ore"], "cycleHours": 8, "ownerFactionId": "faction-belt-cooperative" },
+    { "id": "econ-refinery", "name": "Nacre Refinery", "locationId": "loc-qataaum-quantum-lab", "inputs": ["resource-ore"], "outputs": ["resource-alloy"], "cycleHours": 6, "ownerFactionId": "faction-research-concord" },
+    { "id": "econ-factory", "name": "Cathedral Component Factory", "locationId": "loc-sovereign-cathedral", "inputs": ["resource-alloy"], "outputs": ["resource-components"], "cycleHours": 10, "ownerFactionId": "faction-forge-union" },
+    { "id": "econ-shipyard", "name": "FORGE Shipyard", "locationId": "loc-forge-orbital-shipyard", "inputs": ["resource-components"], "outputs": ["resource-ships"], "cycleHours": 36, "ownerFactionId": "faction-forge-union" },
+    { "id": "econ-fleet", "name": "Voyager Fleet Command", "locationId": "loc-bob-voyager", "inputs": ["resource-ships"], "outputs": ["resource-fleet-readiness"], "cycleHours": 24, "ownerFactionId": "faction-voyager-crew" },
+    { "id": "econ-war-demand", "name": "Conflict Demand Office", "locationId": "loc-sentinel-security-ring", "inputs": ["resource-fleet-readiness"], "outputs": ["resource-demand-signal"], "cycleHours": 12, "ownerFactionId": "faction-station-security" }
+  ],
+  "routes": [
+    { "id": "route-ore-refinery", "fromNodeId": "econ-mining-colony", "toNodeId": "econ-refinery", "resourceId": "resource-ore", "capacity": 140, "risk": 0.35, "playerInterruptible": true },
+    { "id": "route-alloy-factory", "fromNodeId": "econ-refinery", "toNodeId": "econ-factory", "resourceId": "resource-alloy", "capacity": 90, "risk": 0.2, "playerInterruptible": true },
+    { "id": "route-components-shipyard", "fromNodeId": "econ-factory", "toNodeId": "econ-shipyard", "resourceId": "resource-components", "capacity": 60, "risk": 0.25, "playerInterruptible": true },
+    { "id": "route-ships-fleet", "fromNodeId": "econ-shipyard", "toNodeId": "econ-fleet", "resourceId": "resource-ships", "capacity": 4, "risk": 0.45, "playerInterruptible": true },
+    { "id": "route-fleet-war", "fromNodeId": "econ-fleet", "toNodeId": "econ-war-demand", "resourceId": "resource-fleet-readiness", "capacity": 100, "risk": 0.65, "playerInterruptible": true },
+    { "id": "route-demand-mining", "fromNodeId": "econ-war-demand", "toNodeId": "econ-mining-colony", "resourceId": "resource-demand-signal", "capacity": 100, "risk": 0.5, "playerInterruptible": true }
+  ],
+  "interruptions": [
+    { "id": "interrupt-ore", "routeId": "route-ore-refinery", "actions": ["escort miners", "blockade cargo", "negotiate safety strike"], "downstreamEffects": ["alloy shortage", "ore price rise", "mining expansion delayed"] },
+    { "id": "interrupt-alloy", "routeId": "route-alloy-factory", "actions": ["repair refinery", "divert alloy", "expose contamination"], "downstreamEffects": ["component slowdown", "alloy quality change"] },
+    { "id": "interrupt-components", "routeId": "route-components-shipyard", "actions": ["protect convoy", "steal components", "enforce sanctions"], "downstreamEffects": ["ship construction delay", "black market growth"] },
+    { "id": "interrupt-ships", "routeId": "route-ships-fleet", "actions": ["sabotage launch", "crew delivery", "redirect ownership"], "downstreamEffects": ["fleet readiness change", "faction tension"] },
+    { "id": "interrupt-fleet", "routeId": "route-fleet-war", "actions": ["broker ceasefire", "join patrol", "leak orders"], "downstreamEffects": ["conflict intensity change", "strategic demand change"] },
+    { "id": "interrupt-demand", "routeId": "route-demand-mining", "actions": ["publish demand forecast", "challenge expansion permit", "fund new shaft"], "downstreamEffects": ["mining expansion", "labor demand", "habitat pressure"] }
+  ],
+  "pricing": {
+    "formula": "baseValue * scarcity * routeRisk * sanctions * reputationDiscount",
+    "shortageMultiplierMax": 3,
+    "sanctionMultiplierMax": 2.5,
+    "updateIntervalHours": 1
+  }
+}
