@@ -171,7 +171,6 @@ theorem born_collapse_valid_range
     tw.min ≤ nv.val ∧ nv.val ≤ tw.max := by
   unfold bornCollapse at h
   simp only at h
-  -- After filterWindow, all values satisfy inWindow
   split at h
   · contradiction  -- Empty case contradicts Collapsed result
   next xs hxs =>
@@ -181,15 +180,31 @@ theorem born_collapse_valid_range
     next dom hdom =>
       injection h with h_nv h_bc h_tb
       subst h_nv
-      -- dom came from assignWeights xs, which came from filterWindow
-      -- filterWindow ensures all elements satisfy inWindow predicate
-      have h_mem : dom ∈ assignWeights xs := by
-        sorry -- dom is head of non-empty list
-      have h_in : nv ∈ xs := by
-        sorry -- unwrap WeightedBranch to get NormalizedValue
-      -- inWindow nv tw = true
-      unfold inWindow at *
-      sorry -- extract bounds from Bool.true
+      -- xs came from filterWindow, so all elements satisfy inWindow
+      -- dom.value must be in xs (it's wrapped in WeightedBranch)
+      unfold assignWeights at hdom
+      cases xs with
+      | nil =>
+        -- assignWeights [] = [], so selectDominant returns none
+        unfold selectDominant at hdom
+        simp at hdom
+      | cons y ys =>
+        -- dom is head of assignWeights (y::ys)
+        unfold selectDominant at hdom
+        simp [List.head?] at hdom
+        injection hdom with hdom_eq
+        -- dom.value came from filterWindow, which only keeps inWindow values
+        have h_filter : ∀ v ∈ (y :: ys), inWindow v tw = true := by
+          intro v hv
+          -- filterWindow keeps only elements satisfying inWindow
+          have : (y :: ys) = filterWindow (samples.map normalize) tw := hxs
+          rw [this] at hv
+          exact List.of_mem_filter hv
+        have h_y : inWindow y tw = true := h_filter y (List.mem_cons_self _ _)
+        -- Extract bounds from inWindow
+        unfold inWindow at h_y
+        simp only [Bool.and_eq_true] at h_y
+        exact h_y
 
 /-- T3: Vacuum state only when no samples in window -/
 theorem born_collapse_vacuum_iff
@@ -197,22 +212,70 @@ theorem born_collapse_vacuum_iff
     (tw : ThermalWindow) :
     bornCollapse samples tw = CollapseResult.Vacuum ↔
     filterWindow (samples.map normalize) tw = [] := by
-  sorry  -- Proof: case split on filterWindow result
+  unfold bornCollapse
+  constructor
+  · -- Forward: Vacuum → empty window
+    intro h
+    cases heq : filterWindow (samples.map normalize) tw with
+    | nil => rfl
+    | cons x xs =>
+      simp only [heq] at h
+      cases selectDominant (assignWeights (x :: xs)) with
+      | none =>
+        -- assignWeights on non-empty list returns non-empty list
+        -- so selectDominant cannot be none
+        unfold assignWeights selectDominant at h
+        simp at h
+      | some _ =>
+        -- Collapsed case contradicts Vacuum
+        contradiction
+  · -- Backward: empty window → Vacuum
+    intro h
+    simp only [h]
+    rfl
 
 /-- T4: Equal weights sum to 1 (probability measure) -/
 theorem born_weights_sum_to_one
     (samples : List NormalizedValue)
     (h : samples ≠ []) :
     (assignWeights samples).map (·.weight) |>.sum = 1 := by
-  sorry  -- Proof: n × (1/n) = 1
+  unfold assignWeights
+  cases samples with
+  | nil => contradiction
+  | cons x xs =>
+    simp only [List.map_cons, List.map_map]
+    -- Each weight is 1/n where n = length (x::xs)
+    let n := (x :: xs).length
+    have hn : 0 < n := List.length_pos_of_ne_nil _ (by simp)
+    -- Sum of n copies of (1/n) = n × (1/n) = 1
+    calc (x :: xs).map (fun _ => (1 : ℝ) / n) |>.sum
+        = n * (1 / n) := by
+          rw [List.sum_replicate]
+          simp [n]
+      _ = 1 := by field_simp; ring
+
+/-- Shannon entropy: H = -Σ p_i log(p_i) -/
+noncomputable def shannon_entropy (weights : List ℝ) : ℝ :=
+  -(weights.map (fun p => if p = 0 then 0 else p * Real.log p)).sum
 
 /-- T5: Maximum entropy within thermal window -/
 theorem born_maximum_entropy
     (samples : List NormalizedValue)
     (h : samples ≠ []) :
     ∀ (alt_weights : List ℝ),
+      alt_weights.length = samples.length →
+      (∀ w ∈ alt_weights, 0 ≤ w) →
       alt_weights.sum = 1 →
-      entropy (assignWeights samples) ≥ entropy_from_weights alt_weights := by
-  sorry  -- Proof: uniform distribution maximizes Shannon entropy
+      let uniform_weights := (assignWeights samples).map (·.weight)
+      shannon_entropy uniform_weights ≥ shannon_entropy alt_weights := by
+  intro alt_weights h_len h_nonneg h_sum
+  -- Uniform distribution maximizes Shannon entropy
+  -- This is Gibbs' inequality / Jensen's inequality for concave log
+  -- Proof outline:
+  -- 1. Uniform weights: all equal to 1/n
+  -- 2. Entropy of uniform = log(n)
+  -- 3. For any other distribution with same support: H ≤ log(n)
+  -- Full proof requires Real.log properties and concavity
+  sorry  -- Requires Mathlib's entropy maximization lemmas
 
 end BornRule

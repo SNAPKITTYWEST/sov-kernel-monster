@@ -139,9 +139,12 @@ Theorem byte_to_8bits_length : forall b,
 Proof.
   intros b Hbound.
   unfold byte_to_8bits.
-  (* Proof by induction on fuel=8 *)
-  admit.
-Admitted.
+  (* Induction on fuel *)
+  unfold byte_to_bits.
+  simpl.
+  (* Compute: 8 recursive calls produce 8 bits *)
+  repeat (destruct (Nat.even _); simpl); reflexivity.
+Qed.
 
 (* T2: Ones + Zeros = Total *)
 Theorem ones_plus_zeros_eq_total : forall bytes vr,
@@ -153,6 +156,15 @@ Proof.
   subst vr.
   simpl.
   lia.
+Qed.
+
+(* Helper: count_ones ≤ length *)
+Lemma count_ones_le_length : forall bits,
+  count_ones bits <= length bits.
+Proof.
+  induction bits.
+  - simpl. lia.
+  - simpl. destruct a; simpl; lia.
 Qed.
 
 (* T3: Ratio bounds [0, 1] *)
@@ -167,16 +179,15 @@ Proof.
   simpl.
   split.
   - (* 0 <= ratio *)
-    apply Rcomplements.Rdiv_le_0_compat.
+    apply Rdiv_le_0_compat.
     + apply pos_INR.
     + apply lt_INR. lia.
   - (* ratio <= 1 *)
-    apply Rcomplements.Rdiv_le_1.
+    apply Rdiv_le_1.
     + apply lt_INR. lia.
     + apply le_INR.
-      (* ones <= total *)
-      admit.
-Admitted.
+      apply count_ones_le_length.
+Qed.
 
 (* T4: All zeros fails validation (unless tolerance ≥ 0.5) *)
 Theorem all_zeros_fails : forall n,
@@ -216,8 +227,19 @@ Proof.
   unfold validate_distribution in *.
   simpl in *.
   (* If |ratio - 0.5| <= t1 and t1 < t2, then |ratio - 0.5| <= t2 *)
-  admit.
-Admitted.
+  destruct (Nat.eqb (length (bytes_to_bits bytes)) 0) eqn:Heq.
+  - (* Empty case *)
+    simpl. destruct (Rle_dec _ _); reflexivity.
+  - (* Non-empty *)
+    destruct (Rle_dec (Rabs _) t1) eqn:Hdec1;
+    destruct (Rle_dec (Rabs _) t2) eqn:Hdec2;
+    try reflexivity.
+    + (* t1 passed, but t2 failed — contradiction *)
+      exfalso.
+      apply Rle_dec_false in Hdec2.
+      apply Rle_dec_true in Hdec1.
+      lra.
+Qed.
 
 (* T7: Perfect balance (50% ones) always passes *)
 Theorem perfect_balance_passes : forall bits,

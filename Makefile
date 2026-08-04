@@ -180,3 +180,36 @@ $(OBJ_DIR)/measurement_head.o: $(OBJ_DIR)/sov_monster_kernel.o $(OBJ_DIR)/sov_kn
 $(OBJ_DIR)/jordan_block.o:     $(OBJ_DIR)/sov_monster_kernel.o
 $(OBJ_DIR)/spe_encoder.o:      $(OBJ_DIR)/bob_kinds.o
 $(OBJ_DIR)/training_adjoint.o: $(OBJ_DIR)/sov_monster_kernel.o $(OBJ_DIR)/jordan_block.o $(OBJ_DIR)/sov_knowledge.o
+
+#======================================================================
+# QUANTUM ENTROPY API — Unified C Bridge
+# Added: 2026-08-03 (Next Steps Session)
+#======================================================================
+
+# Quantum API sources
+QUANTUM_C_DIR = c
+QUANTUM_C_SRC = $(QUANTUM_C_DIR)/quantum_api.c
+QUANTUM_C_OBJ = $(BUILD_DIR)/quantum_api.o
+QUANTUM_C_LIB = $(LIB_DIR)/libquantum_api.a
+
+# Build quantum API library
+quantum_api: $(QUANTUM_C_LIB)
+
+$(QUANTUM_C_LIB): $(QUANTUM_C_OBJ)
+	mkdir -p $(LIB_DIR)
+	ar rcs $@ $<
+	ranlib $@
+	@echo "Built quantum API library: $@"
+
+$(QUANTUM_C_OBJ): $(QUANTUM_C_SRC)
+	mkdir -p $(BUILD_DIR)
+	$(CC) -O3 -fPIC -Wall -Wextra -std=c11 -I$(QUANTUM_C_DIR) -c $< -o $@
+
+# Test quantum API
+test_quantum_api: $(QUANTUM_C_LIB) $(LIB_DIR)/libbh_numerics.a
+	$(CC) -O3 -I$(QUANTUM_C_DIR) -o $(BUILD_DIR)/test_quantum_api \
+		test/test_quantum_api.c \
+		-L$(LIB_DIR) -lquantum_api -lbh_numerics -lm -lgfortran
+	$(BUILD_DIR)/test_quantum_api
+
+.PHONY: quantum_api test_quantum_api
