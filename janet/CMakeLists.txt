@@ -11,12 +11,16 @@ add_custom_target(janet_bindings ALL
   COMMENT "Janet native bindings verified"
 )
 
-# Install Janet module
-install(FILES bob_quantum.janet
+# Install Janet modules
+install(FILES
+  bob_quantum.janet
+  bh_arrays.janet
   DESTINATION share/bob_quantum/janet
 )
 
 # Add to binding documentation
 file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/../BINDINGS_SUMMARY.txt"
-  "Janet: bob_quantum.janet (native bindings to C ABI) - installed to share/bob_quantum/janet\n"
+  "Janet: bob_quantum.janet (native bindings to C ABI)\n"
+  "Janet: bh_arrays.janet (array model with formal contracts + Coq emission)\n"
+  "Installed to: share/bob_quantum/janet\n"
 )
