@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RBGFSArchitecture version="1.0" xmlns="urn:sovereign:rbg-fs:2024">
+
+  <Identity>
+    <Name>RBG-FS</Name>
+    <FullName>Random Bit Generation - Fortran/Smalltalk Sovereign Stack</FullName>
+    <Purpose>Quantum-grade entropy generation, civilization simulation, and sovereign IDE integration</Purpose>
+    <Classification>SOVEREIGN_CRYPTO_PRIMITIVE</Classification>
+  </Identity>
+
+  <Layers>
+    <!-- Layer 0: Hardware/Entropy Source -->
+    <Layer id="L0" name="entropy_source">
+      <Component id="L0-C1" name="qrng_ibm_legacy" language="fortran" status="REQUIRED">
+        <Description>Reverse-engineered IBM quantum RNG - TRUE quantum entropy</Description>
+        <Interfaces>
+          <Interface name="qrng_init" returns="handle"/>
+          <Interface name="qrng_bytes" params="handle, buffer, len" returns="bytes_written"/>
+          <Interface name="qrng_health" returns="entropy_estimate, bias_p_value"/>
+        </Interfaces>
+      </Component>
+      <Component id="L0-C2" name="bob_rng" language="fortran" status="EXISTS">
+        <Description>xoshiro256** deterministic fallback</Description>
+      </Component>
+    </Layer>
+
+    <!-- Layer 1: Numerical Engine (Fortran) -->
+    <Layer id="L1" name="numerical_engine">
+      <Component id="L1-C1" name="bob_kinds" language="fortran" status="EXISTS"/>
+      <Component id="L1-C2" name="bob_errors" language="fortran" status="EXISTS"/>
+      <Component id="L1-C3" name="bob_state" language="fortran" status="EXISTS"/>
+      <Component id="L1-C4" name="bob_gates" language="fortran" status="EXISTS"/>
+      <Component id="L1-C5" name="bob_circuit" language="fortran" status="EXISTS"/>
+      <Component id="L1-C6" name="bob_lattice" language="fortran" status="EXISTS"/>
+      <Component id="L1-C7" name="bob_measurement" language="fortran" status="EXISTS"/>
+      <Component id="L1-C8" name="bob_hamiltonian" language="fortran" status="COMPLETE"/>
+      <Component id="L1-C9" name="bob_evolution" language="fortran" status="COMPLETE"/>
+      <Component id="L1-C10" name="bob_metrics" language="fortran" status="COMPLETE"/>
+      <Component id="L1-C11" name="bob_integrator" language="fortran" status="EXISTS"/>
+      <Component id="L1-C12" name="bob_abi" language="fortran" status="EXISTS"/>
+    </Layer>
+
+    <!-- Layer 2: Civilization Domain (Smalltalk) -->
+    <Layer id="L2" name="civilization_domain">
+      <Component id="L2-C1" name="QuantumCivilization" language="smalltalk" status="REQUIRED">
+        <Classes>
+          <Class name="QuantumVortex" category="primitives"/>
+          <Class name="VortexLattice" category="primitives"/>
+          <Class name="WatsonAgent" category="cognitive"/>
+          <Class name="KnowledgeNode" category="cognitive"/>
+          <Class name="CivilizationEngine" category="orchestration"/>
+          <Class name="ConsensusFilter" category="governance"/>
+        </Classes>
+      </Component>
+      <Component id="L2-C2" name="SmalltalkBridge" language="smalltalk" status="REQUIRED">
+        <Description>FFI to Fortran C ABI via Alien/IA32</Description>
+      </Component>
+    </Layer>
+
+    <!-- Layer 3: Plasma Gate / Bridge (Rust) -->
+    <Layer id="L3" name="plasma_gateway">
+      <Component id="L3-C1" name="bob_bridge" language="rust" status="REQUIRED">
+        <Description>WebSocket server exposing Fortran/Smalltalk via JSON-RPC</Description>
+        <Endpoints>
+          <Endpoint path="/quantum/lattice" methods="POST,GET"/>
+          <Endpoint path="/quantum/state" methods="POST,GET"/>
+          <Endpoint path="/quantum/measure" methods="POST"/>
+          <Endpoint path="/civilization/step" methods="POST"/>
+          <Endpoint path="/civilization/state" methods="GET"/>
+          <Endpoint path="/entropy/health" methods="GET"/>
+          <Endpoint path="/ws" methods="WS"/>
+        </Endpoints>
+      </Component>
+      <Component id="L3-C2" name="bob_quantum_sys" language="rust" status="EXISTS">
+        <Description>FFI crate for Fortran C ABI</Description>
+      </Component>
+    </Layer>
+
+    <!-- Layer 4: Statistical Analysis (R) -->
+    <Layer id="L4" name="statistical_analysis">
+      <Component id="L4-C1" name="bob_r_analysis" language="r" status="REQUIRED">
+        <Functions>
+          <Function name="nist_sp800_22" params="bitstream"/>
+          <Function name="dieharder" params="bitstream"/>
+          <Function name="entropy_estimation" params="samples"/>
+          <Function name="bias_detection" params="bitstream"/>
+          <Function name="civilization_metrics" params="json_state"/>
+        </Functions>
+      </Component>
+    </Layer>
+
+    <!-- Layer 5: IDE Integration (TypeScript) -->
+    <Layer id="L5" name="ide_integration">
+      <Component id="L5-C1" name="bob_ide_routes" language="typescript" status="REQUIRED">
+        <Routes>
+          <Route path="/api/quantum/*" handler="QuantumController"/>
+          <Route path="/api/civilization/*" handler="CivilizationController"/>
+          <Route path="/api/entropy/*" handler="EntropyController"/>
+          <Route path="/ws/quantum" handler="QuantumWebSocket"/>
+        </Routes>
+      </Component>
+      <Component id="L5-C2" name="quantum_inspector_ui" language="typescript" status="REQUIRED">
+        <Components>
+          <Component name="Lattice3DViewer" description="Three.js vortex lattice visualization"/>
+          <Component name="StateVectorInspector" description="Amplitude/phase display"/>
+          <Component name="EntanglementGraph" description="D3.js entanglement network"/>
+          <Component name="EntropyMonitor" description="Real-time entropy metrics"/>
+          <Component name="CensusDashboard" description="Agent population metrics"/>
+        </Components>
+      </Component>
+    </Layer>
+
+    <!-- Layer 6: Build/Deploy (Bash) -->
+    <Layer id="L6" name="build_system">
+      <Component id="L6-C1" name="build.sh" language="bash" status="REQUIRED"/>
+      <Component id="L6-C2" name="run.sh" language="bash" status="REQUIRED"/>
+      <Component id="L6-C3" name="test.sh" language="bash" status="REQUIRED"/>
+      <Component id="L6-C4" name="deploy.sh" language="bash" status="REQUIRED"/>
+    </Layer>
+  </Layers>
+
+  <Communication>
+    <Protocol name="WebSocket" schema="protocols/websocket.json"/>
+    <Protocol name="NATS" schema="protocols/nats_subjects.go"/>
+    <Protocol name="Bifrost" schema="protocols/bifrost_audit.json"/>
+  </Communication>
+
+  <Governance>
+    <Policy name="entropy_priority">qrng_ibm_legacy > bob_rng > /dev/urandom</Policy>
+    <Policy name="audit_all">All entropy draws logged to Bifrost WORM</Policy>
+    <Policy name="civilization_consensus">Knowledge promotion requires 67% agent agreement</Policy>
+  </Governance>
+
+</RBGFSArchitecture>

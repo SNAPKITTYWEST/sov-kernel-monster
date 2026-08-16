@@ -63,3 +63,14 @@ out.txt
 mh_payload.json
 *.mod
 rust/sov-rust-core/target/
+
+# Claude harness + local dev scaffolding (not for repo)
+claudes-harness/
+frontend/ARCHITECTURE.md
+frontend/INTEGRATION_COMPLETE.md
+frontend/MANIFEST.txt
+frontend/QUICKSTART.txt
+frontend/SETUP_GUIDE.md
+frontend/server.mjs
+frontend/verify-setup.mjs
+frontend/wasm/
